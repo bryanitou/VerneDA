@@ -195,7 +195,7 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
 ############################################
 # EXECUTABLES: DUAVC main
 ############################################
-set(EXECUTABLE_NAME "dace_test")
+set(EXECUTABLE_NAME "Example1-dace_test")
 
 add_executable(${EXECUTABLE_NAME} src/main/Example1-dace_test.cpp)
 
