@@ -52,16 +52,18 @@ void dump_points(DACE::DA &x, DACE::DA &y, const std::string & file_path)
         // Do something here
     }
 
-    vertexes_vrt_stream << x << std::endl;
-    vertexes_vrt_stream << "---------------------" << std::endl;
-    vertexes_vrt_stream << y << std::endl;
-
-    vertexes_vrt_stream.close();
+    // Easy print
+    vertexes_vrt_stream << "x" << std::endl << x << std::endl;
+    vertexes_vrt_stream << "y = sin(x)" << std::endl << y;
 
     // Iterate through the number of vertices
-   //  for (int i = 0; i < x.size(); i++) {
-   //      // Write in the stream
-   //      vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
-   //      vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
-   //  }
+    for (int i = 0; i < x.size(); i++)
+    {
+        // Write in the stream
+        vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
+        vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
+    }
+
+    // Close the stream
+    vertexes_vrt_stream.close();
 }
