@@ -197,7 +197,7 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
 ############################################
 set(EXECUTABLE_NAME "dace_test")
 
-add_executable(${EXECUTABLE_NAME} src/main/dace_test.cpp)
+add_executable(${EXECUTABLE_NAME} src/main/Example1-dace_test.cpp)
 
 add_dependencies(${EXECUTABLE_NAME}
         RECOMPILE_STATIC_FLAGS)
