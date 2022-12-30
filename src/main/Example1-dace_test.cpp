@@ -16,13 +16,16 @@
  */
 int main(int argc, char* argv[])
 {
-    DACE::DA::init( 20, 1 ); // initialize DACE for 20th-order computations in 1 variable
+    // Initialize DACE for 20th-order computations in 1 variable
+    DACE::DA::init( 20, 1 );
 
-    DACE::DA x = DACE::DA(1); // initialize x as DA
+    // Initialize x as DA
+    DACE::DA x = DACE::DA(1);
 
-    DACE::DA y = sin(x); // compute y = sin(x)
+    // Compute y = sin(x)
+    DACE::DA y = sin(x);
 
-    // print x and y to screen
+    // Print x and y to screen
     std::cout << "x" << std::endl << x << std::endl;
     std::cout << "y = sin(x)" << std::endl << y;
 }
