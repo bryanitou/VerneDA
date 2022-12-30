@@ -13,7 +13,7 @@
 
 
 // Forward declarate stuff
-void dump_points(DACE::DA &x, DACE::DA &y, const std::string & file_path);
+void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path);
 
 /**
  * Main entry point
@@ -29,20 +29,18 @@ int main(int argc, char* argv[])
     // Compute y = sin(x)
     DACE::DA y = DACE::sin(x);
 
-    //
-
     // Print x and y to screen
     std::cout << "x" << std::endl << x << std::endl;
     std::cout << "y = sin(x)" << std::endl << y;
 
-    dump_points(x, y, "./out/test.txt");
+    dump_variables(x, y, "./out/Example1-dace_test.txt");
 }
 
-void dump_points(DACE::DA &x, DACE::DA &y, const std::string & file_path)
+void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path)
 {
     // Create the file stream
-    std::ofstream vertexes_vrt_stream;
-    vertexes_vrt_stream.open(file_path);
+    std::ofstream file2write;
+    file2write.open(file_path);
 
     // Safety check
     bool same_length = x.size() == y.size();
@@ -53,17 +51,9 @@ void dump_points(DACE::DA &x, DACE::DA &y, const std::string & file_path)
     }
 
     // Easy print
-    vertexes_vrt_stream << "x" << std::endl << x << std::endl;
-    vertexes_vrt_stream << "y = sin(x)" << std::endl << y;
-
-    // Iterate through the number of vertices
-    for (int i = 0; i < x.size(); i++)
-    {
-        // Write in the stream
-        vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
-        vertexes_vrt_stream << std::to_string(i) << ":" << x << ", " << y << " " << std::endl;
-    }
+    file2write << "x" << std::endl << x << std::endl;
+    file2write << "y = sin(x)" << std::endl << y;
 
     // Close the stream
-    vertexes_vrt_stream.close();
+    file2write.close();
 }
