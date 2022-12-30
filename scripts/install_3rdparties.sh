@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pathfinder maintenance script
+# getting2knowDace maintenance script
 # Uncompress all 3rd party packages
 # Useful to set everything up if the repository has just been cloned, or a new 3rd party is added later on
 # Usage: bash ./scripts/install_3rdparties.sh
@@ -12,7 +12,7 @@ function print_usage()
 
   echo "Default does not clean directories, call it with the flag in order to wipe out previous extraction."
   echo "Default source directory is current working directory (cwd = '.')."
-  echo "Default build directory is <source_dir>/build/pathfinder-3rdparty."
+  echo "Default build directory is <source_dir>/build/getting2knowDace-3rdparty."
   echo " "
 
   echo "--> Example, called from project directory: bash ./scripts/$(basename "$0")"
@@ -36,14 +36,14 @@ function display_logo()
 clean_dirs=false
 current_dir=$(realpath .)
 source_dir="${current_dir}"
-dir_3rdparty="${source_dir}/build/pathfinder-3rdparty"
+dir_3rdparty="${source_dir}/build/getting2knowDace-3rdparty"
 
 while test $# != 0; do
   case "$1" in
   -c | --clean-dirs) clean_dirs=true ;;
   --source-dir)
               source_dir=$(realpath -m "${2%/}/")
-              dir_3rdparty="${source_dir}/build/pathfinder-3rdparty"
+              dir_3rdparty="${source_dir}/build/getting2knowDace-3rdparty"
               shift
               ;;
   --build-dir)
