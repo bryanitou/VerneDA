@@ -204,4 +204,4 @@ add_dependencies(${EXECUTABLE_NAME}
 
 target_link_libraries(${EXECUTABLE_NAME}
         ${LIBRARY_CORE}
-        ${Boost_LIBRARIES})
+        ${LIBRARY_DACE})
