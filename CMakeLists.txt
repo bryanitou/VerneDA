@@ -193,11 +193,28 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 ############################################
-# EXECUTABLES: DUAVC main
+# EXECUTABLES: DACE mains
+############################################
+############################################
+# EXECUTABLES: EXAMPLE 1
 ############################################
 set(EXECUTABLE_NAME "Example1-dace_test")
 
 add_executable(${EXECUTABLE_NAME} src/main/Example1-dace_test.cpp)
+
+add_dependencies(${EXECUTABLE_NAME}
+        RECOMPILE_STATIC_FLAGS)
+
+target_link_libraries(${EXECUTABLE_NAME}
+        ${LIBRARY_CORE}
+        ${LIBRARY_DACE})
+
+############################################
+# EXECUTABLES: EXAMPLE 2
+############################################
+set(EXECUTABLE_NAME "Example2-dace_test")
+
+add_executable(${EXECUTABLE_NAME} src/main/Example2-dace_test.cpp)
 
 add_dependencies(${EXECUTABLE_NAME}
         RECOMPILE_STATIC_FLAGS)
