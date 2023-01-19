@@ -22,7 +22,7 @@ function print_usage()
   exit 1 # Stop execution and return
 }
 
-# Function to display ASCII art logo
+# Function to display ASCII art logo: https://patorjk.com/software/taag/#p=display&f=Letters&t=GETTING2KNOW-DACE
 function display_logo()
 {
   echo "  GGGG  EEEEEEE TTTTTTT TTTTTTT IIIII NN   NN   GGGG   2222   KK  KK NN   NN  OOOOO  WW      WW        DDDDD     AAA    CCCCC  EEEEEEE "
