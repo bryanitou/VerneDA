@@ -25,11 +25,11 @@ function print_usage()
 # Function to display ASCII art logo
 function display_logo()
 {
-  echo "PP"
-  echo "PP"
-  echo "PP"
-  echo "PP"
-  echo "PP"
+  echo "  GGGG  EEEEEEE TTTTTTT TTTTTTT IIIII NN   NN   GGGG   2222   KK  KK NN   NN  OOOOO  WW      WW        DDDDD     AAA    CCCCC  EEEEEEE "
+  echo " GG  GG EE        TTT     TTT    III  NNN  NN  GG  GG 222222  KK KK  NNN  NN OO   OO WW      WW        DD  DD   AAAAA  CC    C EE      "
+  echo "GG      EEEEE     TTT     TTT    III  NN N NN GG          222 KKKK   NN N NN OO   OO WW   W  WW _____  DD   DD AA   AA CC      EEEEE   "
+  echo "GG   GG EE        TTT     TTT    III  NN  NNN GG   GG  2222   KK KK  NN  NNN OO   OO  WW WWW WW        DD   DD AAAAAAA CC    C EE      "
+  echo " GGGGGG EEEEEEE   TTT     TTT   IIIII NN   NN  GGGGGG 2222222 KK  KK NN   NN  OOOO0    WW   WW         DDDDDD  AA   AA  CCCCC  EEEEEEE "
 }
 
 # Get parameters
@@ -74,7 +74,7 @@ fi
 if [ "${SHLVL}" -lt 3 ]; then
   display_logo
   echo " "
-  echo "WELCOME TO PATH-FINDER INSTALL 3RD PARTIES SCRIPT"
+  echo "WELCOME TO GETTING2KNOW-DACE INSTALL 3RD PARTIES SCRIPT"
   echo "This script will extract 3rd parties from their compressed files"
   echo "Useful to set everything up if the repository has just been cloned"
   echo " "
