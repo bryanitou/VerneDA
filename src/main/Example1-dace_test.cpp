@@ -56,7 +56,7 @@ void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path)
 
     // TODO: Try to print coef, exponents (and order) in a organized way so we can print this using Taylor Expansions
     // TODO: later in python?
-    for (int i = 0; i < y.getMaxOrder())
+    // for (int i = 0; i < y.getMaxOrder())
 
     // Close the stream
     file2write.close();
