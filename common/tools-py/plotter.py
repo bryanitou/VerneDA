@@ -104,6 +104,7 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     """
     Get originals
     :param taylor: dictionary containing the coefficients and the order
+    :param x: vector of x values
     :param verbose: verbosity indicator
     :return:
     """
