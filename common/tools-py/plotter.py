@@ -60,10 +60,11 @@ def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, 
     return x
 
 
-def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = False) -> dict:
+def get_images_from_taylor(taylor: dict, span: int, x: list = None, verbose: bool = False) -> dict:
     """
     Gets the x and y from the taylor dict
     :param taylor: dictionary containing the coefficients and the order
+    :param span: span that the plot will cover
     :param x: vector of x values
     :param verbose: verbosity indicator
     :return: dict{x: [], y: []}
@@ -74,7 +75,7 @@ def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = False) 
             print(f"You have not passed an x vector!, A default one will be generated.")
 
         # Get the default vector
-        x = default_x_vector(1)
+        x = default_x_vector(span=span, verbose=verbose)
 
     # Y values will be saved here
     y = []
@@ -148,10 +149,11 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     return xydict
 
 
-def plot_taylor(taylor: dict, verbose: bool = False) -> None:
+def plot_taylor(taylor: dict, span: int, verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
+    :param span: Span that the plot will cover
     :param verbose: verbosity indicator
     :return: None
     """
@@ -160,7 +162,7 @@ def plot_taylor(taylor: dict, verbose: bool = False) -> None:
     assert (taylor, dict)
 
     # Now we should get the x and y from the Taylor polynomial information
-    xytaylor = get_images_from_taylor(taylor, verbose=verbose)
+    xytaylor = get_images_from_taylor(taylor, span=span, verbose=verbose)
 
     # Get original
     xyoriginal = get_original(taylor, xytaylor["x"], verbose=verbose)
@@ -180,11 +182,12 @@ def plot_taylor(taylor: dict, verbose: bool = False) -> None:
 
 
 # Main running function
-def main(args: list = None, verbose: bool = False) -> None:
+def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
     """
     Main running function
 
     :param args: given arguments to the function
+    :param span: span that the plot will cover
     :param verbose: verbosity boolean
     :return:
     """
@@ -202,9 +205,9 @@ def main(args: list = None, verbose: bool = False) -> None:
         taylor_dict = tools.get_dict_from_file(parsed_dict["file"], verbose=verbose)
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_taylor(taylor_dict, verbose=verbose)
+        plot_taylor(taylor_dict, span=span, verbose=verbose)
 
 
 if __name__ == '__main__':
     # Call to main running function
-    main(args=sys.argv[1:], verbose=True)
+    main(args=sys.argv[1:], span=3, verbose=True)
