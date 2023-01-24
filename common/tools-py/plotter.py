@@ -32,7 +32,7 @@ def default_x_vector(which: int, addstop: bool = True, verbose: bool = False):
     return x
 
 
-def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, verbose: bool = True) -> list:
+def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, verbose: bool = False) -> list:
     # Set step size
     step = 0.1
 
@@ -61,7 +61,7 @@ def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, 
     return x
 
 
-def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = True) -> dict:
+def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = False) -> dict:
     """
     Gets the x and y from the taylor dictionary
     :param taylor: dictionary containing the coefficients and the order
