@@ -1,15 +1,14 @@
 import os
 
-
 # Format strings
 # End of variable string
 end_of_variable = "------------------------------------------------"
 
+
 def parse_arguments(args: list[str], verbose: bool = False) -> dict:
     """
     Parse arguments, given a list.
-    Reminder: Arguments should be this format:
-    --<key_word> <value>
+    Reminder: Arguments should be this format: --<key_word> <value>
     :param args: given arguments
     :param verbose: verbosity boolean
     :return: dictionary with arguments
