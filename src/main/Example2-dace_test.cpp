@@ -59,8 +59,8 @@ void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path)
     }
 
     // Easy print
-    file2write << "x" << std::endl << x << std::endl;
-    file2write << "y = sin(x)" << std::endl << y;
+    // file2write << "x" << std::endl << x << std::endl;
+    file2write << "y = sin(x)^2" << std::endl << y.;
 
     // Close the stream
     file2write.close();

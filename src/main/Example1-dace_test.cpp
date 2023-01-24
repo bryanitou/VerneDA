@@ -51,7 +51,7 @@ void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path)
     }
 
     // Easy print
-    file2write << "x" << std::endl << x << std::endl;
+    //file2write << "x" << std::endl << x << std::endl;
     file2write << "y = sin(x)" << std::endl << y;
 
     // TODO: Try to print coef, exponents (and order) in a organized way so we can print this using Taylor Expansions
