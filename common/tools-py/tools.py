@@ -97,9 +97,9 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
                     rows = line.split()
 
                     # Fill in their place
-                    for i, row in enumerate(rows):
+                    for j, row in enumerate(rows):
                         # Get the header
-                        header = headers[i]
+                        header = headers[j]
 
                         # Try to convert it to a number
                         try:
