@@ -1,5 +1,4 @@
 # Import packages
-import os
 import sys
 import matplotlib.pyplot as plt
 import math
