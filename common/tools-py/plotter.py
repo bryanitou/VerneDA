@@ -63,10 +63,11 @@ def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, 
 
 def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = False) -> dict:
     """
-    Gets the x and y from the taylor dictionary
+    Gets the x and y from the taylor dict
     :param taylor: dictionary containing the coefficients and the order
+    :param x: vector of x values
     :param verbose: verbosity indicator
-    :return: dict{x} = [], dict{y} = []
+    :return: dict{x: [], y: []}
     """
     # If the x list is None, generate one by default
     if x is None:
@@ -192,7 +193,7 @@ def main(args: list = None, verbose: bool = False) -> None:
     # Safety check the given arguments
     if args is None:
         if verbose:
-            print("No arguments given.")
+            print("No arguments given!")
         exit(-1)
     else:
         # Parse given arguments
