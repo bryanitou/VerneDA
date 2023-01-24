@@ -7,22 +7,22 @@ import math
 import tools
 
 
-def default_x_vector(which: int, addstop: bool = True, verbose: bool = False):
+def default_x_vector(span: int, addstop: bool = True, verbose: bool = False):
     # Vectors to return
     x = None
 
     # Here a switch case will be
-    if which == 1:
+    if span == 1:
         x = default_x_vector_core(-10, 10, addstop=addstop, verbose=verbose)
-    elif which == 2:
+    elif span == 2:
         x = default_x_vector_core(-5, 5, addstop=addstop, verbose=verbose)
-    elif which == 3:
+    elif span == 3:
         x = default_x_vector_core(-1, 1, addstop=addstop, verbose=verbose)
 
     # Safety check that something is about to be returned
     if x is None:
         if verbose:
-            print(f"Could not find which '{which}' default vector to return! "
+            print(f"Could not find which '{span}' default vector to return! "
                   f"Revise call to function 'default_x_vector'")
 
         # Exit code
@@ -74,7 +74,7 @@ def get_images_from_taylor(taylor: dict, x: list = None, verbose: bool = False) 
             print(f"You have not passed an x vector!, A default one will be generated.")
 
         # Get the default vector
-        x = default_x_vector(2)
+        x = default_x_vector(1)
 
     # Y values will be saved here
     y = []
@@ -166,11 +166,11 @@ def plot_taylor(taylor: dict, verbose: bool = False) -> None:
     xyoriginal = get_original(taylor, xytaylor["x"], verbose=verbose)
 
     # Finally, we can plot everything
-    plt.plot(xytaylor["x"], xytaylor["y"])
     plt.plot(xyoriginal["x"], xyoriginal["y"])
+    plt.plot(xytaylor["x"], xytaylor["y"])
 
     # Write legend
-    plt.legend(["Taylor expansion", f"{taylor['function']}"])
+    plt.legend([f"{taylor['function']}", "Taylor expansion"])
 
     # Plt show grid
     plt.grid()
