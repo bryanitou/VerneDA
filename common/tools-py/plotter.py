@@ -40,21 +40,18 @@ def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, 
         if verbose:
             print(f"Lower bound ('{x_lower}') cannot be greater than the upper ('{x_upper}') bound!")
 
-    # Set limits
-    x_upper = (x_upper + step) if addstop else x_upper
-
     # Compute num of elems
     dist = x_upper - x_lower
     n_val = int(dist / step)
 
-    x = [x_lower + step * i for i in range(0, n_val)]
+    x = [x_lower + step * i for i in range(0, (n_val + 1) if addstop else n_val)]
 
     # Info
     if verbose:
-        print("Default x set to:")
-        print(f"x_lower = {x_lower}")
-        print(f"x_upper = {x_upper}")
-        print(f"step = {step}")
+        print("-> Default x set to:")
+        print(f"-> x_lower = {x_lower}")
+        print(f"-> x_upper = {x_upper}")
+        print(f"-> step = {step}")
 
     # Return the vector
     return x
