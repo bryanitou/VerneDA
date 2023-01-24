@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     DACE::DA x = DACE::DA(1);
 
     // Compute sin(x)^2
-    DACE::DA y1 = DACE::sqr(sin(x));
+    DACE::DA y1 = DACE::sqr(DACE::sin(x));
 
     // Info
     std::cout << "sin(x)^2" << std::endl << y1 << std::endl;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     // Compute and print sin(x)^2+cos(x)^2
     std::cout << "sin(x)^2+cos(x)^2" << std::endl << y1+y2 << std::endl;
 
-    // dump_variables(x, y, "./out/Example2-dace_test.txt");
+    dump_variables(x, y1, "./out/Example2-dace_test.txt");
 }
 
 void dump_variables(DACE::DA &x, DACE::DA &y, const std::string & file_path)
