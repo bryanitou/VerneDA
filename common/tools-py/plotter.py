@@ -157,7 +157,10 @@ def plot_taylor(taylor: dict, span: int, verbose: bool = False) -> None:
     """
 
     # Safety check
-    assert (taylor, dict)
+    if not isinstance(taylor, dict):
+        if verbose:
+            print("Expected input 'taylor' is not a dictionary!")
+            exit(-1)
 
     # Now we should get the x and y from the Taylor polynomial information
     xytaylor = get_images_from_taylor(taylor, span=span, verbose=verbose)
