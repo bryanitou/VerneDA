@@ -219,4 +219,4 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
 if __name__ == '__main__':
     # Call to main running function
-    main(args=sys.argv[1:], span=3, verbose=True)
+    main(args=sys.argv[1:], span=1, verbose=True)
