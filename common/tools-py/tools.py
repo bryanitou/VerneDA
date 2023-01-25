@@ -115,3 +115,11 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
                         filedict[header].append(coef)
 
     return filedict
+
+
+def get_chars2remove() -> str:
+    """
+    Miscellaneous function that returns a list of characters to be removed from somewhere.
+    :return: chars
+    """
+    return "\\(|=|\\)|\\s"

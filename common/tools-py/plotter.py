@@ -1,7 +1,9 @@
 # Import packages
+import os
+import re
 import sys
-import matplotlib.pyplot as plt
 import math
+import matplotlib.pyplot as plt
 
 # Self libraries
 import tools
@@ -147,11 +149,12 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     return xydict
 
 
-def plot_taylor(taylor: dict, span: int, verbose: bool = False) -> None:
+def plot_taylor(taylor: dict, span: int,  output_path: os.PathLike or str,  verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
     :param span: Span that the plot will cover
+    :param output_path: where the plot should be saved.
     :param verbose: verbosity indicator
     :return: None
     """
@@ -179,7 +182,7 @@ def plot_taylor(taylor: dict, span: int, verbose: bool = False) -> None:
     plt.grid()
 
     # Show plot
-    plt.show()
+    plt.savefig(output_path)
 
 
 # Main running function
@@ -205,8 +208,12 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         # Now, we should get the information from the file
         taylor_dict = tools.get_dict_from_file(parsed_dict["file"], verbose=verbose)
 
+        # From the file, get the parent folder and save it
+        parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
+        output_path = os.path.join(parent_folder, f"{re.sub(tools.get_chars2remove(), '_', taylor_dict['function'])}.png")
+
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_taylor(taylor_dict, span=span, verbose=verbose)
+        plot_taylor(taylor_dict, span=span, verbose=verbose, output_path=output_path)
 
 
 if __name__ == '__main__':
