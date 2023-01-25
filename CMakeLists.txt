@@ -111,12 +111,7 @@ add_custom_target(RECOMPILE_STATIC_FLAGS touch ${CMAKE_SOURCE_DIR}/src/core/STAT
 # Load ExternalProject module
 include(ExternalProject)
 
-## Build OMPL API
-## Please see instructions to do so: https://ompl.kavrakilab.org/buildOptions.html
-## If you are building OMPL from source, there are several options that you can use to configure how OMPL is compiled.
-## The options can be set via the command line like so: cmake -D<option>=ON ../... If you previously ran cmake in your
-## build directory, it is safest to remove the CMakeCache.txt before re-running cmake with different options. Below is
-## a list of all options.
+## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
 ExternalProject_Add(dace
         SOURCE_DIR ${CMAKE_3RDPARTY_DIR}/dace-master/
         PREFIX ${CMAKE_3RDPARTY_DIR}/dace-master/
@@ -143,7 +138,8 @@ set(dacelib_path "${dacelib_dir}/${dacelib_file}")
 ############################################
 # Location of header files and libraries (inside source dir, except the includes)
 include_directories(
-        ${daceinclude})
+        ${daceinclude}
+        src/core)
 
 #===========================================
 # LIBRARY: DACE (IMPORTED LIBRARY)
@@ -156,24 +152,6 @@ add_library(${LIBRARY_DACE} SHARED IMPORTED)
 set_target_properties(${LIBRARY_DACE} PROPERTIES
         IMPORTED_LOCATION ${dacelib_path})
 
-# add_custom_target(rsjp COMMAND make install
-#         WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR}/RSJp-cpp-master/
-#         )
-#===========================================
-# LIBRARY: POST-PROCESS, free DACE and BOOST dependent
-#===========================================
-# TODO: DUNNO WHAT THE HELL IS THIS
-# set(LIBRARY_PREPROCESS "preprocess")
-#
-# add_library(${LIBRARY_PREPROCESS} SHARED
-#         src/preprocess/duavc_input_file.cpp)
-#
-# target_link_libraries(${LIBRARY_PREPROCESS})
-#
-# set_target_properties(${LIBRARY_CORE} PROPERTIES
-#         COMPILE_FLAGS "-fPIC"
-#         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
-
 #===========================================
 # LIBRARY: getting2knowDace CORE
 #===========================================
@@ -182,7 +160,7 @@ set(LIBRARY_CORE "core")
 add_library(${LIBRARY_CORE} SHARED
         src/core/tools.cpp)
 
-add_dependencies(${LIBRARY_CORE}
+add_dependencies(core
         dace)
 
 target_link_libraries(${LIBRARY_CORE}
@@ -200,25 +178,33 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
 ############################################
 set(EXECUTABLE_NAME "Example1-dace_test")
 
-add_executable(${EXECUTABLE_NAME} src/main/Example1-dace_test.cpp)
+add_executable(${EXECUTABLE_NAME}
+        src/main/Example1-dace_test.cpp
+        )
 
 add_dependencies(${EXECUTABLE_NAME}
-        RECOMPILE_STATIC_FLAGS)
+        RECOMPILE_STATIC_FLAGS
+        )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        ${LIBRARY_CORE}
-        ${LIBRARY_DACE})
+        core
+        dacelib
+        )
 
 ############################################
 # EXECUTABLES: EXAMPLE 2
 ############################################
 set(EXECUTABLE_NAME "Example2-dace_test")
 
-add_executable(${EXECUTABLE_NAME} src/main/Example2-dace_test.cpp)
+add_executable(${EXECUTABLE_NAME}
+        src/main/Example2-dace_test.cpp
+        )
 
 add_dependencies(${EXECUTABLE_NAME}
-        RECOMPILE_STATIC_FLAGS)
+        RECOMPILE_STATIC_FLAGS
+        )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        ${LIBRARY_CORE}
-        ${LIBRARY_DACE})
+        core
+        dacelib
+        )

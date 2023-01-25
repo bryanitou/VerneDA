@@ -149,7 +149,7 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     return xydict
 
 
-def plot_taylor(taylor: dict, span: int,  output_path: os.PathLike or str,  verbose: bool = False) -> None:
+def plot_taylor(taylor: dict, span: int, output_path: os.PathLike or str, verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
@@ -210,7 +210,8 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
         # From the file, get the parent folder and save it
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
-        output_path = os.path.join(parent_folder, f"{re.sub(tools.get_chars2remove(), '_', taylor_dict['function'])}.png")
+        txt_filename = os.path.split(parsed_dict['file'])[1].replace('txt', 'png')  # TODO: Robustify this
+        output_path = os.path.join(parent_folder, f"{txt_filename}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
         plot_taylor(taylor_dict, span=span, verbose=verbose, output_path=output_path)
@@ -218,4 +219,4 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
 if __name__ == '__main__':
     # Call to main running function
-    main(args=sys.argv[1:], span=3, verbose=True)
+    main(args=sys.argv[1:], span=1, verbose=True)
