@@ -1,3 +1,4 @@
+import math
 import os
 
 # Format strings
@@ -123,3 +124,14 @@ def get_chars2remove() -> str:
     :return: chars
     """
     return "\\(|=|\\)|\\s"
+
+
+def get_generalized_powered_meth(x: float, n: int, math_meth: math.sin or math.cos) -> float:
+    """
+    Generalized way to get a function to the power of n.
+    :param x: input to the math function.
+    :param n: to the power of...
+    :param math_meth: mathematical method.
+    :return: y value
+    """
+    return math.pow(math_meth(x), n)

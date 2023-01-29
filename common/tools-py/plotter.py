@@ -123,11 +123,16 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
 
     # Method to use
     method2use = None
+    powered_num = None
 
     # Vector Y to return
     y = []
 
     # Now, try to guess what do we have
+    if "^" in function_rhs:  # TODO: Robustify code here
+        powered_num = int(str(function_rhs).split("^")[1])
+        function_rhs = function_rhs.split("^")[0]
+
     if function_rhs in recognized_fncts:
         for i, rec in enumerate(recognized_fncts):
             if function_rhs in rec:
@@ -139,8 +144,12 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
 
     # Only if got
     if method2use is not None:
-        for val in x:
-            y.append(method2use(val))
+        if powered_num is not None:
+            for val in x:
+                y.append(tools.get_generalized_powered_meth(val, powered_num, method2use))
+        else:
+            for val in x:
+                y.append(method2use(val))
 
     # XY dict
     xydict = {"x": x, "y": y}
