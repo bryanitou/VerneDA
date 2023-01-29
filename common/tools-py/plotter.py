@@ -199,11 +199,15 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
     # Safety check the given arguments
     if args is None:
         if verbose:
-            print("No arguments given!")
+            print("ERROR: No arguments given!")
         exit(-1)
     else:
         # Parse given arguments
         parsed_dict = tools.parse_arguments(args, verbose=verbose)
+
+        # Re-set verbosity
+        if "silent" in parsed_dict:
+            verbose = False if str(parsed_dict["silent"]).lower() == "true" else True
 
         # Now, we should get the information from the file
         taylor_dict = tools.get_dict_from_file(parsed_dict["file"], verbose=verbose)
