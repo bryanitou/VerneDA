@@ -39,6 +39,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::dump_variables(y, func_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, true);
+    tools::plot_variables(output_path, PYTHON_PLOTTER, 1,true);
 
 }

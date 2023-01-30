@@ -26,9 +26,10 @@ namespace tools {
      * Calls to python file, passes the output file and executes it.
      * @param path2file path to the output '.txt' file.
      * @param python_executable path to the python script.
+     * @param span read python file to understand this argument.
      * @param async asynchronous task.
      * @param silent silent task.
      */
-    void plot_variables(std::filesystem::path &path2file, const std::string &python_executable,
-                        bool async, bool silent = true);
+    void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
+                        bool async = false, bool silent = true);
 };

@@ -217,6 +217,8 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         # Re-set verbosity
         if "silent" in parsed_dict:
             verbose = False if str(parsed_dict["silent"]).lower() == "true" else True
+        if "span" in parsed_dict:
+            span = int(parsed_dict["span"])
 
         # Now, we should get the information from the file
         taylor_dict = tools.get_dict_from_file(parsed_dict["file"], verbose=verbose)
@@ -232,4 +234,4 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
 if __name__ == '__main__':
     # Call to main running function
-    main(args=sys.argv[1:], span=1, verbose=True)
+    main(args=sys.argv[1:], verbose=True)

@@ -28,7 +28,7 @@ void tools::dump_variables(DACE::DA &y, const std::string & func_form, const std
     file2write.close();
 }
 
-void tools::plot_variables(std::filesystem::path & path2file, const std::string& python_executable,
+void tools::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
                            bool async, bool silent)
 {
     // Ensure system() is available
@@ -43,6 +43,10 @@ void tools::plot_variables(std::filesystem::path & path2file, const std::string&
         cmd += "--file";
         cmd += " ";
         cmd += absolute(path2file);
+        cmd += " ";
+        cmd += "--span";
+        cmd += " ";
+        cmd += std::to_string(span);
         cmd += " ";
         cmd += "--silent";
         cmd += " ";

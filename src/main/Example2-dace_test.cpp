@@ -52,6 +52,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::dump_variables(y1_y2, func_form3, y1_y2_output_path);
 
     // Plot all this stuff
-    tools::plot_variables(y1_output_path, PYTHON_PLOTTER, true);
-    tools::plot_variables(y2_output_path, PYTHON_PLOTTER, true);
+    tools::plot_variables(y1_output_path, PYTHON_PLOTTER, 2,true);
+    tools::plot_variables(y2_output_path, PYTHON_PLOTTER, 2,true);
 }
