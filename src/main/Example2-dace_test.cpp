@@ -38,7 +38,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // Compute and print sin(x)^2+cos(x)^2
     auto y1_y2 = y1 + y2;
-    std::string func_form3 = "y = sin(x)^2 + cos^2(x)";
+    std::string func_form3 = "y = sin(x)^2 + cos(x)^2";
     std::cout << func_form3 << std::endl << y1_y2 << std::endl;
 
     // Output paths
