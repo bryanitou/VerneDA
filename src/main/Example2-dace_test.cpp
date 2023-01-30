@@ -54,4 +54,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // Plot all this stuff
     tools::plot_variables(y1_output_path, PYTHON_PLOTTER, 2,true);
     tools::plot_variables(y2_output_path, PYTHON_PLOTTER, 2,true);
+    tools::plot_variables(y1_y2_output_path, PYTHON_PLOTTER, 3,true);
 }
