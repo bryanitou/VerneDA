@@ -1,9 +1,10 @@
 # Import packages
 import os
-import re
 import sys
 import math
+import sympy
 import matplotlib.pyplot as plt
+
 
 # Self libraries
 import tools
@@ -20,6 +21,8 @@ def default_x_vector(span: int, addstop: bool = True, verbose: bool = False):
         x = default_x_vector_core(-5, 5, addstop=addstop, verbose=verbose)
     elif span == 3:
         x = default_x_vector_core(-1, 1, addstop=addstop, verbose=verbose)
+    elif span == 4:
+        x = default_x_vector_core(0.1, 5, addstop=addstop, verbose=verbose)
 
     # Safety check that something is about to be returned
     if x is None:
@@ -117,56 +120,17 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     # Now, try to guess which one is
     function_rhs = function_str.split("=")[1].strip()
 
-    # Recognized functions
-    recognized_fncts = ["sin(x)", "cos(x)", "exp(x)"]
-    recognized_meth = [math.sin, math.cos, math.exp]
+    # Convert our function into
+    x_sym = sympy.symbols("x")
+    expr = sympy.sympify(function_rhs)
+    f = sympy.lambdify(x_sym, expr)
 
-    # Method to use
-    func2use_str = []
-    method2use = []
-    powered_num = []
+    # Images
+    y = []
 
-    # Do you have a sum?
-    if "+" in function_rhs:
-        # Split components of the sum
-        func2use_str = [s.strip() for s in function_rhs.split("+")]
-
-        # For each sum component,
-        for i, comp_sum in enumerate(func2use_str):
-            if "^" in comp_sum:  # TODO: Robustify code here
-                powered_num.append(int(str(comp_sum).split("^")[1]))
-                func2use_str[i] = comp_sum.split("^")[0]
-            else:
-                func2use_str[i] = comp_sum
-    else:
-        if "^" in function_rhs:  # TODO: Robustify code here
-            powered_num.append(int(str(function_rhs).split("^")[1]))
-            func2use_str.append(function_rhs.split("^")[0])
-        else:
-            func2use_str.append(function_rhs)
-
-    # Now, try to guess what do we have
-    for func_str in func2use_str:
-        if func_str in recognized_fncts:
-            for i, rec in enumerate(recognized_fncts):
-                if func_str in rec:
-                    method2use.append(recognized_meth[i])
-        else:
-            if verbose:
-                print(f"Could not recognize the given function '{function_str}' !")
-                exit(-1)
-
-    # Vector Y to return
-    y = [0] * len(x)
-
-    # Iterate through the methods to use and, if powered
-    for j, method in enumerate(method2use):
-        if len(powered_num) > 0:
-            for i, val in enumerate(x):
-                y[i] += tools.get_generalized_powered_meth(val, powered_num[j], method)
-        else:
-            for i, val in enumerate(x):
-                y[i] += method(val)
+    # Compute
+    for val in x:
+        y.append(f(val))
 
     # XY dict
     xydict = {"x": x, "y": y}
@@ -242,7 +206,7 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
         # From the file, get the parent folder and save it
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
-        txt_filename = os.path.split(parsed_dict['file'])[1].replace('txt', 'png')  # TODO: Robustify this
+        txt_filename = os.path.split(parsed_dict['file'])[1].replace('txt', 'png')
         output_path = os.path.join(parent_folder, f"{txt_filename}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients

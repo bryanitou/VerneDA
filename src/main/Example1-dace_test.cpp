@@ -1,6 +1,7 @@
 /**
  * First c++ main to interact with the 3rdparty.
  */
+#pragma once
 
 // System libraries
 #include <iostream>

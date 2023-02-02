@@ -225,3 +225,28 @@ target_link_libraries(${EXECUTABLE_NAME}
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: EXAMPLE 3
+############################################
+set(EXECUTABLE_NAME "Example3-dace_test")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/Example3-dace_test.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
