@@ -16,11 +16,13 @@ namespace tools {
 
     /**
      * Dumps the images in a given file path
-     * @param y images.
+     * @param y DA images.
+     * @param x DA component.
      * @param func_form name of the function form (i.e. 'y = sin(x)').
+     * @param func_form variable form, point and derivative.
      * @param file_path file path.
      */
-    void dump_variables(DACE::DA &y, const std::string &func_form, const std::filesystem::path &file_path);
+    void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,const std::string &var_form, const std::filesystem::path &file_path);
 
     /**
      * Calls to python file, passes the output file and executes it.

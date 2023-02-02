@@ -5,7 +5,7 @@
 #include "tools.h"
 
 
-void tools::dump_variables(DACE::DA &y, const std::string & func_form, const std::filesystem::path & file_path)
+void tools::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -22,6 +22,7 @@ void tools::dump_variables(DACE::DA &y, const std::string & func_form, const std
     file2write.open(file_path);
 
     // Easy print
+    file2write << var_form<< std::endl << x << std::endl;
     file2write << func_form << std::endl << y;
 
     // Close the stream
