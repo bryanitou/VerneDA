@@ -10,7 +10,7 @@ project(getting2knowDace)
 cmake_minimum_required(VERSION 3.21)
 
 # CXX Standard to be used by the compiler
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 ############################################
 # GENERAL INFORMATION
@@ -76,20 +76,25 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib/")
 # Define var to store all user flags
 set(UCFLAGS " ")
 
+# Some user defined variables TODO: Set this outside here
+set(PYTHON_PLOTTER_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/plotter.py")
+
 # Application version information
 # This is automatic; do not touch anything
-string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
+# TODO: No version for the while
+# string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
 string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_HASH=\"\\\"$(shell git log -1 --pretty=format:\"%H\")\\\"\"")
 string(APPEND UCFLAGS " -D USER_NAME=\"\\\"$(USER)\\\"\"")
+string(APPEND UCFLAGS " -D PYTHON_PLOTTER=\"\\\"${PYTHON_PLOTTER_PATH}\\\"\"")
 
 # Force re-compilation of STATIC_FLAGS.h
 # This phony target will always re-compile STATIC_FLAGS.h, thus always updating the compilation flag's values
-add_custom_target(RECOMPILE_STATIC_FLAGS touch ${CMAKE_SOURCE_DIR}/src/core/STATIC_FLAGS.h)
+# add_custom_target(RECOMPILE_STATIC_FLAGS touch ${CMAKE_SOURCE_DIR}/src/core/STATIC_FLAGS.h)
 
 # Note for cmake developers: add this phony dependency to all main programs and subroutines that use static flags.
-# Ex: add_dependencies(getting2knowDace_hachitables_c3po RECOMPILE_STATIC_FLAGS)
+# Ex: add_dependencies(getting2knowDace_some_executable RECOMPILE_STATIC_FLAGS)
 
 ############################################
 # BUILD EXTERNAL PROJECTS
@@ -170,9 +175,9 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
-############################################
+########################################################################################################################
 # EXECUTABLES: DACE mains
-############################################
+########################################################################################################################
 ############################################
 # EXECUTABLES: EXAMPLE 1
 ############################################
@@ -182,14 +187,20 @@ add_executable(${EXECUTABLE_NAME}
         src/main/Example1-dace_test.cpp
         )
 
-add_dependencies(${EXECUTABLE_NAME}
-        RECOMPILE_STATIC_FLAGS
-        )
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
         core
         dacelib
         )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
 # EXECUTABLES: EXAMPLE 2
@@ -200,11 +211,17 @@ add_executable(${EXECUTABLE_NAME}
         src/main/Example2-dace_test.cpp
         )
 
-add_dependencies(${EXECUTABLE_NAME}
-        RECOMPILE_STATIC_FLAGS
-        )
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
         core
         dacelib
         )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs

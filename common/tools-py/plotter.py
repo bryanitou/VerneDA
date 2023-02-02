@@ -122,25 +122,51 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     recognized_meth = [math.sin, math.cos, math.exp]
 
     # Method to use
-    method2use = None
+    func2use_str = []
+    method2use = []
+    powered_num = []
 
-    # Vector Y to return
-    y = []
+    # Do you have a sum?
+    if "+" in function_rhs:
+        # Split components of the sum
+        func2use_str = [s.strip() for s in function_rhs.split("+")]
+
+        # For each sum component,
+        for i, comp_sum in enumerate(func2use_str):
+            if "^" in comp_sum:  # TODO: Robustify code here
+                powered_num.append(int(str(comp_sum).split("^")[1]))
+                func2use_str[i] = comp_sum.split("^")[0]
+            else:
+                func2use_str[i] = comp_sum
+    else:
+        if "^" in function_rhs:  # TODO: Robustify code here
+            powered_num.append(int(str(function_rhs).split("^")[1]))
+            func2use_str.append(function_rhs.split("^")[0])
+        else:
+            func2use_str.append(function_rhs)
 
     # Now, try to guess what do we have
-    if function_rhs in recognized_fncts:
-        for i, rec in enumerate(recognized_fncts):
-            if function_rhs in rec:
-                method2use = recognized_meth[i]
-    else:
-        if verbose:
-            print(f"Could not recognize the given function '{function_str}' !")
-            exit(-1)
+    for func_str in func2use_str:
+        if func_str in recognized_fncts:
+            for i, rec in enumerate(recognized_fncts):
+                if func_str in rec:
+                    method2use.append(recognized_meth[i])
+        else:
+            if verbose:
+                print(f"Could not recognize the given function '{function_str}' !")
+                exit(-1)
 
-    # Only if got
-    if method2use is not None:
-        for val in x:
-            y.append(method2use(val))
+    # Vector Y to return
+    y = [0] * len(x)
+
+    # Iterate through the methods to use and, if powered
+    for j, method in enumerate(method2use):
+        if len(powered_num) > 0:
+            for i, val in enumerate(x):
+                y[i] += tools.get_generalized_powered_meth(val, powered_num[j], method)
+        else:
+            for i, val in enumerate(x):
+                y[i] += method(val)
 
     # XY dict
     xydict = {"x": x, "y": y}
@@ -199,11 +225,17 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
     # Safety check the given arguments
     if args is None:
         if verbose:
-            print("No arguments given!")
+            print("ERROR: No arguments given!")
         exit(-1)
     else:
         # Parse given arguments
         parsed_dict = tools.parse_arguments(args, verbose=verbose)
+
+        # Re-set verbosity
+        if "silent" in parsed_dict:
+            verbose = False if str(parsed_dict["silent"]).lower() == "true" else True
+        if "span" in parsed_dict:
+            span = int(parsed_dict["span"])
 
         # Now, we should get the information from the file
         taylor_dict = tools.get_dict_from_file(parsed_dict["file"], verbose=verbose)
@@ -219,4 +251,4 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
 if __name__ == '__main__':
     # Call to main running function
-    main(args=sys.argv[1:], span=1, verbose=True)
+    main(args=sys.argv[1:], verbose=True)

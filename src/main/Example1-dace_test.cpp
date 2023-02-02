@@ -3,10 +3,7 @@
  */
 
 // System libraries
-#include <cmath>
 #include <iostream>
-#include <fstream>
-#include <iomanip>
 
 // DACE library
 #include <dace/dace.h>
@@ -17,7 +14,7 @@
 /**
  * Main entry point
  */
-int main(int argc, char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Initialize DACE for 20th-order computations in 1 variable
     DACE::DA::init( 20, 1 );
@@ -28,10 +25,20 @@ int main(int argc, char* argv[])
     // Compute y = sin(x)
     DACE::DA y = DACE::sin(x);
 
+    // Analytical form
+    std::string func_form = "y = sin(x)";
+
     // Print x and y to screen
     std::cout << "x" << std::endl << x << std::endl;
-    std::cout << "y = sin(x)" << std::endl << y;
+    std::cout << func_form << std::endl << y;
+
+    // Some pre-set paths
+    std::filesystem::path output_path = "./out/Example1-dace_test2.txt";
 
     // Dump variables
-    tools::dump_variables(y, "./out/Example1-dace_test.txt");
+    tools::dump_variables(y, func_form, output_path);
+
+    // Make plot
+    tools::plot_variables(output_path, PYTHON_PLOTTER, 1,true);
+
 }
