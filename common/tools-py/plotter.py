@@ -1,16 +1,14 @@
 # Import packages
 import os
 import sys
-import math
 import sympy
 import matplotlib.pyplot as plt
-
 
 # Self libraries
 import tools
 
-def get_variable_middle_point(taylor: dict) -> int or float:
 
+def get_variable_middle_point(taylor: dict) -> int or float:
     # Local variables
     result = None
 
@@ -33,7 +31,7 @@ def get_variable_middle_point(taylor: dict) -> int or float:
 
 def default_x_vector(span: int, middlepoint: int or float, addstop: bool = True, verbose: bool = False):
     # Final displaced span
-    centered_span = [middlepoint - span/2, middlepoint + span/2]
+    centered_span = [middlepoint - span / 2, middlepoint + span / 2]
 
     # Vector of x
     x = default_x_vector_core(*centered_span, addstop=addstop, verbose=verbose)
@@ -43,7 +41,7 @@ def default_x_vector(span: int, middlepoint: int or float, addstop: bool = True,
 
 def default_x_vector_core(x_lower: float, x_upper: float, addstop: bool = True, verbose: bool = False) -> list:
     # Set step size
-    step = 0.1
+    step = 0.01
 
     # Safety check validity
     if x_upper <= x_lower:

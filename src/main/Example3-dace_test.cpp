@@ -18,7 +18,7 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Initialize DACE for 1st-order computations in 1 variable
-    DACE::DA::init( 1, 1 );
+    DACE::DA::init(20, 1 );
 
     // Initialize x as DA around 3
     DACE::DA x1 = 3 + DACE::DA(1);
@@ -43,5 +43,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::dump_variables(f, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
+    tools::plot_variables(output_path, PYTHON_PLOTTER, 10,true);
 }

@@ -18,29 +18,36 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Initialize DACE for 20th-order computations in 1 variable
-    DACE::DA::init( 20, 1 );
+    // TOASK: I don't clearly understand the ORDER value hereafter
+    DACE::DA::init(20, 1);
 
     // Initialize x as DA
-    DACE::DA x = DACE::DA(1);
-
-    // Compute y = sin(x)
-    DACE::DA y = DACE::sin(x);
-
-    // Analytical form
-    std::string func_form = "y = sin(x)";
+    DACE::DA x = DACE::sqr(DACE::DA(1));
+    //x = x*x;
     std::string var_form = "x";
 
-    // Print x and y to screen
-    std::cout << var_form << std::endl << x << std::endl;
-    std::cout << func_form << std::endl << y;
+    // Compute [cos(x)-1]
+    DACE::DA y = cos(x)-1;
+    std::string func_form = "f(x) = [cos(x)-1]";
+
+    std::cout << func_form << std::endl << y << std::endl;
 
     // Some pre-set paths
-    std::filesystem::path output_path = "./out/Example1-dace_test.txt";
+    std::filesystem::path output_path = "./out/Example4-dace_test.txt";
 
     // Dump variables
     tools::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
     tools::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
+
+    // Compute [cos(x)-1]^11
+    for ( int i = 0; i < 10; i++)
+    {
+        y = y*(cos(x)-1);
+        std::cout << "f(x) = [cos(x)-1]^" + std::to_string(i+2) << std::endl << y << std::endl;
+    }
+
+
 
 }
