@@ -43,5 +43,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::dump_variables(f, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 4,true);
+    tools::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
 }

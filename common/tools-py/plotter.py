@@ -9,29 +9,34 @@ import matplotlib.pyplot as plt
 # Self libraries
 import tools
 
+def get_variable_middle_point(taylor: dict) -> int or float:
 
-def default_x_vector(span: int, addstop: bool = True, verbose: bool = False):
-    # Vectors to return
-    x = None
+    # Local variables
+    result = None
 
-    # Here a switch case will be
-    if span == 1:
-        x = default_x_vector_core(-10, 10, addstop=addstop, verbose=verbose)
-    elif span == 2:
-        x = default_x_vector_core(-5, 5, addstop=addstop, verbose=verbose)
-    elif span == 3:
-        x = default_x_vector_core(-1, 1, addstop=addstop, verbose=verbose)
-    elif span == 4:
-        x = default_x_vector_core(0.1, 5, addstop=addstop, verbose=verbose)
+    # Search for order 0 coef
+    for i, order_str in enumerate(taylor["variable"]["param"]["ORDER"]):
+        # Convert to integer
+        order_fl = int(order_str)
 
-    # Safety check that something is about to be returned
-    if x is None:
-        if verbose:
-            print(f"Could not find which '{span}' default vector to return! "
-                  f"Revise call to function 'default_x_vector'")
+        # Means it is the center
+        if order_fl == 0:
+            result = taylor["variable"]["param"]["COEFFICIENT"][i]
+            result = float(result)
 
-        # Exit code
-        exit(-1)
+    # If nothing found, the function is centered in the center: x0 = 0
+    if result is None:
+        result = 0
+
+    return result
+
+
+def default_x_vector(span: int, middlepoint: int or float, addstop: bool = True, verbose: bool = False):
+    # Final displaced span
+    centered_span = [middlepoint - span/2, middlepoint + span/2]
+
+    # Vector of x
+    x = default_x_vector_core(*centered_span, addstop=addstop, verbose=verbose)
 
     return x
 
@@ -77,7 +82,7 @@ def get_images_from_taylor(taylor: dict, span: int, x: list = None, verbose: boo
             print(f"You have not passed an x vector!, A default one will be generated.")
 
         # Get the default vector
-        x = default_x_vector(span=span, verbose=verbose)
+        x = default_x_vector(span=span, middlepoint=get_variable_middle_point(taylor), verbose=verbose)
 
     # Y values will be saved here
     y = []
@@ -88,12 +93,15 @@ def get_images_from_taylor(taylor: dict, span: int, x: list = None, verbose: boo
         yval = 0
 
         # Get the coefficients and the orders
-        coeffs = taylor["COEFFICIENT"]
-        orders = taylor["ORDER"]
+        coeffs = taylor["function"]["param"]["COEFFICIENT"]
+        orders = taylor["function"]["param"]["ORDER"]
+
+        # Displacement
+        x_0 = get_variable_middle_point(taylor)
 
         # Compute
         for i, coef in enumerate(coeffs):
-            yval += coef * pow(xval, orders[i])
+            yval += coef * pow(xval - x_0, orders[i])
 
         # Now, should append this new value
         y.append(yval)
@@ -115,7 +123,7 @@ def get_original(taylor: dict, x: list, verbose: bool = False) -> dict:
     """
 
     # Extract the name of the function, which usually is like 'y = sin(x)'
-    function_str = taylor["function"]
+    function_str = taylor["function"]["name"]
 
     # Now, try to guess which one is
     function_rhs = function_str.split("=")[1].strip()
@@ -166,7 +174,7 @@ def plot_taylor(taylor: dict, span: int, output_path: os.PathLike or str, verbos
     plt.plot(xytaylor["x"], xytaylor["y"])
 
     # Write legend
-    plt.legend([f"{taylor['function']}", "Taylor expansion"])
+    plt.legend([f"{taylor['function']['name']}", "Taylor expansion"])
 
     # Plt show grid
     plt.grid()

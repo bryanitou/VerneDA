@@ -25,6 +25,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // Compute sin(x)^2
     DACE::DA y1 = DACE::sqr(DACE::sin(x));
     std::string func_form1 = "y = sin(x)^2";
+    std::string var_form = "x";
 
     // Info
     std::cout << func_form1 << std::endl << y1 << std::endl;
@@ -47,12 +48,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path y1_y2_output_path = "./out/Example2-dace_test_sin2cos2.txt";
 
     // Print all this stuff
-    tools::dump_variables(y1, func_form1, y1_output_path);
-    tools::dump_variables(y2, func_form2, y2_output_path);
-    tools::dump_variables(y1_y2, func_form3, y1_y2_output_path);
+    tools::dump_variables(y1, x, func_form1, var_form, y1_output_path);
+    tools::dump_variables(y2, x, func_form2, var_form, y2_output_path);
+    tools::dump_variables(y1_y2, x, func_form3, var_form, y1_y2_output_path);
 
     // Plot all this stuff
-    tools::plot_variables(y1_output_path, PYTHON_PLOTTER, 2,true);
-    tools::plot_variables(y2_output_path, PYTHON_PLOTTER, 2,true);
-    tools::plot_variables(y1_y2_output_path, PYTHON_PLOTTER, 3,true);
+    tools::plot_variables(y1_output_path, PYTHON_PLOTTER, 10,true);
+    tools::plot_variables(y2_output_path, PYTHON_PLOTTER, 10,true);
+    tools::plot_variables(y1_y2_output_path, PYTHON_PLOTTER, 2,true);
 }

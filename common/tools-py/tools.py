@@ -50,15 +50,21 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
     """
     # Auxiliary variables
     headers = None
+    elem_set = 0
 
     # Set dictionary to return
     filedict = {}
 
     # Name function
     name_function = "function"
+    name_variable = "variable"
 
     # Function
-    filedict["function"] = ""
+    filedict[name_function] = {"name": None, "param": {}}
+    filedict[name_variable] = {"name": None, "param": {}}
+
+    # Separator
+    separator = False
 
     # Iterate through each line
     with open(filepath, "r") as f:
@@ -70,10 +76,17 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
             # Clean strings such as the next line '\n'
             line = line.replace("\n", "")
 
+            # If there's nothing, jump next line
+            if len(line) == 0:
+                # Nothing to parse
+                continue
+
             # First line is the DA function
-            if i == 0:
-                filedict[name_function] = line.strip()
-            elif i == 1:
+            if (i == 0 or separator) and elem_set < 2:
+                filedict[name_function if separator else name_variable]["name"] = line.strip()
+                elem_set += 1
+            # TODO: This is a total nyapa, please change this
+            elif "I  COEFFICIENT              ORDER EXPONENTS" in line:
                 # Should separate each line by space
                 # 2nd line are the headers: I COEFFICIENT ORDER EXPONENT
                 headers = [h.strip() for h in line.split()]
@@ -81,7 +94,7 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
                 # Now, should name these headers into our dictionary
                 for header in headers:
                     if header not in filedict:
-                        filedict[header] = []
+                        filedict[name_function if separator else name_variable]["param"][header] = []
 
             else:
                 # Check that the headers have been filled up
@@ -92,7 +105,8 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
                 else:
                     # Safety check that this is not the last line
                     if line == end_of_variable:
-                        break
+                        separator = True
+                        continue
 
                     # Collect all the coefficients
                     rows = line.split()
@@ -113,7 +127,7 @@ def get_dict_from_file(filepath: os.PathLike or str, verbose: bool = False) -> d
                                 exit(-1)
 
                         # Append back in their place
-                        filedict[header].append(coef)
+                        filedict[name_function if separator else name_variable]["param"][header].append(coef)
 
     return filedict
 

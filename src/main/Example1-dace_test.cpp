@@ -28,18 +28,19 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // Analytical form
     std::string func_form = "y = sin(x)";
+    std::string var_form = "x";
 
     // Print x and y to screen
-    std::cout << "x" << std::endl << x << std::endl;
+    std::cout << var_form << std::endl << x << std::endl;
     std::cout << func_form << std::endl << y;
 
     // Some pre-set paths
     std::filesystem::path output_path = "./out/Example1-dace_test2.txt";
 
     // Dump variables
-    tools::dump_variables(y, func_form, output_path);
+    tools::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 1,true);
+    tools::plot_variables(output_path, PYTHON_PLOTTER, 20,true);
 
 }
