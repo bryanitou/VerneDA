@@ -7,7 +7,7 @@
 #include <iostream>
 
 // DACE library
-#include <dace/dace.h>
+#include "dace/dace.h"
 
 // Project libraries
 #include "tools.h"

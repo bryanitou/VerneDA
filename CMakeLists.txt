@@ -184,7 +184,7 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
 set(EXECUTABLE_NAME "Example1-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example1-dace_test.cpp
+        src/main/tutorials/Example1-dace_test.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
@@ -208,7 +208,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 set(EXECUTABLE_NAME "Example2-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example2-dace_test.cpp
+        src/main/tutorials/Example2-dace_test.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
@@ -233,7 +233,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 set(EXECUTABLE_NAME "Example3-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example3-dace_test.cpp
+        src/main/tutorials/Example3-dace_test.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
@@ -258,7 +258,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 set(EXECUTABLE_NAME "Example4-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example4-dace_test.cpp
+        src/main/tutorials/Example4-dace_test.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
