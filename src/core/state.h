@@ -12,6 +12,9 @@
 # include "enums.h"
 # include "enums_conversion.h"
 
+// DACE libraries
+#include "dace/dace.h"
+
 class state{
 
 public: // Constructor
@@ -21,16 +24,29 @@ public: // Constructor
 
 private:
     // Initialize values without any location in memory... so we can track them
-    std::shared_ptr<double> px_ = nullptr;
-    std::shared_ptr<double> py_ = nullptr;
-    std::shared_ptr<double> pz_ = nullptr;
-    std::shared_ptr<double> vx_ = nullptr;
-    std::shared_ptr<double> vy_ = nullptr;
-    std::shared_ptr<double> vz_ = nullptr;
+    std::shared_ptr<DACE::DA> px_ = nullptr;
+    std::shared_ptr<DACE::DA> py_ = nullptr;
+    std::shared_ptr<DACE::DA> pz_ = nullptr;
+    std::shared_ptr<DACE::DA> vx_ = nullptr;
+    std::shared_ptr<DACE::DA> vy_ = nullptr;
+    std::shared_ptr<DACE::DA> vz_ = nullptr;
 
-private:
+public:
     // Allocators
+    /**
+     * Main allocator of position and velocity
+     * @param px [double]
+     * @param py [double]
+     * @param pz [double]
+     * @param vx [double]
+     * @param vy [double]
+     * @param vz [double]
+     */
     void allocate_state_values(double px, double py, double pz, double vx, double vy, double vz);
+
+public:
+    // Getters
+    DACE::AlgebraicVector<DACE::DA> get_state_vector();
 
 private:
     // Access values
@@ -39,17 +55,17 @@ private:
      * @param position
      * @return double
      */
-    double get_parameter_copy(POSITION position);
+    DACE::DA get_parameter_copy(POSITION position);
 
     /**
      * Get copy of the parameter chosen: velocity.
      * @param velocity
      * @return double
      */
-    double get_parameter_copy(VELOCITY velocity);
+    DACE::DA get_parameter_copy(VELOCITY velocity);
 
 
 private:
     // Memory checks and errors
-    static void check_mem_place(double* val_ptr);
+    static void check_mem_place(DACE::DA* val_ptr);
 };
