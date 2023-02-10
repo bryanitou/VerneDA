@@ -39,11 +39,11 @@ int main(int argc, char* argv[])
     double const tf = M_PI*sqrt(a*a*a/mu);
 
     // Initialize integrator
-    auto my_integrator = std::make_unique<integrator>(INTEGRATOR::EULER);
+    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::EULER);
 
     // Define problem to solve
-    auto my_problem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
+    auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
 
     // Apply integrator
-    auto xf_DA = my_integrator->euler(s0_DA, my_problem, t0, tf);
+    auto xf_DA = eulerIntegrator->euler(s0_DA, twoBodyProblem, t0, tf);
 }
