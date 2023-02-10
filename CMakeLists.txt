@@ -163,12 +163,13 @@ set_target_properties(${LIBRARY_DACE} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
+        src/core/base/enums.h
+        src/core/base/constants.h
         src/core/tools.cpp
         src/core/state.cpp
-        src/core/enums.h
         src/core/enums_conversion.cpp
-        src/core/tbp.cpp
-        src/core/integrator.cpp)
+        src/core/integrator.cpp
+        src/core/problems.cpp)
 
 add_dependencies(core
         dace)

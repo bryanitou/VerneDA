@@ -12,7 +12,7 @@ integrator::integrator(INTEGRATOR integrator)
 
 
 template<typename T>
-DACE::AlgebraicVector<T> integrator::euler(DACE::AlgebraicVector<T> x, double t0, double t1)
+DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1)
 {
     const double hmax = 0.1;
     int steps = ceil((t1-t0)/hmax);
@@ -20,7 +20,7 @@ DACE::AlgebraicVector<T> integrator::euler(DACE::AlgebraicVector<T> x, double t0
     double t = t0;
     for( int i = 0; i < steps; i++ )
     {
-        x = x + h*TBP(x,t);
+        x = x + h * TBP(x,t);
         t += h;
     }
     return x;

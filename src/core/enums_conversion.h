@@ -7,7 +7,7 @@
 #include <string>
 
 // Project libraries
-#include "enums.h"
+#include "base/enums.h"
 
 namespace enums_conversion
 {

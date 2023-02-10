@@ -2,11 +2,6 @@
  * DACE_VSOD (VERY SIMPLE ORBIT DETERMINATION): aims to solve a problem where the initial state is known and we want to
  * compute the future state of the spacecraft after a given time using DACE with conjunction of RK4.
  */
-#pragma once
-
-// System libraries
-#include <string>
-
 // DACE libraries
 #include "dace/dace.h"
 
@@ -45,5 +40,5 @@ int main(int argc, char* argv[])
     auto my_integrator = std::make_unique<integrator>(INTEGRATOR::EULER);
 
     // Apply integrator
-    auto xf_DA = my_integrator->euler(s0_DA, 0.0, tf);
+    auto xf_DA = my_integrator->euler(s0_DA, t0, tf);
 }

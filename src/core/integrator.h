@@ -5,7 +5,7 @@
 # pragma once
 
 // Project libraries
-#include "enums.h"
+#include "base/enums.h"
 
 // DACE libraries
 #include "dace/dace.h"
@@ -29,5 +29,5 @@ private:
 
 public:
     template<typename T>
-    DACE::AlgebraicVector<T> euler(DACE::AlgebraicVector<T> x, double t0, double t1);
+    DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x, std:: double t0, double t1);
 };
