@@ -165,7 +165,8 @@ set(LIBRARY_CORE "core")
 add_library(${LIBRARY_CORE} SHARED
         src/core/tools.cpp
         src/core/state.cpp
-        src/core/enums.h)
+        src/core/enums.h
+        src/core/enums_conversion.cpp)
 
 add_dependencies(core
         dace)

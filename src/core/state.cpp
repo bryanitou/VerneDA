@@ -34,11 +34,8 @@ double state::get_parameter_copy(POSITION position)
             break;
     }
 
-    // Safety check
-    if(val_ptr != nullptr)
-    {
-        // End program here
-    }
+    // Check memory place
+    state::check_mem_place(val_ptr.get());
 
     // Make a copy and exit
     return *val_ptr;
@@ -46,5 +43,37 @@ double state::get_parameter_copy(POSITION position)
 
 double state::get_parameter_copy(VELOCITY velocity)
 {
+    // Go to memory place
+    std::shared_ptr<double> val_ptr;
 
+    // Switch case
+    switch (velocity)
+    {
+        case VELOCITY::X:
+            val_ptr = this->px_;
+            break;
+        case VELOCITY::Y:
+            val_ptr = this->py_;
+            break;
+        case VELOCITY::Z:
+            val_ptr = this->pz_;
+            break;
+    }
+
+    // Check memory place
+    state::check_mem_place(val_ptr.get());
+
+    // Make a copy and exit
+    return *val_ptr;
+
+}
+
+void state::check_mem_place(double* val_ptr)
+{
+    // Safety check
+    if(val_ptr != nullptr)
+    {
+        // End program here
+        std::printf("ERROR: state::get_parameter_copy: value to be returned not found! (%p)", (void*)val_ptr);
+    }
 }

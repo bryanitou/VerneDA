@@ -9,7 +9,8 @@
 # include "memory"
 
 // Project libraries
-#include "enums.h"
+# include "enums.h"
+# include "enums_conversion.h"
 
 class state{
 
@@ -33,8 +34,22 @@ private:
 
 private:
     // Access values
+    /**
+     * Get copy of the parameter chosen: position:
+     * @param position
+     * @return double
+     */
     double get_parameter_copy(POSITION position);
+
+    /**
+     * Get copy of the parameter chosen: velocity.
+     * @param velocity
+     * @return double
+     */
     double get_parameter_copy(VELOCITY velocity);
 
 
+private:
+    // Memory checks and errors
+    static void check_mem_place(double* val_ptr);
 };
