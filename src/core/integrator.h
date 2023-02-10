@@ -4,6 +4,9 @@
 
 # pragma once
 
+// System libraries
+#include <memory>
+
 // Project libraries
 #include "base/enums.h"
 
@@ -28,6 +31,7 @@ private:
     INTEGRATOR type;
 
 public:
-    template<typename T>
-    DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x, std:: double t0, double t1);
+    static DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x,
+                                          DACE::AlgebraicVector<DACE::DA> (*formula)(DACE::AlgebraicVector<DACE::DA>, double),
+                                          double t0, double t1);
 };

@@ -8,6 +8,8 @@
 // Project libraries
 #include "state.h"
 #include "integrator.h"
+#include "base/constants.h"
+#include "problems.h"
 
 /**
  * Main entry point
@@ -22,8 +24,8 @@ int main(int argc, char* argv[])
 
     // Define some constants
     double const ecc = 0.5;
-    double const a = 6678.0; // 300 Km of altitude
-    double const mu = 398600; // km^3 / s^2
+    double const a = 6678.0E3; // 300 Km of altitude
+    double const mu = constants::earth::mu; // km^3 / s^2
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
     // Initialize class
@@ -39,6 +41,9 @@ int main(int argc, char* argv[])
     // Initialize integrator
     auto my_integrator = std::make_unique<integrator>(INTEGRATOR::EULER);
 
+    // Define problem to solve
+    auto my_problem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
+
     // Apply integrator
-    auto xf_DA = my_integrator->euler(s0_DA, t0, tf);
+    auto xf_DA = my_integrator->euler(s0_DA, my_problem, t0, tf);
 }

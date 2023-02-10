@@ -11,17 +11,28 @@ integrator::integrator(INTEGRATOR integrator)
 }
 
 
-template<typename T>
-DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1)
+DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA> x,
+                                                  DACE::AlgebraicVector<DACE::DA> (*formula)(DACE::AlgebraicVector<DACE::DA>, double),
+                                                  double t0, double t1)
 {
+    // Step max
     const double hmax = 0.1;
+
+    // Num of steps
     int steps = ceil((t1-t0)/hmax);
+
+    // Height? TODO: Investigate what was this
     double h = (t1-t0)/steps;
+
+    // Current time
     double t = t0;
+
+    // Iterate
     for( int i = 0; i < steps; i++ )
     {
-        x = x + h * TBP(x,t);
+        x = x + h * (formula(x, t));
         t += h;
     }
+
     return x;
 }

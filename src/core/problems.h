@@ -8,7 +8,6 @@
 
 namespace problems
 {
-    template<typename T> DACE::AlgebraicVector<DACE::DA>
-            TwoBodyProblem( DACE::AlgebraicVector<T> x, double t );
+    DACE::AlgebraicVector<DACE::DA> TwoBodyProblem( DACE::AlgebraicVector<DACE::DA> x, double t );
 
 };
