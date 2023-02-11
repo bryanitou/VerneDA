@@ -4,7 +4,50 @@
 
 #include "scv.h"
 
-void scv::allocate_state_values(double px, double py, double pz, double vx, double vy, double vz)
+scv::scv(double px, double py, double pz, double vx, double vy, double vz)
+{
+    // Call to main allocator
+    this->allocate_scv_values(px, py, pz, vx, vy, vz);
+}
+
+scv::scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA)
+{
+    // Call to main allocator
+    this->allocate_csv_DA_vector(csv_DA);
+}
+
+void scv::allocate_csv_DA_vector(const DACE::AlgebraicVector<DACE::DA>& csv_DA)
+{
+    // Safety check it has at least 6 positions
+    bool greater_size = 6 < csv_DA.size();
+    bool right_size = 6 == csv_DA.size();
+
+    // Safety check
+    if (!greater_size && !right_size)
+    {
+        // EXIT the program for safety reasons
+        std::printf("FATAL: When allocating from a DA vector, length = 6 was expected. "
+                    "Actual size: '%i'. Vector should be at least of length = 6.", (int)csv_DA.size());
+    }
+
+    // Safety check
+    if (greater_size)
+    {
+        // WARN the user that the rest will be lost,
+        std::printf("WARNING: When allocating from a DA vector, length = 6 was expected. "
+                    "Actual size: '%i'. Positions > 5 will be lost.", (int)csv_DA.size());
+    }
+
+    // Allocate variables
+    this->px_ = std::make_shared<DACE::DA>(csv_DA[0]);
+    this->py_ = std::make_shared<DACE::DA>(csv_DA[1]);
+    this->pz_ = std::make_shared<DACE::DA>(csv_DA[2]);
+    this->vx_ = std::make_shared<DACE::DA>(csv_DA[3]);
+    this->vy_ = std::make_shared<DACE::DA>(csv_DA[4]);
+    this->vz_ = std::make_shared<DACE::DA>(csv_DA[5]);
+}
+
+void scv::allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz)
 {
     // Allocate values
     this->px_ = std::make_shared<DACE::DA>(px + DACE::DA(1));

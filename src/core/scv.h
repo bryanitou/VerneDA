@@ -18,8 +18,8 @@
 class scv{
 
 public: // Constructor
-    scv() = default;
-
+    explicit scv(double px, double py, double pz, double vx, double vy, double vz);
+    explicit scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA);
     ~scv() = default;
 
 private:
@@ -31,7 +31,7 @@ private:
     std::shared_ptr<DACE::DA> vy_ = nullptr;
     std::shared_ptr<DACE::DA> vz_ = nullptr;
 
-public:
+private:
     // Allocators
     /**
      * Main allocator of position and velocity
@@ -42,7 +42,13 @@ public:
      * @param vy [double]
      * @param vz [double]
      */
-    void allocate_state_values(double px, double py, double pz, double vx, double vy, double vz);
+    void allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz);
+
+    /**
+     * Main allocator for already built DA vector
+     * @param csv_DA [DACE::AlgebraicVector<DACE::DA>]
+     */
+    void allocate_csv_DA_vector(const DACE::AlgebraicVector<DACE::DA> &csv_DA);
 
 public:
     // Getters
