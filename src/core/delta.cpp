@@ -94,7 +94,7 @@ void delta::generate_gaussian_deltas(int n, POSITION pos)
 void delta::evaluate_deltas(POSITION pos)
 {
     // Evaluate each delta
-    for (auto & scv_delta : *scv_deltas)
+    for (const auto& scv_delta : *scv_deltas)
     {
         // Evaluate
         this->poly_->eval(scv_delta->get_state_vector());
