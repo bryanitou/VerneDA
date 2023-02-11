@@ -16,14 +16,14 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
     this->scv_base_ = std::make_shared<scv>(scv_base);
 
     // Allocate polynomial to evaluate
-    this->poly_ = std::make_shared<DACE::AlgebraicVector<DACE::DA>>(taylor_polinomial);
+    this->base_poly_ = std::make_shared<DACE::AlgebraicVector<DACE::DA>>(taylor_polinomial);
 
 }
 
 void delta::compute_deltas(DISTRIBUTION distribution, int n, POSITION pos)
 {
     // Safety check that the deltas are still not generated
-    if (this->scv_deltas != nullptr)
+    if (this->scv_deltas_ != nullptr)
     {
         // WARNING: deltas are gonna be replaced
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
@@ -46,7 +46,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, POSITION pos)
     }
 
     // Once done, evaluate deltas with the polynomial which is already saved in memory
-    this->evaluate_deltas(pos);
+    this->evaluate_deltas();
 
     // TODO: Show info message
 }
@@ -86,17 +86,24 @@ void delta::generate_gaussian_deltas(int n, POSITION pos)
     }
 
     // Make shared and save
-    this->scv_deltas = std::make_shared<std::vector<std::shared_ptr<scv>>>(deltas);
+    this->scv_deltas_ = std::make_shared<std::vector<std::shared_ptr<scv>>>(deltas);
 
     // TODO: Info message
 }
 
-void delta::evaluate_deltas(POSITION pos)
+void delta::evaluate_deltas()
 {
+    // Local auxiliary variables
+    std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
+    taylor_list.reserve(this->scv_deltas_->size());
+
     // Evaluate each delta
-    for (const auto& scv_delta : *scv_deltas)
+    for (const auto& scv_delta : *scv_deltas_)
     {
-        // Evaluate
-        this->poly_->eval(scv_delta->get_state_vector());
+        // Evaluate and save
+        taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector()));
     }
+
+    // Make it ptr
+    this->deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
 }

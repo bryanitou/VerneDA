@@ -11,6 +11,7 @@
 #include "base/constants.h"
 #include "problems.h"
 #include "delta.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -56,8 +57,6 @@ int main(int argc, char* argv[])
     deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 100);
 
     // Dump final info
-    for (auto & xf_ : xf_DA)
-    {
-        std::cout << xf_ << std::endl;
-    }
+    tools::io::dump_algebraic_vector(xf_DA, "./out/tbp/taylor_expression.te");
+    tools::io::dump_deltas(deltas_engine.get(), "./out/tbp/deltas_expression.csv");
 }

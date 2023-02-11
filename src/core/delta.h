@@ -5,6 +5,7 @@
 
 // Project libraries
 #include "scv.h"
+#include "tools/ep.h"
 
 // System libraries
 #include <random>
@@ -27,15 +28,21 @@ public:
 public:
     void compute_deltas(DISTRIBUTION type, int n, POSITION pos = POSITION::X);
 
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> get_deltas_poly()
+    {
+        return deltas_poly_;
+    };
+
 private:
     // Attributes
     std::shared_ptr<scv> scv_base_ = nullptr;
+    // Polynomial to evaluate
+    std::shared_ptr<DACE::AlgebraicVector<DACE::DA>> base_poly_ = nullptr;
 
     // List of deltas
-    std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas = nullptr;
-
-    // Polynomial to evaluate
-    std::shared_ptr<DACE::AlgebraicVector<DACE::DA>> poly_ = nullptr;
+    std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
+    // List of results
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> deltas_poly_ = nullptr;
 
 private:
     // Allocators
@@ -46,5 +53,5 @@ private:
     void generate_gaussian_deltas(int n, POSITION pos);
 
     // Evaluate
-    void evaluate_deltas(POSITION pos);
+    void evaluate_deltas();
 };

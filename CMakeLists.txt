@@ -165,7 +165,10 @@ set(LIBRARY_CORE "core")
 add_library(${LIBRARY_CORE} SHARED
         src/core/base/enums.h
         src/core/base/constants.h
-        src/core/tools.cpp
+        src/core/tools/ep.cpp
+        src/core/tools/io.cpp
+        src/core/tools/vo.cpp
+        src/core/tools/str.cpp
         src/core/scv.cpp
         src/core/integrator.cpp
         src/core/problems.cpp
