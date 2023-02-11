@@ -5,7 +5,7 @@
 #include "tools.h"
 
 
-void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
+[[maybe_unused]] void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -29,7 +29,7 @@ void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & fun
     file2write.close();
 }
 
-void tools::io::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
+[[maybe_unused]] void tools::io::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
                            bool async, bool silent)
 {
     // Ensure system() is available
@@ -65,7 +65,7 @@ void tools::io::plot_variables(std::filesystem::path & path2file, const std::str
     }
 }
 
-std::string tools::enums::VELOCITY2str(VELOCITY velocity)
+[[maybe_unused]] std::string tools::enums::VELOCITY2str(VELOCITY velocity)
 {
     // Value to be returned
     std::string result;
@@ -86,7 +86,7 @@ std::string tools::enums::VELOCITY2str(VELOCITY velocity)
     return result;
 }
 
-std::string tools::enums::POSITION2str(POSITION position)
+[[maybe_unused]] std::string tools::enums::POSITION2str(POSITION position)
 {
     // Value to be returned
     std::string result;

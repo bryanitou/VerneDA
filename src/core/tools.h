@@ -26,7 +26,7 @@ namespace tools {
      * @param func_form variable form, point and derivative.
      * @param file_path file path.
      */
-        void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,const std::string &var_form, const std::filesystem::path &file_path);
+        [[maybe_unused]] void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,const std::string &var_form, const std::filesystem::path &file_path);
 
         /**
          * Calls to python file, passes the output file and executes it.
@@ -36,7 +36,7 @@ namespace tools {
          * @param async asynchronous task.
          * @param silent silent task.
          */
-        void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
+        [[maybe_unused]] void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
                             bool async = false, bool silent = true);
     }
 
@@ -47,14 +47,14 @@ namespace tools {
          * @param velocity
          * @return
          */
-        std::string VELOCITY2str(VELOCITY velocity);
+        [[maybe_unused]] std::string VELOCITY2str(VELOCITY velocity);
 
         /**
          * Parse POSITION enum to string.
          * @param position
          * @return
          */
-        std::string POSITION2str(POSITION position);
+        [[maybe_unused]] std::string POSITION2str(POSITION position);
 
         /**
          * Parse DISTRIBUTION enum to string.
