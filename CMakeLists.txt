@@ -163,7 +163,13 @@ set_target_properties(${LIBRARY_DACE} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
-        src/core/tools.cpp)
+        src/core/base/enums.h
+        src/core/base/constants.h
+        src/core/tools.cpp
+        src/core/scv.cpp
+        src/core/integrator.cpp
+        src/core/problems.cpp
+        src/core/delta.cpp)
 
 add_dependencies(core
         dace)
@@ -184,7 +190,7 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
 set(EXECUTABLE_NAME "Example1-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example1-dace_test.cpp
+        src/main/tutorials/Example1-dace_test.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
@@ -208,7 +214,82 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 set(EXECUTABLE_NAME "Example2-dace_test")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/Example2-dace_test.cpp
+        src/main/tutorials/Example2-dace_test.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: EXAMPLE 3
+############################################
+set(EXECUTABLE_NAME "Example3-dace_test")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/tutorials/Example3-dace_test.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: EXAMPLE 4
+############################################
+set(EXECUTABLE_NAME "Example4-dace_test")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/tutorials/Example4-dace_test.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: DACE_VSO (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+set(EXECUTABLE_NAME "dace_vsod")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/dace_vsod.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
