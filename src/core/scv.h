@@ -1,5 +1,5 @@
 /**
- * This class will hold all the attributes and methods referent to a state of an spacecraft
+ * This class will hold all the attributes and methods referent to a scv of an spacecraft
  */
 
 #pragma once
@@ -15,12 +15,12 @@
 // DACE libraries
 #include "dace/dace.h"
 
-class state{
+class scv{
 
 public: // Constructor
-    state() = default;
+    scv() = default;
 
-    ~state() = default;
+    ~scv() = default;
 
 private:
     // Initialize values without any location in memory... so we can track them

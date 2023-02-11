@@ -1,6 +1,7 @@
 /**
  * Constants header.
  */
+#pragma once
 
 namespace constants
 {
@@ -11,6 +12,9 @@ namespace constants
     }
     namespace earth
     {
+        // Earth radius
+        const double radius = 6371E3; // m
+
         // Earth constants
         const double mass = 5.972E24; // kg
 

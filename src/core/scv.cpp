@@ -1,10 +1,10 @@
 /**
- * This class will hold all the attributes and methods referent to a state of an spacecraft
+ * This class will hold all the attributes and methods referent to a scv of an spacecraft
  */
 
-#include "state.h"
+#include "scv.h"
 
-void state::allocate_state_values(double px, double py, double pz, double vx, double vy, double vz)
+void scv::allocate_state_values(double px, double py, double pz, double vx, double vy, double vz)
 {
     // Allocate values
     this->px_ = std::make_shared<DACE::DA>(px + DACE::DA(1));
@@ -15,12 +15,12 @@ void state::allocate_state_values(double px, double py, double pz, double vx, do
     this->vz_ = std::make_shared<DACE::DA>(vz + DACE::DA(6));
 }
 
-DACE::AlgebraicVector<DACE::DA> state::get_state_vector()
+DACE::AlgebraicVector<DACE::DA> scv::get_state_vector()
 {
     // Safety check, check that the pointers are not nullptr
     // TODO: create function here
 
-    // Return state vector
+    // Return scv vector
     DACE::AlgebraicVector<DACE::DA> res = {*this->px_,
                                            *this->py_,
                                            *this->pz_,
@@ -32,7 +32,7 @@ DACE::AlgebraicVector<DACE::DA> state::get_state_vector()
     return res;
 }
 
-DACE::DA state::get_parameter_copy(POSITION position)
+DACE::DA scv::get_parameter_copy(POSITION position)
 {
     // Go to memory place
     std::shared_ptr<DACE::DA> val_ptr;
@@ -52,13 +52,13 @@ DACE::DA state::get_parameter_copy(POSITION position)
     }
 
     // Check memory place
-    state::check_mem_place(val_ptr.get());
+    scv::check_mem_place(val_ptr.get());
 
     // Make a copy and exit
     return *val_ptr;
 }
 
-DACE::DA state::get_parameter_copy(VELOCITY velocity)
+DACE::DA scv::get_parameter_copy(VELOCITY velocity)
 {
     // Go to memory place
     std::shared_ptr<DACE::DA> val_ptr;
@@ -78,19 +78,19 @@ DACE::DA state::get_parameter_copy(VELOCITY velocity)
     }
 
     // Check memory place
-    state::check_mem_place(val_ptr.get());
+    scv::check_mem_place(val_ptr.get());
 
     // Make a copy and exit
     return *val_ptr;
 
 }
 
-void state::check_mem_place(DACE::DA* val_ptr)
+void scv::check_mem_place(DACE::DA* val_ptr)
 {
     // Safety check
     if(val_ptr != nullptr)
     {
         // End program here
-        std::printf("ERROR: state::get_parameter_copy: value to be returned not found! (%p)", (void*)val_ptr);
+        std::printf("ERROR: scv::get_parameter_copy: value to be returned not found! (%p)", (void*)val_ptr);
     }
 }

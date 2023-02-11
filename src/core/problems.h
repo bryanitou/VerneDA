@@ -6,8 +6,11 @@
 // DACE libraries
 #include "dace/dace.h"
 
+// Project libraries
+#include "base/constants.h"
+
 namespace problems
 {
-    DACE::AlgebraicVector<DACE::DA> TwoBodyProblem( DACE::AlgebraicVector<DACE::DA> x, double t );
+    DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t );
 
 };

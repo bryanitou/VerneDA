@@ -1,12 +1,12 @@
 /**
- * DACE_VSOD (VERY SIMPLE ORBIT DETERMINATION): aims to solve a problem where the initial state is known and we want to
- * compute the future state of the spacecraft after a given time using DACE with conjunction of RK4.
+ * DACE_VSOD (VERY SIMPLE ORBIT DETERMINATION): aims to solve a problem where the initial scv is known and we want to
+ * compute the future scv of the spacecraft after a given time using DACE with conjunction of RK4.
  */
 // DACE libraries
 #include "dace/dace.h"
 
 // Project libraries
-#include "state.h"
+#include "scv.h"
 #include "integrator.h"
 #include "base/constants.h"
 #include "problems.h"
@@ -19,12 +19,13 @@ int main(int argc, char* argv[])
     // Initialize DACE with 6 variables
     DACE::DA::init(1, 6);
 
-    // Declare state class
-    std::unique_ptr<state> s0 = std::make_unique<state>();
+    // Declare scv class
+    std::unique_ptr<scv> s0 = std::make_unique<scv>();
 
     // Define some constants
     double const ecc = 0.5;
-    double const a = 6678.0E3; // 300 Km of altitude
+    double const alt = 300E3; // 300 m of altitude
+    double const a = constants::earth::radius + alt; // 300 Km of altitude
     double const mu = constants::earth::mu; // km^3 / s^2
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
@@ -46,4 +47,14 @@ int main(int argc, char* argv[])
 
     // Apply integrator
     auto xf_DA = eulerIntegrator->euler(s0_DA, twoBodyProblem, t0, tf);
+
+    // Now we have to evaluate the deltas (little displacements in the initial position)
+
+
+
+    // Dump final info
+    for (auto & xf_ : xf_DA)
+    {
+        std::cout << xf_ << std::endl;
+    }
 }
