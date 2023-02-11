@@ -11,10 +11,14 @@
 // DA library
 #include "dace/dace.h"
 
+// Project libraries
+#include "base/enums.h"
+
 namespace tools {
 
-
-    /**
+    namespace io
+    {
+        /**
      * Dumps the images in a given file path
      * @param y DA images.
      * @param x DA component.
@@ -22,16 +26,35 @@ namespace tools {
      * @param func_form variable form, point and derivative.
      * @param file_path file path.
      */
-    void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,const std::string &var_form, const std::filesystem::path &file_path);
+        void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,const std::string &var_form, const std::filesystem::path &file_path);
 
-    /**
-     * Calls to python file, passes the output file and executes it.
-     * @param path2file path to the output '.txt' file.
-     * @param python_executable path to the python script.
-     * @param span read python file to understand this argument.
-     * @param async asynchronous task.
-     * @param silent silent task.
-     */
-    void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
-                        bool async = false, bool silent = true);
+        /**
+         * Calls to python file, passes the output file and executes it.
+         * @param path2file path to the output '.txt' file.
+         * @param python_executable path to the python script.
+         * @param span read python file to understand this argument.
+         * @param async asynchronous task.
+         * @param silent silent task.
+         */
+        void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
+                            bool async = false, bool silent = true);
+    }
+
+    namespace enums
+    {
+        /**
+         * Parse VELOCITY enum to string.
+         * @param velocity
+         * @return
+         */
+        std::string VELOCITY2str(VELOCITY velocity);
+
+        /**
+         * Parse POSITION enum to string.
+         * @param position
+         * @return
+         */
+        std::string POSITION2str(POSITION position);
+    }
+
 };

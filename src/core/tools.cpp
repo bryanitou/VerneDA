@@ -5,7 +5,7 @@
 #include "tools.h"
 
 
-void tools::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
+void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -29,7 +29,7 @@ void tools::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_fo
     file2write.close();
 }
 
-void tools::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
+void tools::io::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
                            bool async, bool silent)
 {
     // Ensure system() is available
@@ -63,4 +63,47 @@ void tools::plot_variables(std::filesystem::path & path2file, const std::string&
         // Launch command
         std::system(cmd.c_str());
     }
+}
+
+std::string tools::enums::VELOCITY2str(VELOCITY velocity)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            VELOCITY::X == velocity ? "X" :
+            VELOCITY::Y == velocity ? "Y" :
+            VELOCITY::Z == velocity ? "Z" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse VELOCITY enum. Returning '%s'", result.c_str());
+    }
+
+    // Return found value
+    return result;
+}
+
+std::string tools::enums::POSITION2str(POSITION position)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            POSITION::X == position ? "X" :
+            POSITION::Y == position ? "Y" :
+            POSITION::Z == position ? "Z" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse POSITION enum. Returning '%s'", result.c_str());
+    }
+
+    // Return found value
+    return result;
+
 }
