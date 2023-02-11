@@ -55,6 +55,13 @@ namespace tools {
          * @return
          */
         std::string POSITION2str(POSITION position);
+
+        /**
+         * Parse DISTRIBUTION enum to string.
+         * @param distribution
+         * @return
+         */
+        std::string DISTRIBUTION2str(DISTRIBUTION distribution);
     }
 
 };

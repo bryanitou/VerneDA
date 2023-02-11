@@ -107,3 +107,24 @@ std::string tools::enums::POSITION2str(POSITION position)
     return result;
 
 }
+
+std::string tools::enums::DISTRIBUTION2str(DISTRIBUTION distribution)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            DISTRIBUTION::GAUSSIAN == distribution ? "GAUSSIAN" :
+            DISTRIBUTION::UNIFORM == distribution ? "UNIFORM" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse DISTRIBUTION enum. Returning '%s'", result.c_str());
+    }
+
+    // Return found value
+    return result;
+
+}

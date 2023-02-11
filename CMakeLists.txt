@@ -168,7 +168,8 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/tools.cpp
         src/core/scv.cpp
         src/core/integrator.cpp
-        src/core/problems.cpp)
+        src/core/problems.cpp
+        src/core/delta.cpp)
 
 add_dependencies(core
         dace)

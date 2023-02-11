@@ -10,6 +10,7 @@
 #include "integrator.h"
 #include "base/constants.h"
 #include "problems.h"
+#include "delta.h"
 
 /**
  * Main entry point
@@ -46,8 +47,13 @@ int main(int argc, char* argv[])
     auto xf_DA = eulerIntegrator->euler(scv0_DA, twoBodyProblem, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
-    auto scvf_DA = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0);
+    auto scvf_DA = std::make_shared<scv>(xf_DA);
 
+    // Build deltas class
+    auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
+
+    // Compute deltas
+    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 100);
 
     // Dump final info
     for (auto & xf_ : xf_DA)

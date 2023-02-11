@@ -137,3 +137,82 @@ void scv::check_mem_place(DACE::DA* val_ptr)
         std::printf("ERROR: scv::get_parameter_copy: value to be returned not found! (%p)", (void*)val_ptr);
     }
 }
+
+void scv::set_state_value(const DACE::DA& val, POSITION position)
+{
+    // Switch case
+    switch (position)
+    {
+        case POSITION::X:
+            this->px_ = std::make_shared<DACE::DA>(val);
+            break;
+        case POSITION::Y:
+            this->py_ =  std::make_shared<DACE::DA>(val);
+            break;
+        case POSITION::Z:
+            this->pz_ =  std::make_shared<DACE::DA>(val);
+            break;
+    }
+}
+
+void scv::set_state_value(const DACE::DA& val, VELOCITY velocity)
+{
+    // Switch case
+    switch (velocity)
+    {
+        case VELOCITY::X:
+            this->vx_ = std::make_shared<DACE::DA>(val);
+            break;
+        case VELOCITY::Y:
+            this->vy_ =  std::make_shared<DACE::DA>(val);
+            break;
+        case VELOCITY::Z:
+            this->vz_ =  std::make_shared<DACE::DA>(val);
+            break;
+    }
+}
+
+DACE::DA scv::get_state_value_copy(POSITION position)
+{
+    // Scope auxiliary variable
+    DACE::DA res;
+
+    // Switch case: make copy and assign result
+    switch (position)
+    {
+        case POSITION::X:
+            res = *this->px_;
+            break;
+        case POSITION::Y:
+            res = *this->py_;
+            break;
+        case POSITION::Z:
+            res = *this->pz_;
+            break;
+    }
+
+    // Return result
+    return res;
+}
+
+DACE::DA scv::get_state_value_copy(VELOCITY velocity) {
+    // Scope auxiliary variable
+    DACE::DA res;
+
+    // Switch case: make copy and assign result
+    switch (velocity)
+    {
+        case VELOCITY::X:
+            res = *this->vx_;
+            break;
+        case VELOCITY::Y:
+            res = *this->vy_;
+            break;
+        case VELOCITY::Z:
+            res = *this->vz_;
+            break;
+    }
+
+    // Return result
+    return res;
+}

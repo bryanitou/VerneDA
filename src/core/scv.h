@@ -22,6 +22,19 @@ public: // Constructor
     explicit scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA);
     ~scv() = default;
 
+public:
+    // Getters
+    DACE::AlgebraicVector<DACE::DA> get_state_vector();
+
+public:
+    // Setters
+    void set_state_value(const DACE::DA& val, POSITION position);
+    void set_state_value(const DACE::DA& val, VELOCITY velocity);
+
+    // Getters
+    DACE::DA get_state_value_copy(POSITION position);
+    DACE::DA get_state_value_copy(VELOCITY velocity);
+
 private:
     // Initialize values without any location in memory... so we can track them
     std::shared_ptr<DACE::DA> px_ = nullptr;
@@ -49,10 +62,6 @@ private:
      * @param csv_DA [DACE::AlgebraicVector<DACE::DA>]
      */
     void allocate_csv_DA_vector(const DACE::AlgebraicVector<DACE::DA> &csv_DA);
-
-public:
-    // Getters
-    DACE::AlgebraicVector<DACE::DA> get_state_vector();
 
 private:
     // Access values

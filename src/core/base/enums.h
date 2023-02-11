@@ -32,3 +32,9 @@ enum class INTEGRATOR
     EULER,
     RK4
 };
+
+enum class DISTRIBUTION
+{
+    GAUSSIAN,
+    UNIFORM
+};
