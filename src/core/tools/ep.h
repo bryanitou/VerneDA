@@ -36,4 +36,7 @@ namespace tools::enums
          * @return
          */
         std::string DISTRIBUTION2str(DISTRIBUTION distribution);
+
+        VELOCITY STATE2VELOCITY(STATE state);
+        POSITION STATE2POSITION(STATE state);
     };

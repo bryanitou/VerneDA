@@ -68,3 +68,23 @@ std::string tools::enums::DISTRIBUTION2str(DISTRIBUTION distribution)
     return result;
 
 }
+
+POSITION tools::enums::STATE2POSITION(STATE state)
+{
+    auto result =
+            state == STATE::PX ? POSITION::X :
+            state == STATE::PY ? POSITION::Y :
+            state == STATE::PZ ? POSITION::Z : POSITION::NA;
+
+    return result;
+}
+
+VELOCITY tools::enums::STATE2VELOCITY(STATE state)
+{
+    auto result =
+            state == STATE::VX ? VELOCITY::X :
+            state == STATE::VY ? VELOCITY::Y :
+            state == STATE::VZ ? VELOCITY::Z : VELOCITY::NA;
+
+    return result;
+}

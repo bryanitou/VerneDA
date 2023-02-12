@@ -10,7 +10,7 @@
 #include "dace/dace.h"
 
 // Project libraries
-#include "tools.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -19,7 +19,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Initialize DACE for 20th-order computations in 1 variable
     // TOASK: I don't clearly understand the ORDER value hereafter
-    DACE::DA::init(20, 1);
+    DACE::DA::init(1, 1);
 
     // Initialize x as DA
     DACE::DA x = DACE::sqr(DACE::DA(1));
@@ -36,10 +36,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path output_path = "./out/Example4-dace_test.txt";
 
     // Dump variables
-    tools::dump_variables(y, x, func_form, var_form, output_path);
+    tools::io::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
+    tools::io::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
 
     // Compute [cos(x)-1]^11
     for ( int i = 0; i < 10; i++)

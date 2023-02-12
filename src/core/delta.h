@@ -26,7 +26,7 @@ public:
     ~delta() = default;
 
 public:
-    void compute_deltas(DISTRIBUTION type, int n, POSITION pos = POSITION::X);
+    void compute_deltas(DISTRIBUTION type, int n, STATE state);
 
     std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> get_deltas_poly()
     {
@@ -50,7 +50,7 @@ private:
 
 private:
     // Deltas calculators relying on the distribution type
-    void generate_gaussian_deltas(int n, POSITION pos);
+    void generate_gaussian_deltas(int n, STATE state);
 
     // Evaluate
     void evaluate_deltas();

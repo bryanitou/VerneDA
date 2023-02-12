@@ -22,14 +22,14 @@ int main(int argc, char* argv[])
     DACE::DA::init(1, 6);
 
     // Define some constants
-    double const ecc = 0.5;
-    double const alt = 300E3; // 300 m of altitude
+    double const ecc = 0.0;
+    double const alt = 300E3; // 300 km of altitude
     double const a = constants::earth::radius + alt; // 300 Km of altitude
-    double const mu = constants::earth::mu; // km^3 / s^2
+    double const mu = constants::earth::mu; // m^3 / s^2
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0);
+    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0.0);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector();
@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 100);
+    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::VX);
 
     // Dump final info
-    tools::io::dump_algebraic_vector(xf_DA, "./out/tbp/taylor_expression.te");
-    tools::io::dump_deltas(deltas_engine.get(), "./out/tbp/deltas_expression.csv");
+    tools::io::dump_algebraic_vector(xf_DA, "./out/tbp/taylor_expression.avd");
+    tools::io::dump_deltas(deltas_engine.get(), "./out/tbp/deltas_expression.dd");
 }

@@ -1,7 +1,6 @@
 /**
  * First c++ main to interact with the 3rdparty.
  */
-#pragma once
 
 // System libraries
 #include <iostream>
@@ -10,7 +9,7 @@
 #include "dace/dace.h"
 
 // Project libraries
-#include "tools.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -18,7 +17,7 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Initialize DACE for 1st-order computations in 1 variable
-    DACE::DA::init(20, 1 );
+    DACE::DA::init(1, 1 );
 
     // Initialize x as DA around 3
     DACE::DA x1 = 3 + DACE::DA(1);
@@ -40,8 +39,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path output_path = "./out/Example3-dace_test.txt";
 
     // Dump variables
-    tools::dump_variables(f, x, func_form, var_form, output_path);
+    tools::io::dump_variables(f, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 10,true);
+    tools::io::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
 }
