@@ -123,7 +123,7 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     this->scv_deltas_ = std::make_shared<std::vector<std::shared_ptr<scv>>>(deltas);
 
     // Print first one
-    // std::cout << this->scv_deltas_->front()->get_state_vector().front().toString() << std::endl;
+    // std::cout << this->scv_deltas_->front()->get_state_vector_copy().front().toString() << std::endl;
     // TODO: Info message
 }
 
@@ -137,7 +137,7 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *scv_deltas_)
     {
         // Evaluate and save
-        taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector()));
+        taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector_copy()));
     }
 
     // Make it ptr

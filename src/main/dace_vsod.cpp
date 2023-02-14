@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0.0);
 
     // Now, should initialize all the dace variables from the initial conditions
-    auto scv0_DA = s0->get_state_vector();
+    auto scv0_DA = s0->get_state_vector_copy();
 
     // Initial and final time
     double const t0 = 0.0;

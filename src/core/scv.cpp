@@ -58,7 +58,7 @@ void scv::allocate_scv_values(double px, double py, double pz, double vx, double
     this->vz_ = std::make_shared<DACE::DA>(with_da ? vz + DACE::DA(6) : vz);
 }
 
-DACE::AlgebraicVector<DACE::DA> scv::get_state_vector()
+DACE::AlgebraicVector<DACE::DA> scv::get_state_vector_copy()
 {
     // Safety check, check that the pointers are not nullptr
     // TODO: create function here

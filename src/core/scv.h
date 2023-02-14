@@ -23,7 +23,7 @@ public: // Constructor
 
 public:
     // Getters
-    DACE::AlgebraicVector<DACE::DA> get_state_vector();
+    DACE::AlgebraicVector<DACE::DA> get_state_vector_copy();
 
 public:
     // Setters
