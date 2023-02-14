@@ -10,7 +10,7 @@ import reader
 import matplotlib.pyplot as plt
 
 
-def plot_banana(taylor: dict, span: int, output_path: os.PathLike or str, verbose: bool = False) -> None:
+def plot_banana(taylor: dict, output_path: os.PathLike or str, verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
@@ -37,25 +37,52 @@ def plot_banana(taylor: dict, span: int, output_path: os.PathLike or str, verbos
                 val = taylor[delta][var]["1"]["coef"] / 1000  # to km
                 x.append(val) if var == "0" else (y.append(val) if var == "1" else z.append(val))
 
-    fig = plt.figure(figsize = (10, 7))
-    ax = plt.axes(projection ="3d")
+    # Initialise the subplot function using number of rows and columns
+    figure, ax = plt.subplots(1, 3, figsize=(10, 7))
 
     # Creating plot
-    ax.scatter3D(x, y, z, color = "green")
-    plt.title("simple 3D scatter plot")
-    plt.grid(True)
+    ax[0].scatter(x, y, color="green", s=0.4)
+    ax[1].scatter(y, z, color="green", s=0.4)
+    ax[2].scatter(x, z, color="green", s=0.4)
+
+    # Labels
+    ax[0].set_xlabel("x [km]")
+    ax[0].set_ylabel("y [km]")
+    ax[1].set_xlabel("y [km]")
+    ax[1].set_ylabel("z [km]")
+    ax[2].set_xlabel("x [km]")
+    ax[2].set_ylabel("z [km]")
+
+    # Titles
+    ax[0].set_title("XY Projection")
+    ax[1].set_title("YZ Projection")
+    ax[2].set_title("XZ Projection")
+
+    # Enable grid
+    ax[0].grid(True)
+    ax[1].grid(True)
+    ax[2].grid(True)
+
+    # Set subtitle
+    plt.suptitle("Final position distribution")
+
+    # Show plot
     plt.show()
+
+    # Clear
+    plt.close(figure)
+
     # Finally, we can plot everything
-    # plt.scatter(x, y, z, s=0.1)
-    # plt.xlabel("x [km]")
-    # plt.ylabel("y [km]")
-    # plt.zlabel("y [km]")
+    plt.scatter(x, y, s=0.4)
+    plt.xlabel("x [km]")
+    plt.ylabel("y [km]")
 
     # Write legend
     # plt.legend([f"{taylor['function']['name']}", "Taylor expansion"])
 
     # Plt show grid
-    plt.grid()
+    plt.grid(True)
+    plt.show()
 
     # Show plot
     plt.savefig(output_path)
@@ -95,7 +122,7 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         output_path = os.path.join(parent_folder, f"{txt_filename}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, span=span, verbose=verbose, output_path=output_path)
+        plot_banana(taylor_dict, verbose=verbose, output_path=output_path)
 
 
 if __name__ == '__main__':

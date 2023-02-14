@@ -95,18 +95,25 @@ void delta::generate_gaussian_deltas(int n, STATE state)
         // auto delta = number;
 
         // Set the delta in the given place
-        if (var2change == "POSITION")
-        {
-            scv_delta->set_state_value(number, POSITION::X);
-            scv_delta->set_state_value(number, POSITION::Y);
-            scv_delta->set_state_value(number/100, POSITION::Z);
-        }
-        else
-        {
-            scv_delta->set_state_value(number, VELOCITY::X);
-            scv_delta->set_state_value(number, VELOCITY::Y);
-            scv_delta->set_state_value(number/100, VELOCITY::Z);
-        }
+        // if (var2change == "POSITION")
+        // {
+        //     scv_delta->set_state_value(number, VELOCITY::X);
+        //     scv_delta->set_state_value(number, VELOCITY::Y);
+        //     scv_delta->set_state_value(number, VELOCITY::Z);
+        // }
+        // else
+        // {
+        //     scv_delta->set_state_value(number, VELOCITY::X);
+        //     scv_delta->set_state_value(number, VELOCITY::Y);
+        //     scv_delta->set_state_value(number, VELOCITY::Z);
+        // }
+
+        scv_delta->set_state_value(number, VELOCITY::X);
+        scv_delta->set_state_value(number, VELOCITY::Y);
+        scv_delta->set_state_value(number, VELOCITY::Z);
+        scv_delta->set_state_value(number, VELOCITY::X);
+        scv_delta->set_state_value(number, VELOCITY::Y);
+        scv_delta->set_state_value(number, VELOCITY::Z);
 
         // Append scv in the list
         deltas.emplace_back(scv_delta);
