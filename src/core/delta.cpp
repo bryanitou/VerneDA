@@ -88,8 +88,7 @@ void delta::generate_gaussian_deltas(int n, STATE state)
 
 
         // Generate the scv from the base csv
-        auto scv_delta = std::make_shared<scv>(
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
+        auto scv_delta = std::make_shared<scv>(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
 
         // Change its value from the number given form the normal function
         // Make the change in the adequate place: px, py, pz, vx, vy, vz...
