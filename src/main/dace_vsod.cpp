@@ -11,6 +11,7 @@
 #include "base/constants.h"
 #include "problems.h"
 #include "delta.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -21,30 +22,31 @@ int main(int argc, char* argv[])
     DACE::DA::init(1, 6);
 
     // Define some constants
-    double const ecc = 0.5;
-    double const alt = 300E3; // 300 m of altitude
+    double const ecc = 0.0;
+    double const alt = 300E3; // 300 km of altitude
     double const a = constants::earth::radius + alt; // 300 Km of altitude
-    double const mu = constants::earth::mu; // km^3 / s^2
+    double const mu = constants::earth::mu; // m^3 / s^2
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0);
+    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0.0);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector();
 
     // Initial and final time
     double const t0 = 0.0;
-    double const tf = M_PI*sqrt(a*a*a/mu);
+    double const rev = 2*M_PI*std::sqrt(a*a*a/mu);
+    double const tf = rev*100;
 
     // Initialize integrator
-    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::EULER);
+    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 60);
 
     // Define problem to solve
     auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
 
     // Apply integrator
-    auto xf_DA = eulerIntegrator->euler(scv0_DA, twoBodyProblem, t0, tf);
+    auto xf_DA = eulerIntegrator->integrate(scv0_DA, twoBodyProblem, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
@@ -53,11 +55,9 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 100);
+    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX);
 
     // Dump final info
-    for (auto & xf_ : xf_DA)
-    {
-        std::cout << xf_ << std::endl;
-    }
+    tools::io::dump_algebraic_vector(xf_DA, "./out/tbp/taylor_expression.avd");
+    tools::io::dump_deltas(deltas_engine.get(), "./out/tbp/deltas_expression.dd");
 }

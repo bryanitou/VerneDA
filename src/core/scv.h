@@ -10,7 +10,6 @@
 
 // Project libraries
 # include "base/enums.h"
-# include "tools.h"
 
 // DACE libraries
 #include "dace/dace.h"
@@ -18,7 +17,7 @@
 class scv{
 
 public: // Constructor
-    explicit scv(double px, double py, double pz, double vx, double vy, double vz);
+    explicit scv(double px, double py, double pz, double vx, double vy, double vz, bool with_da = true);
     explicit scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA);
     ~scv() = default;
 
@@ -55,7 +54,7 @@ private:
      * @param vy [double]
      * @param vz [double]
      */
-    void allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz);
+    void allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz, bool with_da = true);
 
     /**
      * Main allocator for already built DA vector

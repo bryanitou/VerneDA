@@ -11,7 +11,8 @@ enum class POSITION
 {
     X,
     Y,
-    Z
+    Z,
+    NA
 };
 
 /**
@@ -21,7 +22,21 @@ enum class VELOCITY
 {
     X,
     Y,
-    Z
+    Z,
+    NA
+};
+
+/**
+ * SCV: State Control Vector enum
+ */
+enum class STATE
+{
+    PX,
+    PY,
+    PZ,
+    VX,
+    VY,
+    VZ
 };
 
 /**
