@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0.0);
+    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 100.0, true);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();

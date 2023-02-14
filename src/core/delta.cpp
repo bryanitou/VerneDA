@@ -66,8 +66,8 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // pos: position (x, y, z) that will be modified
     // Call to random engine generator
     std::default_random_engine generator;
-    std::normal_distribution<double> distribution(var2change == "POSITION" ?  2.8*1E4*1E3 : 10*1E3,
-                                                  var2change == "POSITION" ? 400*1E3 : 1E3); // 1 km centered and 100 m standard deviation
+    std::normal_distribution<double> distribution(var2change == "POSITION" ?  100 : 10,
+                                                  var2change == "POSITION" ? 10 : 1); // 100 m centered and 10 m stddev
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n);

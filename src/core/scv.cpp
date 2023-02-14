@@ -4,10 +4,10 @@
 
 #include "scv.h"
 
-scv::scv(double px, double py, double pz, double vx, double vy, double vz, double error, bool with_da)
+scv::scv(double px, double py, double pz, double vx, double vy, double vz,  bool with_da, double error)
 {
     // Call to main allocator
-    this->allocate_scv_values(px, py, pz, vx, vy, vz, error, with_da);
+    this->allocate_scv_values(px, py, pz, vx, vy, vz, with_da, error);
 }
 
 scv::scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA)
@@ -47,8 +47,8 @@ void scv::allocate_csv_DA_vector(const DACE::AlgebraicVector<DACE::DA>& csv_DA)
     this->vz_ = std::make_shared<DACE::DA>(csv_DA[5]);
 }
 
-void scv::allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz, double error,
-                              bool with_da)
+void scv::allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz,
+                              bool with_da, double error)
 {
     // Allocate values
     this->px_ = std::make_shared<DACE::DA>(with_da ? px + DACE::DA(1) * 1/error : px);
