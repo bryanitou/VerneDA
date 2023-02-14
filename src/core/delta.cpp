@@ -66,7 +66,7 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // pos: position (x, y, z) that will be modified
     // Call to random engine generator
     std::default_random_engine generator;
-    std::normal_distribution<double> distribution(var2change == "POSITION" ?  100 : 10,
+    std::normal_distribution<double> distribution(var2change == "POSITION" ?  100.0 : 10,
                                                   var2change == "POSITION" ? 10 : 1); // 100 m centered and 10 m stddev
 
     // Reserve memory for CPU efficiency
@@ -108,9 +108,10 @@ void delta::generate_gaussian_deltas(int n, STATE state)
         //     scv_delta->set_state_value(number, VELOCITY::Z);
         // }
 
-        scv_delta->set_state_value(number, VELOCITY::X);
-        scv_delta->set_state_value(number, VELOCITY::Y);
-        scv_delta->set_state_value(number, VELOCITY::Z);
+        // TODO: Discuss this logic, leave this demonstration for the while
+        scv_delta->set_state_value(number, POSITION::X);
+        scv_delta->set_state_value(number, POSITION::Y);
+        scv_delta->set_state_value(number, POSITION::Z);
         scv_delta->set_state_value(number, VELOCITY::X);
         scv_delta->set_state_value(number, VELOCITY::Y);
         scv_delta->set_state_value(number, VELOCITY::Z);

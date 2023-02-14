@@ -19,7 +19,7 @@
 int main(int argc, char* argv[])
 {
     // Initialize DACE with 6 variables
-    DACE::DA::init(1, 6);
+    DACE::DA::init(2, 6);
 
     // Define some constants
     double const ecc = 0.0;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     double const vy = sqrt(mu / a) * sqrt(1 + ecc);
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 100.0, true);
+    auto s0 = std::make_unique<scv>(a, 0.0, 0.0, 0.0, vy, 0.0, true, 100.0);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
