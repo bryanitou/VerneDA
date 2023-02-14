@@ -17,7 +17,7 @@
 class scv{
 
 public: // Constructor
-    explicit scv(double px, double py, double pz, double vx, double vy, double vz, bool with_da = true);
+    explicit scv(double px, double py, double pz, double vx, double vy, double vz, double error = 100.0, bool with_da = true);
     explicit scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA);
     ~scv() = default;
 
@@ -54,7 +54,8 @@ private:
      * @param vy [double]
      * @param vz [double]
      */
-    void allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz, bool with_da = true);
+    void allocate_scv_values(double px, double py, double pz, double vx, double vy, double vz,
+                             double error, bool with_da);
 
     /**
      * Main allocator for already built DA vector
