@@ -1,7 +1,6 @@
 /**
  * First c++ main to interact with the 3rdparty.
  */
-#pragma once
 
 // System libraries
 #include <iostream>
@@ -42,6 +41,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::io::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::io::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
+    tools::io::plot_variables(output_path, PYPLOT_SIMPLE, 5,true);
 
 }

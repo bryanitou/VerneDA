@@ -77,7 +77,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib/")
 set(UCFLAGS " ")
 
 # Some user defined variables TODO: Set this outside here
-set(PYTHON_PLOTTER_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/plotter.py")
+set(PYPLOT_SIMPLE_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/plotter.py")
+set(PYPLOT_BANANA_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/banana.py")
 
 # Application version information
 # This is automatic; do not touch anything
@@ -87,7 +88,8 @@ string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_HASH=\"\\\"$(shell git log -1 --pretty=format:\"%H\")\\\"\"")
 string(APPEND UCFLAGS " -D USER_NAME=\"\\\"$(USER)\\\"\"")
-string(APPEND UCFLAGS " -D PYTHON_PLOTTER=\"\\\"${PYTHON_PLOTTER_PATH}\\\"\"")
+string(APPEND UCFLAGS " -D PYPLOT_SIMPLE=\"\\\"${PYPLOT_SIMPLE_PATH}\\\"\"")
+string(APPEND UCFLAGS " -D PYPLOT_BANANA=\"\\\"${PYPLOT_BANANA_PATH}\\\"\"")
 
 # Force re-compilation of STATIC_FLAGS.h
 # This phony target will always re-compile STATIC_FLAGS.h, thus always updating the compilation flag's values

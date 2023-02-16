@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     double const rev = 2*M_PI*std::sqrt(a*a*a/mu);
 
     // How many periods do we want to integrate?
-    double const tf = rev*100;
+    double const tf = rev*1;
 
     // Initialize integrator
     auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK78, 60);
@@ -62,7 +62,15 @@ int main(int argc, char* argv[])
     // Compute deltas
     deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX);
 
+    // Set output path
+    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression.avd";
+    std::filesystem::path output_path_dd = "./out/tbp/deltas_expression.dd";
+
     // Dump final info
-    tools::io::dump_algebraic_vector(xf_DA, "./out/tbp/taylor_expression.avd");
-    tools::io::dump_deltas(deltas_engine.get(), "./out/tbp/deltas_expression.dd");
+    tools::io::dump_algebraic_vector(xf_DA, output_path_avd);
+    tools::io::dump_deltas(deltas_engine.get(), output_path_dd);
+
+    // Draw plots
+    tools::io::plot_variables(output_path_dd, PYPLOT_BANANA);
+
 }

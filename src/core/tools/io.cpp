@@ -207,6 +207,8 @@ void tools::io::dump_deltas(delta* delta, const std::filesystem::path &file_path
     // Ensure system() is available
     if (std::system(nullptr))
     {
+        // TODO: remove such amount of inputs and use a non-ordered map or something like this
+        //  this way it will be a more general function
         // Build command
         std::string cmd{};
         cmd = "python3";
