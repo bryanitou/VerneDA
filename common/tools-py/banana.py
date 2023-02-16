@@ -10,7 +10,7 @@ import reader
 import matplotlib.pyplot as plt
 
 
-def plot_banana(taylor: dict, output_path: os.PathLike or str, verbose: bool = False) -> None:
+def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
@@ -37,40 +37,58 @@ def plot_banana(taylor: dict, output_path: os.PathLike or str, verbose: bool = F
                 val = taylor[delta][var]["1"]["coef"] / 1000  # to km
                 x.append(val) if var == "0" else (y.append(val) if var == "1" else z.append(val))
 
-    # Initialise the subplot function using number of rows and columns
-    figure, ax = plt.subplots(1, 3, figsize=(10, 7))
+    if len(z) > 0:
+        # Initialise the subplot function using number of rows and columns
+        figure, ax = plt.subplots(1, 3, figsize=(16, 9))
 
-    # Creating plot
-    ax[0].scatter(x, y, color="green", s=0.4)
-    ax[1].scatter(y, z, color="green", s=0.4)
-    ax[2].scatter(x, z, color="green", s=0.4)
+        # Creating plot
+        ax[0].scatter(x, y, color="green", s=0.4)
+        ax[1].scatter(y, z, color="green", s=0.4)
+        ax[2].scatter(x, z, color="green", s=0.4)
 
-    # Labels
-    ax[0].set_xlabel("x [km]")
-    ax[0].set_ylabel("y [km]")
-    ax[1].set_xlabel("y [km]")
-    ax[1].set_ylabel("z [km]")
-    ax[2].set_xlabel("x [km]")
-    ax[2].set_ylabel("z [km]")
+        # Labels
+        ax[0].set_xlabel("x [km]")
+        ax[0].set_ylabel("y [km]")
+        ax[1].set_xlabel("y [km]")
+        ax[1].set_ylabel("z [km]")
+        ax[2].set_xlabel("x [km]")
+        ax[2].set_ylabel("z [km]")
 
-    # Titles
-    ax[0].set_title("XY Projection")
-    ax[1].set_title("YZ Projection")
-    ax[2].set_title("XZ Projection")
+        # Titles
+        ax[0].set_title("XY Projection")
+        ax[1].set_title("YZ Projection")
+        ax[2].set_title("XZ Projection")
 
-    # Enable grid
-    ax[0].grid(True)
-    ax[1].grid(True)
-    ax[2].grid(True)
+        # Tilt labels
+        [ticks.set_rotation(45) for ticks in ax[0].get_xticklabels()]
+        [ticks.set_rotation(45) for ticks in ax[1].get_xticklabels()]
+        [ticks.set_rotation(45) for ticks in ax[2].get_xticklabels()]
 
-    # Set subtitle
-    plt.suptitle("Final position distribution")
+        # Don't show y label for middle plot but mantain the grids
+        # Refer to: https://stackoverflow.com/questions/20416609/remove-the-x-axis-ticks-while-keeping-the-grids-matplotlib
+        # For the code explanation
+        for tick in ax[1].yaxis.get_major_ticks():
+            tick.tick1line.set_visible(False)
+            tick.tick2line.set_visible(False)
+            tick.label1.set_visible(False)
+            tick.label2.set_visible(False)
 
-    # Show plot
-    plt.show()
+        # Set y-axis labels of the right plot to the right
+        ax[2].yaxis.tick_right()
 
-    # Clear
-    plt.close(figure)
+        # Enable grid
+        ax[0].grid(True)
+        ax[1].grid(True)
+        ax[2].grid(True)
+
+        # Set subtitle
+        plt.suptitle("Final position distribution")
+
+        # Save plot
+        plt.savefig(output_path[0])
+
+        # Clear
+        plt.close(figure)
 
     # Finally, we can plot everything
     plt.scatter(x, y, s=0.4)
@@ -82,10 +100,12 @@ def plot_banana(taylor: dict, output_path: os.PathLike or str, verbose: bool = F
 
     # Plt show grid
     plt.grid(True)
-    plt.show()
 
-    # Show plot
-    plt.savefig(output_path)
+    # Save second plot
+    plt.savefig(output_path[1])
+
+    # Clear
+    plt.close(figure)
 
 
 def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
@@ -118,11 +138,13 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
 
         # From the file, get the parent folder and save it
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
-        txt_filename = os.path.split(parsed_dict['file'])[1].replace('dd', 'png')
-        output_path = os.path.join(parent_folder, f"{txt_filename}")
+        txt_filename1 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_1.png')
+        txt_filename2 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_2.png')
+        output_path1 = os.path.join(parent_folder, f"{txt_filename1}")
+        output_path2 = os.path.join(parent_folder, f"{txt_filename2}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, verbose=verbose, output_path=output_path)
+        plot_banana(taylor_dict, verbose=verbose, output_path=[output_path1, output_path2])
 
 
 if __name__ == '__main__':
