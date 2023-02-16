@@ -45,13 +45,13 @@ int main(int argc, char* argv[])
     double const tf = rev*10;
 
     // Initialize integrator
-    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
+    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
 
     // Define problem to solve
     auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
 
     // Apply integrator
-    auto xf_DA = eulerIntegrator->integrate(scv0_DA, twoBodyProblem, t0, tf);
+    auto xf_DA = objIntegrator->integrate(scv0_DA, twoBodyProblem, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
