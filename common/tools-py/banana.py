@@ -64,9 +64,9 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
         [ticks.set_rotation(45) for ticks in ax[1].get_xticklabels()]
         [ticks.set_rotation(45) for ticks in ax[2].get_xticklabels()]
 
-        # Don't show y label for middle plot but mantain the grids
-        # Refer to: https://stackoverflow.com/questions/20416609/remove-the-x-axis-ticks-while-keeping-the-grids-matplotlib
-        # For the code explanation
+        # Don't show y label for middle plot but maintain the grids Refer to:
+        # https://stackoverflow.com/questions/20416609/remove-the-x-axis-ticks-while-keeping-the-grids-matplotlib, for
+        # the code explanation
         for tick in ax[1].yaxis.get_major_ticks():
             tick.tick1line.set_visible(False)
             tick.tick2line.set_visible(False)
