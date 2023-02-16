@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     double const tf = rev*10;
 
     // Initialize integrator
-    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK78, 60);
+    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
 
     // Define problem to solve
     auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
@@ -63,8 +63,8 @@ int main(int argc, char* argv[])
     deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX);
 
     // Set output path
-    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression_RK78.avd";
-    std::filesystem::path output_path_dd = "./out/tbp/deltas_expression_RK78.dd";
+    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression_RK4.avd";
+    std::filesystem::path output_path_dd = "./out/tbp/deltas_expression_RK4.dd";
 
     // Dump final info
     tools::io::dump_algebraic_vector(xf_DA, output_path_avd);
