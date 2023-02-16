@@ -5,12 +5,13 @@
 
 // System libraries
 #include <iostream>
+#include <filesystem>
 
 // DACE library
 #include "dace/dace.h"
 
 // Project libraries
-#include "tools.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -38,9 +39,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path output_path = "./out/Example1-dace_test.txt";
 
     // Dump variables
-    tools::dump_variables(y, x, func_form, var_form, output_path);
+    tools::io::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
-    tools::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
+    tools::io::plot_variables(output_path, PYTHON_PLOTTER, 5,true);
 
 }

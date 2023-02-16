@@ -35,12 +35,17 @@ int main(int argc, char* argv[])
     auto scv0_DA = s0->get_state_vector_copy();
 
     // Initial and final time
+    // Initial time is zero
     double const t0 = 0.0;
+
+    // Compute the time for one period
     double const rev = 2*M_PI*std::sqrt(a*a*a/mu);
+
+    // How many periods do we want to integrate?
     double const tf = rev*100;
 
     // Initialize integrator
-    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 60);
+    auto eulerIntegrator = std::make_unique<integrator>(INTEGRATOR::RK78, 60);
 
     // Define problem to solve
     auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);

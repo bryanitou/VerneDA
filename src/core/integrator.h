@@ -75,4 +75,9 @@ private:
                                         DACE::AlgebraicVector<DACE::DA>
                                                 (*pFunction)(DACE::AlgebraicVector<DACE::DA>,
                                                                                      double), double t0, double t1) const;
+
+    template<typename T>
+    DACE::AlgebraicVector<T> RK78(int N, DACE::AlgebraicVector<T> Y0,
+                                  DACE::AlgebraicVector<DACE::DA> (*pFunction)(DACE::AlgebraicVector<DACE::DA>, double),
+                                  double X0, double X1);
 };

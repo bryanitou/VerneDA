@@ -4,12 +4,13 @@
 
 // System libraries
 #include <iostream>
+#include <filesystem>
 
 // DACE library
 #include "dace/dace.h"
 
 // Project libraries
-#include "tools.h"
+#include "tools/io.h"
 
 /**
  * Main entry point
@@ -48,12 +49,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path y1_y2_output_path = "./out/Example2-dace_test_sin2cos2.txt";
 
     // Print all this stuff
-    tools::dump_variables(y1, x, func_form1, var_form, y1_output_path);
-    tools::dump_variables(y2, x, func_form2, var_form, y2_output_path);
-    tools::dump_variables(y1_y2, x, func_form3, var_form, y1_y2_output_path);
+    tools::io::dump_variables(y1, x, func_form1, var_form, y1_output_path);
+    tools::io::dump_variables(y2, x, func_form2, var_form, y2_output_path);
+    tools::io::dump_variables(y1_y2, x, func_form3, var_form, y1_y2_output_path);
 
     // Plot all this stuff
-    tools::plot_variables(y1_output_path, PYTHON_PLOTTER, 10,true);
-    tools::plot_variables(y2_output_path, PYTHON_PLOTTER, 10,true);
-    tools::plot_variables(y1_y2_output_path, PYTHON_PLOTTER, 2,true);
+    tools::io::plot_variables(y1_output_path, PYTHON_PLOTTER, 10,true);
+    tools::io::plot_variables(y2_output_path, PYTHON_PLOTTER, 10,true);
+    tools::io::plot_variables(y1_y2_output_path, PYTHON_PLOTTER, 2,true);
 }

@@ -45,7 +45,8 @@ enum class STATE
 enum class INTEGRATOR
 {
     EULER,
-    RK4
+    RK4,
+    RK78
 };
 
 enum class DISTRIBUTION
