@@ -104,9 +104,6 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
     # Save second plot
     plt.savefig(output_path[1])
 
-    # Clear
-    plt.close(figure)
-
 
 def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
     """
