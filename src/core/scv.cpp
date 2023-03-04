@@ -51,12 +51,13 @@ void scv::allocate_scv_values(double px, double py, double pz, double vx, double
                               bool with_da, double error)
 {
     // Allocate values
-    this->px_ = std::make_shared<DACE::DA>(with_da ? px + DACE::DA(1) * 1/error : px);
-    this->py_ = std::make_shared<DACE::DA>(with_da ? py + DACE::DA(2) * 1/error : py);
-    this->pz_ = std::make_shared<DACE::DA>(with_da ? pz + DACE::DA(3) * 1/error : pz);
-    this->vx_ = std::make_shared<DACE::DA>(with_da ? vx + DACE::DA(4) * 1/error : vx);
-    this->vy_ = std::make_shared<DACE::DA>(with_da ? vy + DACE::DA(5) * 1/error : vy);
-    this->vz_ = std::make_shared<DACE::DA>(with_da ? vz + DACE::DA(6) * 1/error : vz);
+    // TODO:
+    this->px_ = std::make_shared<DACE::DA>(with_da ? px + DACE::DA(1) * error : px);
+    this->py_ = std::make_shared<DACE::DA>(with_da ? py + DACE::DA(2) * error : py);
+    this->pz_ = std::make_shared<DACE::DA>(with_da ? pz + DACE::DA(3) * error : pz);
+    this->vx_ = std::make_shared<DACE::DA>(with_da ? vx + DACE::DA(4) * error : vx);
+    this->vy_ = std::make_shared<DACE::DA>(with_da ? vy + DACE::DA(5) * error : vy);
+    this->vz_ = std::make_shared<DACE::DA>(with_da ? vz + DACE::DA(6) * error : vz);
 }
 
 DACE::AlgebraicVector<DACE::DA> scv::get_state_vector_copy()

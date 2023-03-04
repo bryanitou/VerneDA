@@ -66,6 +66,7 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // pos: position (x, y, z) that will be modified
     // Call to random engine generator
     std::default_random_engine generator;
+    // todo: the mean is the initial condition, see photo
     double mean_pos = 100.0; double stddev_pos = 10.0;
     double mean_vel = 10.0; double stddev_vel = 1.0;
     std::normal_distribution<double> distribution_pos(mean_pos, stddev_pos);
