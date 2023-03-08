@@ -1,6 +1,114 @@
 # getting2knowDace
 Basic repository where DACE library will be treated as a thirdparty, where some mains will be used to use its functions and features.
 
+## Build
+
+Follow the steps to successfully build the project, this section is dedicated to the people
+who have just downloaded the repository, set-ups and installations are detailed here.
+
+- Go to dependencies section and install all of them.
+
+Install third parties, this bash code will unpack all the tared packages in this folder. This is 
+done to economize space in the repository.
+```shell
+bash scripts/install_3rdparty
+```
+
+Set the installation prefix of the application in the recommended folder using the CMake options 
+(change it if needed).
+```shell
+cmake -DCMAKE_INSTALL_PREFIX=build/getting2knowDace-install-debug
+```
+
+Build the project (8 is the number of threads to be used by the build):
+```shell
+make -j8
+```
+
+Test project with the 'dace_vsod' (DACE Very Simple Orbit Determination) executable:
+```shell
+build/getting2knowDace-install-debug/bin/dace_vsod
+```
+Results will be generated in the following location:
+```tree
+out/tbp/  
+├── deltas_expression_RK4_1.png  
+├── deltas_expression_RK4_2.png  
+├── deltas_expression_RK4.dd  
+└── taylor_expression_RK4.avd  
+```
+If you can find all the results, you have successfully installed the project.
+
+
+Remarks:
+
+- If some error occur during the build, please communicate it for troubleshooting.
+- Build is only targeted to be in **_Debug_** mode.
+- **_Release_** mode TBD. If you want to do it should check for Optimization Flags to be accepted 
+by the CMake check, should be done to ensure optimal execution of the application (memory leaks, etc.)
+## Tutorials
+
+A brief section dedicated to tutorials has been created, these tutorials can be found in:
+
+```tree
+src/main/tutorials/  
+├── Example1-dace_test.cpp  
+├── Example2-dace_test.cpp  
+├── Example3-dace_test.cpp  
+└── Example4-dace_test.cpp  
+```
+
+Navigate through each of them and read carefully the documentation. After the run, a python 
+script will be called in order to plot the results.
+
+## Outputs
+
+Some output formats made _in the house_ for post-process recognition purposes:
+
+| Extension | Format |      Description      | Details                                                                       |
+|:---------:|:------:|:---------------------:|-------------------------------------------------------------------------------|
+|   *.dd    |  CSV   |      Delta Dump       | Delta ID (Identifier), within it the variables (physical) and its information |
+|   *.avd   |  CSV   | Algebraic Vector Dump | Variable (physical) and its information to re-construct the taylor polynomial |
+
+
+## Dependencies
+
+Should install the following dependencies in order to make the project work:
+
+- gcc version >= 11.3.0
+- g++ version >= 11.3.0
+- cmake version >= 3.22.1
+- make >= 4.3
+
+```shell
+sudo apt-get install gcc g++ cmake make
+```
+
+## Deployment
+
+TODO
+
+## Project structure
+
+```html
+├── common  
+│&nbsp;&nbsp;└── tools-py  
+├── doc  
+├── scripts  
+└── src  
+&nbsp;&nbsp; ├── 3rdparty  
+&nbsp;&nbsp; ├── core  
+&nbsp;&nbsp; │&nbsp;&nbsp; ├── base  
+&nbsp;&nbsp; │&nbsp;&nbsp; └── tools  
+&nbsp;&nbsp; └── main  
+&nbsp;&nbsp; &nbsp;&nbsp;└── tutorials
+```
+TBD: Add description of each place.
+
+## Programming guidelines
+
+TODO
+
 ## Developers in CLion Environment
 
 1 - Clone the repository from CLion's Version control using the same URL:
@@ -19,7 +127,8 @@ versions do not have it)
 
 6 - Add to options `-DCMAKE_INSTALL_PREFIX=../getting2knowDace-install-debug` (to match with `build_all.sh`).
 
-7 - Set 'Build directory' to `build/getting2knowDace-build-debug` (to match with `build_all.sh`).
+7 - Set 'Build directory' to `build/getting2knowDace-build-debug` (TODO: to match with `build_all.sh`, this
+script is still to be done).
 
 8 - 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
 
