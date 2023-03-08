@@ -92,16 +92,16 @@ TODO
 
 ```html
 ├── common  
-│&nbsp;&nbsp;└── tools-py  
+│   └── tools-py  
 ├── doc  
 ├── scripts  
 └── src  
-&nbsp;&nbsp; ├── 3rdparty  
-&nbsp;&nbsp; ├── core  
-&nbsp;&nbsp; │&nbsp;&nbsp; ├── base  
-&nbsp;&nbsp; │&nbsp;&nbsp; └── tools  
-&nbsp;&nbsp; └── main  
-&nbsp;&nbsp; &nbsp;&nbsp;└── tutorials
+    ├── 3rdparty  
+    ├── core  
+    │   ├── base  
+    │   └── tools  
+    └── main  
+        └── tutorials
 ```
 TBD: Add description of each place.
 
