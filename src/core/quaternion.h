@@ -33,7 +33,7 @@ public: // Constructors
 private: // Attributes
 
     // Quaternion definition: q = a + b*i + c*j + d*k
-    double q[4];
+    double q[4]{};
 
 private: // Private functions
 
@@ -60,5 +60,6 @@ private: // Private functions
      *      inverse ( Q ) = conjugate ( Q ) / ( norm ( Q ) )^2.
      * @return
      */
-    static double* inverse(double q[]);
+     double* inverse();
+     static double* inverse(const double* q);
 };

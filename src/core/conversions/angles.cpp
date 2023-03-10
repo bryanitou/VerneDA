@@ -15,6 +15,8 @@ double conversions::angles::deg2rad(double deg)
     {
         deg += 360.0;
     }
+
+    // Return result
     return (deg / 180.0) * M_PI;
 }
 
@@ -30,5 +32,6 @@ double conversions::angles::rad2deg(double rad)
         rad += M_2_PI;
     }
 
+    // Return result
     return (rad / M_PI) * 180.0;
 }
