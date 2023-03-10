@@ -19,7 +19,7 @@ public: // Constructor
     /**
      * Default constructor.
      */
-    point(double x, double y, double z);
+    point(double x, double y, double z, const std::string &id = "");
 
     /**
      * Default destructor.

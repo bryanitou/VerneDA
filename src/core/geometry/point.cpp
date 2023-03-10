@@ -4,9 +4,11 @@
 
 #include "point.h"
 
-point::point(double x, double y, double z)
+point::point(double x, double y, double z, const std::string& id)
 {
+    // Set the point and the id
     this->set_point(x, y, z);
+    this->id = id;
 }
 
 void point::set_point(double x, double y, double z)
