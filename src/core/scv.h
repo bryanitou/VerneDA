@@ -17,8 +17,28 @@
 class scv{
 
 public: // Constructor
+    /**
+     * State control vector class constructor.
+     * @param px [in] [double]
+     * @param py [in] [double]
+     * @param pz [in] [double]
+     * @param vx [in] [double]
+     * @param vy [in] [double]
+     * @param vz [in] [double]
+     * @param with_da [in] [bool]
+     * @param error [in] [double]
+     */
     explicit scv(double px, double py, double pz, double vx, double vy, double vz, bool with_da = true, double error = 1.0);
+
+    /**
+     * State control vector class constructor from Algebraic Vector.
+     * @param csv_DA [in] [DACE::AlgebraicVector<DACE::DA>]
+     */
     explicit scv(const DACE::AlgebraicVector<DACE::DA>& csv_DA);
+
+    /**
+     * Class default destructor.
+     */
     ~scv() = default;
 
 public:
