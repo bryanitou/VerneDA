@@ -1,5 +1,5 @@
 /**
- * Namespace dedicated to tools.
+ * IO: In / Out space. Namespace dedicated to tools.
  */
 
 #pragma once

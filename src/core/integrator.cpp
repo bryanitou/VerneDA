@@ -155,6 +155,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     double BS = 20*EPS;
 
     // TODO: Investigate what is this
+    //  This is not initialized!
     int I, J, K;
 
     // AlgebraicMatrix<T> Z(N,16);

@@ -171,10 +171,12 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/tools/io.cpp
         src/core/tools/vo.cpp
         src/core/tools/str.cpp
+        src/core/conversions/angles.cpp
         src/core/scv.cpp
         src/core/integrator.cpp
         src/core/problems.cpp
-        src/core/delta.cpp)
+        src/core/delta.cpp
+        src/core/quaternion.cpp)
 
 add_dependencies(core
         dace)

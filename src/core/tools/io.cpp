@@ -1,5 +1,5 @@
 /**
- *
+ * IO: In / Out space. Namespace dedicated to tools.
  */
 
 #include "io.h"

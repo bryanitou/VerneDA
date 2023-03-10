@@ -135,6 +135,8 @@ void delta::evaluate_deltas()
 {
     // Local auxiliary variables
     std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
+
+    // Reserve space for optimal memory management
     taylor_list.reserve(this->scv_deltas_->size());
 
     // Evaluate each delta

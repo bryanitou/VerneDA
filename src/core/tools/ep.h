@@ -1,5 +1,5 @@
 /**
- * Namespace dedicated to tools.
+ * EP: Enum Parser space. Namespace dedicated to tools.
  */
 
 #pragma once
@@ -37,6 +37,17 @@ namespace tools::enums
          */
         std::string DISTRIBUTION2str(DISTRIBUTION distribution);
 
+        /**
+         * Parse STATE CONTROL VECTOR to VELOCITY enum.
+         * @param state
+         * @return VELOCITY enum
+         */
         VELOCITY STATE2VELOCITY(STATE state);
+
+        /**
+        * Parse STATE CONTROL VECTOR to POSITION enum.
+        * @param state
+        * @return POSITION enum
+        */
         POSITION STATE2POSITION(STATE state);
     };

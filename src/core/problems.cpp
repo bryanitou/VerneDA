@@ -27,3 +27,17 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     // Return result
     return res;
 }
+
+DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::DA> scv, double t )
+{
+    // Create attitude and resultant vector
+    DACE::AlgebraicVector<DACE::DA> ang(3), res(6);
+
+    // Set positions: equal to the first three positions of the SCV (State Control Vector)
+    ang[0] = scv[0]; // Px
+    ang[1] = scv[1]; // Py
+    ang[2] = scv[2]; // Pz
+
+    // Compute next
+
+}
