@@ -172,6 +172,8 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/tools/vo.cpp
         src/core/tools/str.cpp
         src/core/conversions/angles.cpp
+        src/core/geometry/point.cpp
+        src/core/solids/cylinder.cpp
         src/core/scv.cpp
         src/core/integrator.cpp
         src/core/problems.cpp
