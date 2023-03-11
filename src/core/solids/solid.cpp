@@ -38,6 +38,15 @@ void solid::addpoint(double x, double y, double z, const std::string& point_id)
     }
 }
 
+void solid::addpoints(const std::vector<point> &point_list)
+{
+    // Add points looping through them
+    for (auto &new_p: point_list)
+    {
+        this->addpoint(new_p);
+    }
+}
+
 void solid::addpoint(const point& point)
 {
     this->points.push_back(point);
