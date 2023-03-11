@@ -4,7 +4,7 @@
 
 #include "solid.h"
 
-void solid::addpoint(double x, double y, double z, const std::string& id)
+void solid::addpoint(double x, double y, double z, const std::string& point_id)
 {
     // Check if point is already there
     point new_p(x, y, z, id);
@@ -18,7 +18,7 @@ void solid::addpoint(double x, double y, double z, const std::string& id)
         if (p.operator==(&new_p))
         {
             // Info
-            std::printf("Not adding point '%s' since it is already in the list.", id.c_str());
+            std::printf("Not adding point '%s' since it is already in the list.", point_id.c_str());
 
             // Set bool
             same = true;
@@ -30,6 +30,9 @@ void solid::addpoint(double x, double y, double z, const std::string& id)
 
     if (!same)
     {
+        // Info
+        std::printf("Adding point '%s' to solid '%s'", point_id.c_str(), this->id.c_str());
+
         // Create a point object and add it
         this->addpoint(new_p);
     }

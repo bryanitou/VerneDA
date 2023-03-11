@@ -30,6 +30,9 @@ private:
     // A vector of points
     std::vector<point> points{};
 
+    // Identifier
+    std::string id{};
+
 public:
 
     /**
