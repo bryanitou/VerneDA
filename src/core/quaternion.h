@@ -45,11 +45,20 @@ private: // Private functions
      */
     static double * get_from_Euler(double roll, double pitch, double yaw);
 
-    void set_quaternion(double* q);
+    /**
+     * Set quaternion as is.
+     * @param q_new [in] [double]
+     */
+    void set_quaternion(double* q_new);
 
     /**
-     * Get the inverse of the quaternion q
-     * @param q
+     * Get the inverse of the internal quaternion
+     */
+     double* inverse();
+
+     /**
+      * Get inverse from external quaternion.
+     * @param q2inv
      * @details
      *
      *    A quaternion is a quadruplet (A,B,C,D) of real numbers, which
@@ -62,10 +71,21 @@ private: // Private functions
      *      inverse ( Q ) = conjugate ( Q ) / ( norm ( Q ) )^2.
      * @return
      */
-     double* inverse();
-     static double* inverse(const double* q);
+     static double* inverse(const double* q2inv);
 
-
+    /**
+     * Rotate quaternion given an axis.
+     * @param q_axis
+     * @return
+     */
      double* rotate(const double* q_axis);
+
+     /**
+      * Rotate quaternion given an axis in Euler angles.
+      * @param roll [in] [double]
+      * @param pitch [in] [double]
+      * @param yaw [in] [double]
+      * @return quaternion
+      */
      double* rotate(double roll, double pitch, double yaw);
 };

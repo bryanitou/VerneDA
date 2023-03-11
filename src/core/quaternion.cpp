@@ -13,16 +13,16 @@ quaternion::quaternion(double roll, double pitch, double yaw)
     this->set_quaternion(q1);
 }
 
-void quaternion::set_quaternion(double *q)
+void quaternion::set_quaternion(double *q_new)
 {
     // Set received quaternion
-    this->q[0] = q[0];
-    this->q[1] = q[1];
-    this->q[2] = q[2];
-    this->q[3] = q[3];
+    this->q[0] = q_new[0];
+    this->q[1] = q_new[1];
+    this->q[2] = q_new[2];
+    this->q[3] = q_new[3];
 
     // Delete quaternion
-    delete q;
+    delete q_new;
 }
 
 double * quaternion::get_from_Euler(double roll, double pitch, double yaw)
@@ -50,39 +50,26 @@ double * quaternion::get_from_Euler(double roll, double pitch, double yaw)
 
 double *quaternion::inverse()
 {
-    // New double inversed
-    auto* q2 = new double [4];
-
-    double norm =     this->q[0] * this->q[0]
-                      + this->q[1] * this->q[1]
-                      + this->q[2] * this->q[2]
-                      + this->q[3] * this->q[3];
-
-    q2[0] =  this->q[0] / norm;
-    q2[1] = -this->q[1] / norm;
-    q2[2] = -this->q[2] / norm;
-    q2[3] = -this->q[3] / norm;
-
     // Return result
-    return q2;
+    return quaternion::inverse(this->q);
 }
 
-double *quaternion::inverse(const double *q)
+double *quaternion::inverse(const double *q2inv)
 {
     // New double inversed
-    auto* q2 = new double [4];
+    auto* q_inv = new double [4];
 
-    double norm =   q[0] * q[0]
-                  + q[1] * q[1]
-                  + q[2] * q[2]
-                  + q[3] * q[3];
+    double norm =   q2inv[0] * q2inv[0]
+                  + q2inv[1] * q2inv[1]
+                  + q2inv[2] * q2inv[2]
+                  + q2inv[3] * q2inv[3];
 
-    q2[0] =  q[0] / norm;
-    q2[1] = -q[1] / norm;
-    q2[2] = -q[2] / norm;
-    q2[3] = -q[3] / norm;
+    q_inv[0] = q2inv[0] / norm;
+    q_inv[1] = -q2inv[1] / norm;
+    q_inv[2] = -q2inv[2] / norm;
+    q_inv[3] = -q2inv[3] / norm;
 
-    return q2;
+    return q_inv;
 }
 
 double *q8_multiply ( const double q1[], const double q2[] )
