@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     double radius = 2.0;
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(100.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    auto s0 = std::make_unique<scv>(0.0, 0.0, 0.0, 100.0, 0.0, 0.0,
                                     true, 10);
 
     // Now, should initialize all the dace variables from the initial conditions
@@ -59,6 +59,9 @@ int main(int argc, char* argv[])
 
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
+
+    // Set distribution
+    deltas_engine->set_constants(10.0, 1.0, 10.0, 1.0);
 
     // Compute deltas
     deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX);
