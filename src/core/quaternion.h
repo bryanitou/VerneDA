@@ -49,7 +49,7 @@ private: // Private functions
      * Set quaternion as is.
      * @param q_new [in] [double]
      */
-    void set_quaternion(double* q_new);
+    void set_quaternion(const double* q_new);
 
     /**
      * Get the inverse of the internal quaternion

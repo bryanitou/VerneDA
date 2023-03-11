@@ -13,7 +13,7 @@ quaternion::quaternion(double roll, double pitch, double yaw)
     this->set_quaternion(q1);
 }
 
-void quaternion::set_quaternion(double *q_new)
+void quaternion::set_quaternion(const double *q_new)
 {
     // Set received quaternion
     this->q[0] = q_new[0];
@@ -74,9 +74,7 @@ double *quaternion::inverse(const double *q2inv)
 
 double *q8_multiply ( const double q1[], const double q2[] )
 {
-    double *q3;
-
-    q3 = new double[4];
+    auto *q3 = new double[4];
 
     q3[0] = q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3];
     q3[1] = q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2];
