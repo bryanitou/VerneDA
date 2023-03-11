@@ -43,7 +43,9 @@ private: // Private functions
      * @param pitch [in] [double]
      * @param yaw [in] [double]
      */
-    void set_from_Euler(double roll, double pitch, double yaw);
+    static double * get_from_Euler(double roll, double pitch, double yaw);
+
+    void set_quaternion(double* q);
 
     /**
      * Get the inverse of the quaternion q
@@ -62,4 +64,8 @@ private: // Private functions
      */
      double* inverse();
      static double* inverse(const double* q);
+
+
+     double* rotate(const double* q_axis);
+     double* rotate(double roll, double pitch, double yaw);
 };

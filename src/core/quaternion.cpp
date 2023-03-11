@@ -6,10 +6,26 @@
 
 quaternion::quaternion(double roll, double pitch, double yaw)
 {
-    this->set_from_Euler(roll, pitch, yaw);
+    // Create the quaternion
+    auto q1 = get_from_Euler(roll, pitch, yaw);
+
+    // Save it
+    this->set_quaternion(q1);
 }
 
-void quaternion::set_from_Euler(double roll, double pitch, double yaw)
+void quaternion::set_quaternion(double *q)
+{
+    // Set received quaternion
+    this->q[0] = q[0];
+    this->q[1] = q[1];
+    this->q[2] = q[2];
+    this->q[3] = q[3];
+
+    // Delete quaternion
+    delete q;
+}
+
+double * quaternion::get_from_Euler(double roll, double pitch, double yaw)
 {
     // Pre-compute values for efficiency
     double sin_roll = sin(roll/2);
@@ -19,11 +35,17 @@ void quaternion::set_from_Euler(double roll, double pitch, double yaw)
     double sin_yaw = sin(yaw/2);
     double cos_yaw = cos(yaw/2);
 
+    // Declare quaternion
+    auto * q1 = new double[4];
+
     // Save the quaternion
-    this->q[0] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
-    this->q[1] = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
-    this->q[2] = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
-    this->q[3] = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+    q1[0] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
+    q1[1] = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
+    q1[2] = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
+    q1[3] = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+
+    // Return got quaternion
+    return q1;
 }
 
 double *quaternion::inverse()
@@ -63,3 +85,38 @@ double *quaternion::inverse(const double *q)
     return q2;
 }
 
+double *q8_multiply ( const double q1[], const double q2[] )
+{
+    double *q3;
+
+    q3 = new double[4];
+
+    q3[0] = q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3];
+    q3[1] = q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2];
+    q3[2] = q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1];
+    q3[3] = q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0];
+
+    return q3;
+}
+
+double* quaternion::rotate(double roll, double pitch, double yaw)
+{
+    // Get the rotation axis as a quaternion
+    auto q_axis = quaternion::get_from_Euler(roll, pitch, yaw);
+
+    // Get the inverse
+    return quaternion::rotate(q_axis);
+}
+
+double* quaternion::rotate(const double *q_axis)
+{
+    // Get the inverse
+    auto q_inv = quaternion::inverse(q_axis);
+
+    // Multiply
+    auto res1 = q8_multiply(this->q, q_inv);
+    auto q_res = q8_multiply(q_axis, res1);
+
+    // Return result
+    return q_res;
+}
