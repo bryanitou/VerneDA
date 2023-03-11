@@ -4,7 +4,8 @@
 
 #include "io.h"
 
-[[maybe_unused]] void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
+[[maybe_unused]] void tools::io::dace::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form,
+                                                const std::string & var_form, const std::filesystem::path & file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -28,7 +29,7 @@
     file2write.close();
 }
 
-void tools::io::dump_variables(DACE::DA &func, const std::string& id,  const std::filesystem::path &file_path)
+void tools::io::dace::dump_variables(DACE::DA &func, const std::string& id,  const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -81,7 +82,7 @@ void tools::io::write2stream_DA_parameters(std::iostream * iostream, DACE::DA da
     }
 }*/ //TODO: Finish this
 
-void tools::io::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_v, const std::filesystem::path &file_path)
+void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_v, const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -139,7 +140,7 @@ void tools::io::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_
 
 }
 
-void tools::io::dump_deltas(delta* delta, const std::filesystem::path &file_path)
+void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();

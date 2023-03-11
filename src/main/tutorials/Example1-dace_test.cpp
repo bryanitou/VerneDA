@@ -38,7 +38,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::filesystem::path output_path = "./out/Example1-dace_test.txt";
 
     // Dump variables
-    tools::io::dump_variables(y, x, func_form, var_form, output_path);
+    tools::io::dace::dump_variables(y, x, func_form, var_form, output_path);
 
     // Make plot
     tools::io::plot_variables(output_path, PYPLOT_SIMPLE, 5,true);

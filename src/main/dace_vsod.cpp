@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
     std::filesystem::path output_path_dd = "./out/tbp/deltas_expression_RK4.dd";
 
     // Dump final info
-    tools::io::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dump_deltas(deltas_engine.get(), output_path_dd);
+    tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
+    tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
 
     // Draw plots
     tools::io::plot_variables(output_path_dd, PYPLOT_BANANA);
