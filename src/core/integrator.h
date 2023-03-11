@@ -28,8 +28,6 @@ public:
     ~integrator() = default;
 
 private:
-    int a;
-    int b;
     std::vector<int> vector;
 
 public:

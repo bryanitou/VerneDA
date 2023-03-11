@@ -29,6 +29,17 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
     }
 
+    // Safety check that the constants are already set
+    if (!this->constants_set)
+    {
+        // WARNING! Must set constants for the distribution competition before
+        std::printf("WARNING: Deltas are not going to be computed. Need to provide pos/vel: mean and stddev. "
+                    "It has not been set yet. Exiting program.");
+
+        // Exit program
+        std::exit(-1);
+    }
+
     // If normal distribution chosen:
     switch (distribution)
     {
@@ -67,10 +78,8 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-    double mean_pos = 100.0; double stddev_pos = 10.0;
-    double mean_vel = 10.0; double stddev_vel = 1.0;
-    std::normal_distribution<double> distribution_pos(mean_pos, stddev_pos);
-    std::normal_distribution<double> distribution_vel(mean_vel, stddev_vel);
+    std::normal_distribution<double> distribution_pos(this->mean_pos, this->stddev_pos);
+    std::normal_distribution<double> distribution_vel(this->mean_vel, this->stddev_vel);
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n);
@@ -78,8 +87,8 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     for (int i=0; i<n; ++i)
     {
         // Generate number from GAUSSIAN distribution
-        double number_pos = distribution_pos(generator);
-        double number_vel = distribution_vel(generator);
+        double random_pos = distribution_pos(generator);
+        double random_vel = distribution_vel(generator);
 
         // TODO: Remove when clear
         // Create Delta vector for DEBUG
@@ -112,12 +121,12 @@ void delta::generate_gaussian_deltas(int n, STATE state)
         // }
 
         // TODO: Discuss this logic, leave this demonstration for the while
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::X);
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::Y);
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::Z);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::X);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::Y);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::Z);
+        scv_delta->set_state_value(random_pos - mean_pos, POSITION::X);
+        scv_delta->set_state_value(random_pos - mean_pos, POSITION::Y);
+        scv_delta->set_state_value(random_pos - mean_pos, POSITION::Z);
+        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::X);
+        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::Y);
+        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::Z);
 
         // Append scv in the list
         deltas.emplace_back(scv_delta);
@@ -148,4 +157,17 @@ void delta::evaluate_deltas()
 
     // Make it ptr
     this->deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
+}
+
+void delta::set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel)
+{
+    // Set constants
+    this->mean_pos = mean_pos;
+    this->stddev_pos = stddev_pos;
+    this->mean_vel = mean_vel;
+    this->stddev_vel = stddev_vel;
+
+    // Notice
+    this->constants_set = true;
+
 }

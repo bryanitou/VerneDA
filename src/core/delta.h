@@ -26,8 +26,29 @@ public:
     ~delta() = default;
 
 public:
+
+    /**
+     * Set constants for the deltas generation
+     * @param mean_pos [in] [double]
+     * @param stddev_pos [in] [double]
+     * @param mean_vel [in] [double]
+     * @param stddev_vel [in] [double]
+     */
+    void set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel);
+
+
+    /**
+     * Compute the deltas. Constants need to be set for this.
+     * @param type [in] [DISTRIBUTION]
+     * @param n [in] [int]
+     * @param state [in] [STATE]
+     */
     void compute_deltas(DISTRIBUTION type, int n, STATE state);
 
+    /**
+     * Get deltas polynomial.
+     * @return deltas_poly
+     */
     std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> get_deltas_poly()
     {
         return deltas_poly_;
@@ -43,6 +64,17 @@ private:
     std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
     // List of results
     std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> deltas_poly_ = nullptr;
+
+private:
+
+    // Distribution constants
+    double mean_pos{};
+    double stddev_pos{};
+    double mean_vel{};
+    double stddev_vel{};
+
+    // Constants set?
+    bool constants_set{false};
 
 private:
     // Allocators
