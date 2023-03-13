@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd, true);
+    tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
 
     // Draw plots
     tools::io::plot_variables(output_path_dd, PYPLOT_BANANA);
