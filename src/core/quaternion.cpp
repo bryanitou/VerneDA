@@ -36,10 +36,10 @@ std::vector<double> quaternion::get_from_Euler(double roll, double pitch, double
     std::vector<double> q1(4);
 
     // Save the quaternion
-    q1[0] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
-    q1[1] = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
-    q1[2] = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
-    q1[3] = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+    q1[1] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
+    q1[2] = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
+    q1[3] = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
+    q1[0] = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
 
     // Return got quaternion
     return q1;
