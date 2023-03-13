@@ -39,13 +39,13 @@ int main(int argc, char* argv[])
 
     // Declare the state control vector
     std::vector<DACE::DA> scv0 = {
-            q_control[0], // q0
-            q_control[1], // q1
-            q_control[2], // q2
-            q_control[3], // q3
-            100.0, // w1 -> rotation around 1 axis
-            100.0, // w2 -> rotation around 2 axis
-            0.0  };  // w3 -> rotation around 3 axis
+            q_control[0],   // q0
+            q_control[1],   // q1
+            q_control[2],   // q2
+            q_control[3],   // q3
+            100.0,          // w1 -> rotation around 1 axis
+            100.0,          // w2 -> rotation around 2 axis
+            0.0  };         // w3 -> rotation around 3 axis
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0, true, error);
