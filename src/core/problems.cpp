@@ -35,10 +35,10 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     DACE::AlgebraicVector<DACE::DA> q(4), omega(3), res(7);
 
     // Set positions: equal to the first three positions of the SCV (State Control Vector)
-    q[0] = scv[0]; // theta_x_dot
-    q[1] = scv[1]; // theta_y_dot
-    q[2] = scv[2]; // theta_z_dot
-    q[3] = scv[3]; // theta_z_dot
+    q[0] = scv[0]; // ?
+    q[1] = scv[1]; // ?
+    q[2] = scv[2]; // ?
+    q[3] = scv[3]; // ?
 
     omega[0] = scv[4];
     omega[1] = scv[5];
