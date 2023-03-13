@@ -1,5 +1,6 @@
 /**
  * NAMESPACE hosting problems formulas
+ * - Quaternions problem: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=686806
  */
 
 #include "problems.h"
@@ -15,9 +16,9 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     pos[2] = scv[2]; // Pz_dot
     auto r = pos.vnorm();
 
-    res[0] = scv[3]; // Vx_dot
-    res[1] = scv[4]; // Vy_dot
-    res[2] = scv[5]; // Vz_dot
+    res[0] = scv[3]; // Px_dot = Vx
+    res[1] = scv[4]; // Py_dot = Vy
+    res[2] = scv[5]; // Pz_dot = Vz
 
     // Compute next Vx, Vy, Vz state from the current position
     res[3] = -constants::earth::mu*pos[0]/(r*r*r); // Vx_dot
@@ -39,9 +40,9 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     ang[2] = scv[2]; // theta_z_dot
 
     // Set result
-    res[0] = ang[0]; // theta_x_dot
-    res[1] = ang[1]; // theta_y_dot
-    res[2] = ang[2]; // theta_z_dot
+    res[0] = 0.5 * ang[0] * scv[3]; // theta_x_dot
+    res[1] = 0.5 * ang[1] * scv[4]; // theta_y_dot
+    res[2] = 0.5 * ang[2] * scv[5]; // theta_z_dot
     res[3] = 0.0; // omega_x_dot
     res[4] = 0.0; // omega_y_dot
     res[5] = 0.0; // omega_z_dot
