@@ -29,7 +29,7 @@ void scv::allocate_csv_DA_vector(const DACE::AlgebraicVector<DACE::DA>& csv_DA, 
     {
         // WARN the user that the rest will be lost,
         std::printf("WARNING: When allocating from a DA vector, length = 6 was expected. "
-                    "Actual size: '%i'. Positions > 5 will be lost.", (int)csv_DA.size());
+                    "Actual size: '%i'. Positions > 5 will be lost.\n", (int)csv_DA.size());
     }
 
     // Allocate variables
