@@ -32,20 +32,26 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
 DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::DA> scv, double t )
 {
     // Create attitude and resultant vector
-    DACE::AlgebraicVector<DACE::DA> ang(3), res(6);
+    DACE::AlgebraicVector<DACE::DA> q(4), omega(3), res(7);
 
     // Set positions: equal to the first three positions of the SCV (State Control Vector)
-    ang[0] = scv[0]; // theta_x_dot
-    ang[1] = scv[1]; // theta_y_dot
-    ang[2] = scv[2]; // theta_z_dot
+    q[0] = scv[0]; // theta_x_dot
+    q[1] = scv[1]; // theta_y_dot
+    q[2] = scv[2]; // theta_z_dot
+    q[3] = scv[3]; // theta_z_dot
+
+    omega[0] = scv[4];
+    omega[1] = scv[5];
+    omega[2] = scv[6];
 
     // Set result
-    res[0] = 0.5 * ang[0] * scv[3]; // theta_x_dot
-    res[1] = 0.5 * ang[1] * scv[4]; // theta_y_dot
-    res[2] = 0.5 * ang[2] * scv[5]; // theta_z_dot
-    res[3] = 0.0; // omega_x_dot
+    res[0] = 0.5 * (-omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]); // theta_x_dot
+    res[1] = 0.5 * ( omega[0] * q[0] + omega[2] * q[2] - omega[1] * q[3]); // theta_x_dot
+    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] + omega[0] * q[3]); // theta_x_dot
+    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[0] * q[2]); // theta_x_dot
     res[4] = 0.0; // omega_y_dot
     res[5] = 0.0; // omega_z_dot
+    res[6] = 0.0; // omega_z_dot
 
     // Return result
     return res;

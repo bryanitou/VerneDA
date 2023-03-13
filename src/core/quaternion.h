@@ -10,6 +10,7 @@
 
 // System libraries
 #include <cmath>
+#include <vector>
 
 class quaternion {
 
@@ -33,9 +34,9 @@ public: // Constructors
 private: // Attributes
 
     // Quaternion definition: q = a + b*i + c*j + d*k
-    double q[4]{};
+    std::vector<double> q = {0.0, 0.0, 0.0, 0.0};
 
-private: // Private functions
+public: // Private functions
 
     /**
      * Set quaternion from Euler angles.
@@ -43,18 +44,19 @@ private: // Private functions
      * @param pitch [in] [double]
      * @param yaw [in] [double]
      */
-    static double * get_from_Euler(double roll, double pitch, double yaw);
+    static std::vector<double> get_from_Euler(double roll, double pitch, double yaw);
 
+private:
     /**
      * Set quaternion as is.
      * @param q_new [in] [double]
      */
-    void set_quaternion(const double* q_new);
+    void set_quaternion(std::vector<double> q_new);
 
     /**
      * Get the inverse of the internal quaternion
      */
-     double* inverse();
+    std::vector<double>  inverse();
 
      /**
       * Get inverse from external quaternion.
@@ -71,14 +73,14 @@ private: // Private functions
      *      inverse ( Q ) = conjugate ( Q ) / ( norm ( Q ) )^2.
      * @return
      */
-     static double* inverse(const double* q2inv);
+     static std::vector<double>  inverse(std::vector<double>  q2inv);
 
     /**
      * Rotate quaternion given an axis.
      * @param q_axis
      * @return
      */
-     double* rotate(const double* q_axis);
+    std::vector<double> rotate(std::vector<double>  q_axis);
 
      /**
       * Rotate quaternion given an axis in Euler angles.
@@ -87,5 +89,5 @@ private: // Private functions
       * @param yaw [in] [double]
       * @return quaternion
       */
-     double* rotate(double roll, double pitch, double yaw);
+     std::vector<double>  rotate(double roll, double pitch, double yaw);
 };

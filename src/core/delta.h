@@ -43,7 +43,7 @@ public:
      * @param n [in] [int]
      * @param state [in] [STATE]
      */
-    void compute_deltas(DISTRIBUTION type, int n, STATE state);
+    void compute_deltas(DISTRIBUTION type, int n, STATE state,  bool attitude = false);
 
     /**
      * Get deltas polynomial.
@@ -82,7 +82,7 @@ private:
 
 private:
     // Deltas calculators relying on the distribution type
-    void generate_gaussian_deltas(int n, STATE state);
+    void generate_gaussian_deltas(int n, STATE state,  bool attitude);
 
     // Evaluate
     void evaluate_deltas();

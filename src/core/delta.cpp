@@ -20,7 +20,7 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
+void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool attitude)
 {
     // Safety check that the deltas are still not generated
     if (this->scv_deltas_ != nullptr)
@@ -45,7 +45,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
     {
         case DISTRIBUTION::GAUSSIAN:
         {
-            this->generate_gaussian_deltas(n, state);
+            this->generate_gaussian_deltas(n, state, attitude);
             break;
         }
         default:
@@ -62,7 +62,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
     // TODO: Show info message
 }
 
-void delta::generate_gaussian_deltas(int n, STATE state)
+void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
 {
     // Stack results here: no need to initialize!
     std::vector<std::shared_ptr<scv>> deltas;
@@ -96,10 +96,6 @@ void delta::generate_gaussian_deltas(int n, STATE state)
         // Deltax0[0] = 1.0;
         // std::cout << Deltax0.toString() << std::endl;
 
-
-        // Generate the scv from the base csv
-        auto scv_delta = std::make_shared<scv>(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
-
         // Change its value from the number given form the normal function
         // Make the change in the adequate place: px, py, pz, vx, vy, vz...
         // TODO: Revise this step:
@@ -121,12 +117,32 @@ void delta::generate_gaussian_deltas(int n, STATE state)
         // }
 
         // TODO: Discuss this logic, leave this demonstration for the while
-        scv_delta->set_state_value(random_pos - mean_pos, POSITION::X);
-        scv_delta->set_state_value(random_pos - mean_pos, POSITION::Y);
-        scv_delta->set_state_value(random_pos - mean_pos, POSITION::Z);
-        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::X);
-        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::Y);
-        scv_delta->set_state_value(random_vel - mean_vel, VELOCITY::Z);
+        std::vector<DACE::DA> new_delta;
+        if (attitude)
+        {
+            new_delta = {
+                    random_pos - mean_pos,
+                    random_pos - mean_pos,
+                    random_pos - mean_pos,
+                    random_pos - mean_pos,
+                    random_vel - mean_vel,
+                    random_vel - mean_vel,
+                    random_vel - mean_vel};
+        }
+        else
+        {
+            new_delta = {
+                    random_pos - mean_pos,
+                    random_pos - mean_pos,
+                    random_pos - mean_pos,
+                    random_vel - mean_vel,
+                    random_vel - mean_vel,
+                    random_vel - mean_vel};
+        }
+
+
+        // Generate the scv from the base csv
+        auto scv_delta = std::make_shared<scv>(new_delta);
 
         // Append scv in the list
         deltas.emplace_back(scv_delta);
