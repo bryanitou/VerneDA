@@ -11,7 +11,7 @@ who have just downloaded the repository, set-ups and installations are detailed 
 Install third parties, this bash code will unpack all the tared packages in this folder. This is 
 done to economize space in the repository.
 ```shell
-bash scripts/install_3rdparty
+bash scripts/install_3rdparties.sh
 ```
 
 Set the installation prefix of the application in the recommended folder using the CMake options 
