@@ -40,6 +40,10 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     q[2] = scv[2]; // ?
     q[3] = scv[3]; // ?
 
+    omega[0] = scv[4];
+    omega[1] = scv[5];
+    omega[2] = scv[6];
+
     double r = 2;
     double h = 6;
     double mass = 1000;
@@ -48,7 +52,6 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     double Jz = (mass * r * r) / 4;
 
     // Set result
-    // Don't touch this
     res[0] = 0.5 * ( omega[2] * q[1] - omega[1] * q[2] + omega[0] * q[3]); // theta_x_dot
     res[1] = 0.5 * (-omega[2] * q[0] + omega[0] * q[2] + omega[1] * q[3]); // theta_x_dot
     res[2] = 0.5 * ( omega[1] * q[0] - omega[0] * q[1] + omega[2] * q[3]); // theta_x_dot
@@ -57,16 +60,12 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     res[5] = (Jz - Jx) * omega[1] * omega[0] / Jy; // omega_z_dot
     res[6] = (Jx - Jy) * omega[0] * omega[1] / Jz; // omega_z_dot
 
-    // Check norm of the new quaternion
     // Check the norm of the quaternion
-    auto q_res_norm = q.cons().extract(0, 3).vnorm();
-    auto line2write = tools::string::print2string("Integration point: \n\t'%.5f'", q_res_norm);
+    auto q_norm = q.cons().vnorm();
+    auto line2write = tools::string::print2string("Integration point: \n\t'%.5f'", q_norm);
 
     std::cout << line2write << std::endl;
 
-    omega[0] = scv[4];
-    omega[1] = scv[5];
-    omega[2] = scv[6];
 
     // Return result
     return res;
