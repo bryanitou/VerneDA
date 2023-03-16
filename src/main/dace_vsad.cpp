@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
     double radius = 2.0;
 
     // Get initial quaternion
-    auto q_control = quaternion::get_from_Euler(0.0, 0.0, 0.0);
+    auto q_control = quaternion::euler2quaternion(0.0, 0.0, 0.0);
 
     // Set error
-    double error = 10.0;
+    double error = 0.1;
 
     // Declare the state control vector
     std::vector<DACE::DA> scv0 = {
@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
             q_control[1],   // q1
             q_control[2],   // q2
             q_control[3],   // q3
-            100.0,          // w1 -> rotation around 1 axis
-            100.0,          // w2 -> rotation around 2 axis
+            0.01,          // w1 -> rotation around 1 axis
+            0.01,          // w2 -> rotation around 2 axis
             0.0  };         // w3 -> rotation around 3 axis
 
     // Declare and initialize class
@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
     double const t0 = 0.0;
 
     // How many periods do we want to integrate?
-    double const tf = 1000;
+    double const tf = 100;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
+    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
 
     // Define problem to solve
     auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::Attitude);
@@ -73,18 +73,23 @@ int main(int argc, char* argv[])
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
 
+    // TODO: Add this to the delta set
+    //  Debug line
+    std::cout << scvf_DA->get_state_vector_copy().cons()<< std::endl;
+    std::cout << scvf_DA->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
+
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(error, 1.0, error, 1.0);
+    deltas_engine->set_constants(error, 0.01, error, 0.01);
 
     // Compute deltas
     deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX, true);
 
     // Set output path
-    std::filesystem::path output_path_avd = "./out/attp4/taylor_expression_RK4.avd";
-    std::filesystem::path output_path_dd = "./out/attp4/deltas_expression_RK4.dd";
+    std::filesystem::path output_path_avd = "./out/attp/taylor_expression_RK4.avd";
+    std::filesystem::path output_path_dd = "./out/attp/deltas_expression_RK4.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);

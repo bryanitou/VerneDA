@@ -12,31 +12,7 @@
 #include <cmath>
 #include <vector>
 
-class quaternion {
-
-public: // Constructors
-
-    /**
-     * Default constructor.
-     */
-    quaternion(double roll, double pitch, double yaw);
-
-    /**
-     * Default constructor.
-     */
-    quaternion() = default;
-
-    /**
-     * Default destructor.
-     */
-    ~quaternion() = default;
-
-private: // Attributes
-
-    // Quaternion definition: q = a + b*i + c*j + d*k
-    std::vector<double> q = {0.0, 0.0, 0.0, 0.0};
-
-public: // Private functions
+namespace quaternion {
 
     /**
      * Set quaternion from Euler angles.
@@ -44,50 +20,39 @@ public: // Private functions
      * @param pitch [in] [double]
      * @param yaw [in] [double]
      */
-    static std::vector<double> get_from_Euler(double roll, double pitch, double yaw);
+    std::vector<double> euler2quaternion(double roll, double pitch, double yaw);
 
-private:
-    /**
-     * Set quaternion as is.
-     * @param q_new [in] [double]
-     */
-    void set_quaternion(std::vector<double> q_new);
+     /**
+      * Get the norm of the quaterion.
+      * @param q
+      * @return
+      */
+    double getnorm(std::vector<double> q);
+
+    std::vector<double> scale(std::vector<double> q, double num);
 
     /**
-     * Get the inverse of the internal quaternion
-     */
+ * Get the inverse of the internal quaternion
+ */
     std::vector<double>  inverse();
 
-     /**
-      * Get inverse from external quaternion.
-     * @param q2inv
-     * @details
-     *
-     *    A quaternion is a quadruplet (A,B,C,D) of real numbers, which
-     *    may be written as
-     *
-     *      Q = A + Bi + Cj + Dk.
-     *
-     *    The inverse of Q is
-     *
-     *      inverse ( Q ) = conjugate ( Q ) / ( norm ( Q ) )^2.
-     * @return
-     */
-     static std::vector<double>  inverse(std::vector<double>  q2inv);
-
     /**
-     * Rotate quaternion given an axis.
-     * @param q_axis
-     * @return
-     */
-    std::vector<double> rotate(std::vector<double>  q_axis);
+     * Get inverse from external quaternion.
+    * @param q2inv
+    * @details
+    *
+    *    A quaternion is a quadruplet (A,B,C,D) of real numbers, which
+    *    may be written as
+    *
+    *      Q = A + Bi + Cj + Dk.
+    *
+    *    The inverse of Q is
+    *
+    *      inverse ( Q ) = conjugate ( Q ) / ( norm ( Q ) )^2.
+    * @return
+    */
+    std::vector<double>  inverse(std::vector<double>  q2inv);
 
-     /**
-      * Rotate quaternion given an axis in Euler angles.
-      * @param roll [in] [double]
-      * @param pitch [in] [double]
-      * @param yaw [in] [double]
-      * @return quaternion
-      */
-     std::vector<double>  rotate(double roll, double pitch, double yaw);
+
+    std::vector<double> q8_multiply(std::vector<double> q1, std::vector<double> q2);
 };

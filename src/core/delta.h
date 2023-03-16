@@ -6,6 +6,8 @@
 // Project libraries
 #include "scv.h"
 #include "tools/ep.h"
+#include "quaternion.h"
+#include "tools/str.h"
 
 // System libraries
 #include <random>

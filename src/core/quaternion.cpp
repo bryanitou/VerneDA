@@ -4,25 +4,7 @@
 
 #include "quaternion.h"
 
-quaternion::quaternion(double roll, double pitch, double yaw)
-{
-    // Create the quaternion
-    auto q1 = get_from_Euler(roll, pitch, yaw);
-
-    // Save it
-    this->set_quaternion(q1);
-}
-
-void quaternion::set_quaternion(std::vector<double> q_new)
-{
-    // Set received quaternion
-    this->q[0] = q_new[0];
-    this->q[1] = q_new[1];
-    this->q[2] = q_new[2];
-    this->q[3] = q_new[3];
-}
-
-std::vector<double> quaternion::get_from_Euler(double roll, double pitch, double yaw)
+std::vector<double> quaternion::euler2quaternion(double roll, double pitch, double yaw)
 {
     // Pre-compute values for efficiency
     double sin_roll = sin(roll/2);
@@ -45,21 +27,68 @@ std::vector<double> quaternion::get_from_Euler(double roll, double pitch, double
     return q1;
 }
 
-std::vector<double> quaternion::inverse()
+std::vector<double> quaternion::scale(std::vector<double> q, double num)
 {
-    // Return result
-    return quaternion::inverse(this->q);
+    // Declare quaternion
+    std::vector<double> q1(4);
+
+    // Save the quaternion
+    q1[1] = q1[1] * num;
+    q1[2] = q1[2] * num;
+    q1[3] = q1[3] * num;
+    q1[0] = q1[0] * num;
+
+    // Return got quaternion
+    return q1;
 }
+
+}
+
+double quaternion::getnorm(std::vector<double> q)
+{
+    double norm =   q[0] * q[0]
+                    + q[1] * q[1]
+                    + q[2] * q[2]
+                    + q[3] * q[3];
+
+    return norm;
+}
+
+/*
+std::vector<double> quaternion::quaternion2euler(double a, double b, double c, double d)
+{
+    // Declare quaternion
+    std::vector<double> euler_angles(3);
+
+    double yaw = atan2 (2.0*( c * d + a * b ) , a * a - b * b - c * c + d * d);
+
+    double t0 = +2.0 * (w * x + y * z);
+    double t1 = +1.0 - 2.0 * (x * x + y * y);
+    double roll_x = atan2(t0, t1);
+
+    double t2 = +2.0 * (w * y - z * x);
+    // Python code translated below:
+    // double t2 = +1.0 if t2 > +1.0 else t2;
+    // double t2 = -1.0 if t2 < -1.0 else t2;
+    // Becomes:
+    t2 = t2 > +1.0 ? +1.0 : t2 < -1.0 ? -1.0 : t2;
+    double pitch_y = asin(t2);
+    double t3 = +2.0 * (w * z + x * y);
+    double t4 = +1.0 - 2.0 * (y * y + z * z);
+    double yaw_z = math.atan2(t3, t4);
+
+
+    // Return got quaternion
+    return q1;
+}*/
+
 
 std::vector<double>  quaternion::inverse(std::vector<double> q2inv)
 {
     // New double inversed
     std::vector<double> q_inv(4);
 
-    double norm =   q2inv[0] * q2inv[0]
-                  + q2inv[1] * q2inv[1]
-                  + q2inv[2] * q2inv[2]
-                  + q2inv[3] * q2inv[3];
+    double norm = quaternion::getnorm(q2inv);
 
     q_inv[0] = q2inv[0] / norm;
     q_inv[1] = -q2inv[1] / norm;
@@ -69,7 +98,7 @@ std::vector<double>  quaternion::inverse(std::vector<double> q2inv)
     return q_inv;
 }
 
-std::vector<double> q8_multiply (std::vector<double>  q1, std::vector<double>  q2)
+std::vector<double> quaternion::q8_multiply (std::vector<double>  q1, std::vector<double>  q2)
 {
     std::vector<double> q3(4);
 
@@ -79,26 +108,4 @@ std::vector<double> q8_multiply (std::vector<double>  q1, std::vector<double>  q
     q3[3] = q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0];
 
     return q3;
-}
-
-std::vector<double>  quaternion::rotate(double roll, double pitch, double yaw)
-{
-    // Get the rotation axis as a quaternion
-    auto q_axis = quaternion::get_from_Euler(roll, pitch, yaw);
-
-    // Get the inverse
-    return quaternion::rotate(q_axis);
-}
-
-std::vector<double>  quaternion::rotate(std::vector<double> q_axis)
-{
-    // Get the inverse
-    auto q_inv = quaternion::inverse(q_axis);
-
-    // Multiply
-    auto res1 = q8_multiply(this->q, q_inv);
-    auto q_res = q8_multiply(q_axis, res1);
-
-    // Return result
-    return q_res;
 }

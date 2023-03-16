@@ -1,4 +1,5 @@
 # System imports
+import math
 import os
 import sys
 
@@ -27,15 +28,18 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
             exit(-1)
 
     # Now, should collect X-Y coordinates
+    # TODO: Make this work for quaternion AND for orbit
+    w = []
     x = []
     y = []
     z = []
     for delta in taylor:
         for var in taylor[delta]:
-            if var == "0" or var == "1" or var == "2":
+            if var == "0" or var == "1" or var == "2" or var == "3":
                 # Get index and coef
-                val = taylor[delta][var]["1"]["coef"] / 1000  # to km
-                x.append(val) if var == "0" else (y.append(val) if var == "1" else z.append(val))
+                val = taylor[delta][var]["1"]["coef"]  # to km
+                w.append(val) if var == "0" else (x.append(val) if var == "1" else (y.append(int(var)) if var == "2" else z.append(val)))
+        print(f"Norm: {w[-1]*w[-1] + x[-1]*x[-1] + y[-1]*y[-1] + z[-1]*z[-1]}")
 
     if len(z) > 0:
         # Initialise the subplot function using number of rows and columns

@@ -90,41 +90,30 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
         double random_pos = distribution_pos(generator);
         double random_vel = distribution_vel(generator);
 
-        // TODO: Remove when clear
-        // Create Delta vector for DEBUG
-        // DACE::AlgebraicVector<DACE::DA> Deltax0(6);
-        // Deltax0[0] = 1.0;
-        // std::cout << Deltax0.toString() << std::endl;
-
-        // Change its value from the number given form the normal function
-        // Make the change in the adequate place: px, py, pz, vx, vy, vz...
-        // TODO: Revise this step:
-        // auto delta = scv_base_->get_state_value_copy(pos) + number;
-        // auto delta = number;
-
-        // Set the delta in the given place
-        // if (var2change == "POSITION")
-        // {
-        //     scv_delta->set_state_value(number, VELOCITY::X);
-        //     scv_delta->set_state_value(number, VELOCITY::Y);
-        //     scv_delta->set_state_value(number, VELOCITY::Z);
-        // }
-        // else
-        // {
-        //     scv_delta->set_state_value(number, VELOCITY::X);
-        //     scv_delta->set_state_value(number, VELOCITY::Y);
-        //     scv_delta->set_state_value(number, VELOCITY::Z);
-        // }
-
         // TODO: Discuss this logic, leave this demonstration for the while
         std::vector<DACE::DA> new_delta;
         if (attitude)
         {
+            // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
+            // Get the quaternion
+            auto nq = quaternion::euler2quaternion(random_pos - mean_pos,
+                                                               random_pos - mean_pos,
+                                                               random_pos - mean_pos);
+
+            // Safety check for norm
+            double nq_norm = quaternion::getnorm(nq);
+            bool is1norm = nq_norm == 1.0;
+
+            if (!is1norm)
+            {
+                std::string err_msg = tools::string::print2string(
+                        "This quaternion = ('%.2f', ''%.2f', '%.2f', ''%.2f') is not norm 1! Actual norm: '%.24f'",
+                        nq[0], nq[1], nq[2], nq[3], nq_norm);
+                std::cerr << err_msg << std::endl;
+                std::exit(-1);
+            }
             new_delta = {
-                    random_pos - mean_pos,
-                    random_pos - mean_pos,
-                    random_pos - mean_pos,
-                    random_pos - mean_pos,
+                    nq[0], nq[1], nq[2], nq[3],
                     random_vel - mean_vel,
                     random_vel - mean_vel,
                     random_vel - mean_vel};
@@ -169,6 +158,9 @@ void delta::evaluate_deltas()
     {
         // Evaluate and save
         taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector_copy()));
+
+        // TODO: DEBUG LINE
+        std::cout << this->base_poly_->eval(scv_delta->get_state_vector_copy()).cons().extract(0, 3).vnorm() << std::endl;
     }
 
     // Make it ptr

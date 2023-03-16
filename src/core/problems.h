@@ -8,6 +8,7 @@
 
 // Project libraries
 #include "base/constants.h"
+#include "tools/str.h"
 
 namespace problems
 {
