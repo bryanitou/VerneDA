@@ -65,4 +65,6 @@ namespace quaternion {
     void scale(DACE::AlgebraicVector<DACE::DA> *q, double num);
 
     void check_norm(DACE::AlgebraicVector<DACE::DA> *q);
+
+    std::vector<double> quaternion2euler(double w, double x, double y, double z);
 };

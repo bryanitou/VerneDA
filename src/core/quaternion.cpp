@@ -75,33 +75,39 @@ double quaternion::getnorm(std::vector<double> q)
     return norm;
 }
 
-/*
-std::vector<double> quaternion::quaternion2euler(double a, double b, double c, double d)
+
+std::vector<double> quaternion::quaternion2euler(double w, double x, double y, double z)
 {
     // Declare quaternion
     std::vector<double> euler_angles(3);
 
-    double yaw = atan2 (2.0*( c * d + a * b ) , a * a - b * b - c * c + d * d);
+    // Auxiliary variables
+    double num{};
+    double den{};
 
-    double t0 = +2.0 * (w * x + y * z);
-    double t1 = +1.0 - 2.0 * (x * x + y * y);
-    double roll_x = atan2(t0, t1);
+    // Roll
+    num = +2.0 * (w * x + y * z);
+    den = +1.0 - 2.0 * (x * x + y * y);
+    double roll = atan2(num, den);
 
-    double t2 = +2.0 * (w * y - z * x);
-    // Python code translated below:
+    // Pitch
+    num = +2.0 * (w * y - z * x);
+    // Python code translated below: // TODO: Re-check this translation
     // double t2 = +1.0 if t2 > +1.0 else t2;
     // double t2 = -1.0 if t2 < -1.0 else t2;
     // Becomes:
-    t2 = t2 > +1.0 ? +1.0 : t2 < -1.0 ? -1.0 : t2;
-    double pitch_y = asin(t2);
-    double t3 = +2.0 * (w * z + x * y);
-    double t4 = +1.0 - 2.0 * (y * y + z * z);
-    double yaw_z = math.atan2(t3, t4);
+    num = num > +1.0 ? +1.0 : num < -1.0 ? -1.0 : num;
+    double pitch = asin(num);
+
+    // Yaw
+    num = +2.0 * (w * z + x * y);
+    den = +1.0 - 2.0 * (y * y + z * z);
+    double yaw = atan2(num, den);
 
 
-    // Return got quaternion
-    return q1;
-}*/
+    // Return Euler angles
+    return std::vector<double> {roll, pitch, yaw};
+}
 
 
 std::vector<double>  quaternion::inverse(std::vector<double> q2inv)
