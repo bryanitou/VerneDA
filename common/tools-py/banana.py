@@ -6,9 +6,16 @@ import sys
 # Project libraries
 import tools
 import reader
+import euler
 
 # Import matplotlib stuff
 import matplotlib.pyplot as plt
+
+# 3d printer
+from mpl_toolkits.mplot3d import Axes3D
+
+# Import numpy
+import numpy as np
 
 
 def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, verbose: bool = False) -> None:
@@ -103,6 +110,9 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, v
         # Clear
         plt.close(figure)
 
+    # Set the size
+    plt.figure(figsize=(16, 9))
+
     # Finally, we can plot everything
     plt.scatter(x, y, s=0.4)
     plt.xlabel(f"x [{unit_str}]")
@@ -116,6 +126,59 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, v
 
     # Save second plot
     plt.savefig(output_path[1])
+
+    # Plot 3D vectors
+    plot_3d_vectors(x, y, z, output=output_path[2])
+
+
+def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
+    # The initial orientation was: [x: 0, y: 0, z: 1]
+    initial_vector_x = np.array([1, 0, 0]).transpose()  # Initial attitude
+    initial_vector_y = np.array([0, 1, 0]).transpose()  # Initial attitude
+    initial_vector_z = np.array([0, 0, 1]).transpose()  # Initial attitude
+
+    # Final vectors
+    final_attitude_x = []
+    final_attitude_y = []
+    final_attitude_z = []
+
+    # Get size
+    size = len(roll)
+
+    for i in range(0, size):
+        # Get rotation matrix
+        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx")
+
+        # Final vector
+        final_vector_x = np.matmul(rot_matrix, initial_vector_x)
+        final_vector_y = np.matmul(rot_matrix, initial_vector_y)
+        final_vector_z = np.matmul(rot_matrix, initial_vector_z)
+
+        # Append result
+        final_attitude_x.append(final_vector_x)
+        final_attitude_y.append(final_vector_y)
+        final_attitude_z.append(final_vector_z)
+
+    # Triplets of vectors
+    xx, yx, zx = zip(*final_attitude_x)
+    xy, yy, zy = zip(*final_attitude_y)
+    xz, yz, zz = zip(*final_attitude_z)
+
+    # Figure and its size
+    fig = plt.figure(figsize=(16, 9))
+
+    # Add subplot
+    ax = fig.add_subplot(111, projection='3d')
+
+    # From the center, print vectors.
+    ax.quiver([0] * size, [0] * size, [0] * size, xx, yx, zx, color="r")
+    ax.quiver([0] * size, [0] * size, [0] * size, xy, yy, zy, color="b")
+    ax.quiver([0] * size, [0] * size, [0] * size, xz, yz, zz, color="y")
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    plt.show()
+    plt.savefig(output)
 
 
 def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
@@ -155,11 +218,13 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
         txt_filename1 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_1.png')
         txt_filename2 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_2.png')
+        txt_filename3 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_3d.png')
         output_path1 = os.path.join(parent_folder, f"{txt_filename1}")
         output_path2 = os.path.join(parent_folder, f"{txt_filename2}")
+        output_path3 = os.path.join(parent_folder, f"{txt_filename3}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, output_path=[output_path1, output_path2], metrics=metrics, verbose=verbose, )
+        plot_banana(taylor_dict, output_path=[output_path1, output_path2, output_path3], metrics=metrics, verbose=verbose)
 
 
 if __name__ == '__main__':
