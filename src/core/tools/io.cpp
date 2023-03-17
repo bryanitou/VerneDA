@@ -202,7 +202,9 @@ void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &fil
 
 }
 
-[[maybe_unused]] void tools::io::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
+[[maybe_unused]] void tools::io::plot_variables(std::filesystem::path & path2file,
+                                                const std::string& python_executable,
+                                                const std::string& metrics, int span,
                                                 bool async, bool silent)
 {
     // Ensure system() is available
@@ -227,12 +229,22 @@ void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &fil
         cmd += "--silent";
         cmd += " ";
         cmd += silent ? "true" : "false";
+        cmd += " ";
+
+        // Metrics
+        if (!metrics.empty())
+        {
+            cmd += "--metrics";
+            cmd += " ";
+            cmd += metrics;
+            cmd += " ";
+        }
 
         // Is it async?
         if (async)
         {
-            cmd += " ";
             cmd += "&";
+            cmd += " ";
         }
 
         // Launch command

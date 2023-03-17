@@ -45,10 +45,14 @@ namespace tools::io
      * Calls to python file, passes the output file and executes it.
      * @param path2file path to the output '.txt' file.
      * @param python_executable path to the python script.
+     * @param metrics units of the plot.
      * @param span read python file to understand this argument.
      * @param async asynchronous task.
      * @param silent silent task.
      */
-    [[maybe_unused]] void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
-                                         bool async = false, bool silent = true);
+    [[maybe_unused]] void plot_variables(std::filesystem::path &path2file, const std::string &python_executable,
+                                         const std::string& metrics = "",
+                                         int span = 1,
+                                         bool async = false,
+                                         bool silent = true);
 };

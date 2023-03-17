@@ -85,6 +85,6 @@ int main(int argc, char* argv[])
     tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
 
     // Draw plots
-    tools::io::plot_variables(output_path_dd, PYPLOT_BANANA);
+    tools::io::plot_variables(output_path_dd, PYPLOT_BANANA, "m");
 
 }

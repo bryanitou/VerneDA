@@ -20,7 +20,7 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool attitude)
+void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool attitude, bool quat2euler)
 {
     // Safety check that the deltas are still not generated
     if (this->scv_deltas_ != nullptr)
@@ -57,7 +57,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool a
     }
 
     // Once done, evaluate deltas with the polynomial which is already saved in memory
-    this->evaluate_deltas();
+    this->evaluate_deltas(quat2euler);
 
     // TODO: Show info message
 }
@@ -110,7 +110,7 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
                         "This quaternion = ('%.2f', ''%.2f', '%.2f', ''%.2f') is not norm 1! Actual norm: '%.24f'",
                         nq[0], nq[1], nq[2], nq[3], nq_norm);
                 std::cerr << err_msg << std::endl;
-                std::exit(-1);
+                //std::exit(-1);
             }
             new_delta = {
                     nq[0], nq[1], nq[2], nq[3],
@@ -145,10 +145,11 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
     // TODO: Info message
 }
 
-void delta::evaluate_deltas()
+void delta::evaluate_deltas(bool quat2euler)
 {
     // Local auxiliary variables
     std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
+    DACE::AlgebraicVector<DACE::DA> single_sol;
 
     // Reserve space for optimal memory management
     taylor_list.reserve(this->scv_deltas_->size());
@@ -157,10 +158,38 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *scv_deltas_)
     {
         // Evaluate and save
-        taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector_copy()));
+        single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
 
+        // Check the norm
         // TODO: DEBUG LINE
-        std::cout << this->base_poly_->eval(scv_delta->get_state_vector_copy()).cons().extract(0, 3).vnorm() << std::endl;
+        auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
+                                                      single_sol.cons().extract(0, 3).vnorm());
+        std::cout << line2write << std::endl;
+        std::cout << single_sol << std::endl;
+
+        // If it is attitude, we should convert the quaternion to Euler angles
+        if (quat2euler)
+        {
+            // Get the constants
+            auto quaternion = single_sol.cons().extract(0, 3);
+
+            // Convert to Euler
+            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+                                                             quaternion[1],
+                                                             quaternion[2],
+                                                             quaternion[3]);
+
+            // Replace the constant valuesç
+            // TODO: MAKE THIS MODULAR FROM THE MAIN
+            single_sol = {euler_angles[0]  * (180.0 / M_PI),
+                          euler_angles[1]  * (180.0 / M_PI),
+                          euler_angles[2]  * (180.0 / M_PI), single_sol[4], single_sol[5], single_sol[6]};
+
+            std::cout << single_sol << std::endl;
+        }
+
+        // Push back
+        taylor_list.emplace_back(single_sol);
     }
 
     // Make it ptr

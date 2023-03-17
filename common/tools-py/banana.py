@@ -11,12 +11,13 @@ import reader
 import matplotlib.pyplot as plt
 
 
-def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool = False) -> None:
+def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
     :param span: Span that the plot will cover
     :param output_path: where the plot should be saved.
+    :param metrics: what should we plot? Attitude, translation...
     :param verbose: verbosity indicator
     :return: None
     """
@@ -27,19 +28,27 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
             print("Expected input 'taylor' is not a dictionary!")
             exit(-1)
 
+    # Units
+    unit_str = "-" if metrics == "" else metrics
+
     # Now, should collect X-Y coordinates
     # TODO: Make this work for quaternion AND for orbit
-    w = []
     x = []
     y = []
     z = []
     for delta in taylor:
         for var in taylor[delta]:
-            if var == "0" or var == "1" or var == "2" or var == "3":
+            if var == "0" or var == "1" or var == "2":
                 # Get index and coef
-                val = taylor[delta][var]["1"]["coef"]  # to km
-                w.append(val) if var == "0" else (x.append(val) if var == "1" else (y.append(int(var)) if var == "2" else z.append(val)))
-        print(f"Norm: {w[-1]*w[-1] + x[-1]*x[-1] + y[-1]*y[-1] + z[-1]*z[-1]}")
+                val = taylor[delta][var]["1"]["coef"]
+
+                # Expanding this line
+                if var == "0":
+                    x.append(val)
+                elif var == "1":
+                    y.append(val)
+                else:
+                    z.append(val)
 
     if len(z) > 0:
         # Initialise the subplot function using number of rows and columns
@@ -51,12 +60,12 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
         ax[2].scatter(x, z, color="green", s=0.4)
 
         # Labels
-        ax[0].set_xlabel("x [km]")
-        ax[0].set_ylabel("y [km]")
-        ax[1].set_xlabel("y [km]")
-        ax[1].set_ylabel("z [km]")
-        ax[2].set_xlabel("x [km]")
-        ax[2].set_ylabel("z [km]")
+        ax[0].set_xlabel(f"x [{unit_str}]")
+        ax[0].set_ylabel(f"y [{unit_str}]")
+        ax[1].set_xlabel(f"y [{unit_str}]")
+        ax[1].set_ylabel(f"z [{unit_str}]")
+        ax[2].set_xlabel(f"x [{unit_str}]")
+        ax[2].set_ylabel(f"z [{unit_str}]")
 
         # Titles
         ax[0].set_title("XY Projection")
@@ -96,8 +105,8 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], verbose: bool =
 
     # Finally, we can plot everything
     plt.scatter(x, y, s=0.4)
-    plt.xlabel("x [km]")
-    plt.ylabel("y [km]")
+    plt.xlabel(f"x [{unit_str}]")
+    plt.ylabel(f"y [{unit_str}]")
 
     # Write legend
     # plt.legend([f"{taylor['function']['name']}", "Taylor expansion"])
@@ -128,11 +137,16 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         # Parse given arguments
         parsed_dict = tools.parse_arguments(args, verbose=verbose)
 
+        # Metrics of the plot
+        metrics = ""
+
         # Re-set verbosity
         if "silent" in parsed_dict:
             verbose = False if str(parsed_dict["silent"]).lower() == "true" else True
         if "span" in parsed_dict:
             span = int(parsed_dict["span"])
+        if "metrics" in parsed_dict:
+            metrics = parsed_dict["metrics"]
 
         # Now, we should get the information from the file
         taylor_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose)
@@ -145,7 +159,7 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         output_path2 = os.path.join(parent_folder, f"{txt_filename2}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, verbose=verbose, output_path=[output_path1, output_path2])
+        plot_banana(taylor_dict, output_path=[output_path1, output_path2], metrics=metrics, verbose=verbose, )
 
 
 if __name__ == '__main__':

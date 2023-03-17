@@ -11,6 +11,7 @@
 
 // System libraries
 #include <random>
+#include <cmath>
 
 class delta {
 
@@ -45,7 +46,7 @@ public:
      * @param n [in] [int]
      * @param state [in] [STATE]
      */
-    void compute_deltas(DISTRIBUTION type, int n, STATE state,  bool attitude = false);
+    void compute_deltas(DISTRIBUTION type, int n, STATE state,  bool attitude = false, bool quat2euler = false);
 
     /**
      * Get deltas polynomial.
@@ -87,5 +88,5 @@ private:
     void generate_gaussian_deltas(int n, STATE state,  bool attitude);
 
     // Evaluate
-    void evaluate_deltas();
+    void evaluate_deltas(bool quat2euler);
 };
