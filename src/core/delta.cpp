@@ -96,9 +96,9 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
             // Get the quaternion
-            auto nq = quaternion::euler2quaternion(random_pos - mean_pos,
-                                                               random_pos - mean_pos,
-                                                               random_pos - mean_pos);
+            auto nq = quaternion::euler2quaternion(random_pos - mean_pos_,
+                                                   random_pos - mean_pos_,
+                                                   random_pos - mean_pos_);
 
             // Safety check for norm
             double nq_norm = quaternion::getnorm(nq);
@@ -114,19 +114,19 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
             }
             new_delta = {
                     nq[0], nq[1], nq[2], nq[3],
-                    random_vel - mean_vel,
-                    random_vel - mean_vel,
-                    random_vel - mean_vel};
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_};
         }
         else
         {
             new_delta = {
-                    random_pos - mean_pos,
-                    random_pos - mean_pos,
-                    random_pos - mean_pos,
-                    random_vel - mean_vel,
-                    random_vel - mean_vel,
-                    random_vel - mean_vel};
+                    random_pos - mean_pos_,
+                    random_pos - mean_pos_,
+                    random_pos - mean_pos_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_};
         }
 
 
@@ -170,10 +170,10 @@ void delta::evaluate_deltas()
 void delta::set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel)
 {
     // Set constants
-    this->mean_pos = mean_pos;
-    this->stddev_pos = stddev_pos;
-    this->mean_vel = mean_vel;
-    this->stddev_vel = stddev_vel;
+    this->mean_pos_ = mean_pos;
+    this->stddev_pos_ = stddev_pos;
+    this->mean_vel_ = mean_vel;
+    this->stddev_vel_ = stddev_vel;
 
     // Notice
     this->constants_set = true;
