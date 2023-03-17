@@ -30,17 +30,18 @@ std::vector<double> quaternion::euler2quaternion(double roll, double pitch, doub
 void quaternion::scale(DACE::AlgebraicVector<DACE::DA>* q, double num)
 {
     // Save the quaternion
-    q[1] = q[1] * num;
-    q[2] = q[2] * num;
-    q[3] = q[3] * num;
-    q[0] = q[0] * num;
+    q[0].normalize() = q[0] * num;
+    q[1].normalize() = q[1] * num;
+    q[2].normalize() = q[2] * num;
+    q[3].normalize() = q[3] * num;
+
 }
 
 void quaternion::check_norm(DACE::AlgebraicVector<DACE::DA>* q)
 {
     // Check the norm of the quaternion
     auto q_norm = q->cons().vnorm();
-    auto line2write = tools::string::print2string("Integration point N^(q) = '%.5f'", q_norm);
+    auto line2write = tools::string::print2string("Integration point N^2(q) = '%.5f'", q_norm);
 
     // TODO: Debug line
     std::cout << line2write << std::endl;

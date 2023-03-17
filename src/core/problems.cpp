@@ -40,8 +40,9 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     q[2] = scv[2]; // Previous state
     q[3] = scv[3]; // Previous state
 
-    // Check for norm
-    quaternion::check_norm(&q);
+    // Normalize vector
+    // TODO: Do this will work? It seems so..! Otherwise think of using algorithm in function quaternion::check_norm
+    q = q.normalize();
 
     omega[0] = scv[4];
     omega[1] = scv[5];
