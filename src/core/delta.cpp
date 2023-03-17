@@ -78,8 +78,8 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-    std::normal_distribution<double> distribution_pos(this->mean_pos, this->stddev_pos);
-    std::normal_distribution<double> distribution_vel(this->mean_vel, this->stddev_vel);
+    std::normal_distribution<double> distribution_pos(this->mean_pos_, this->stddev_pos_);
+    std::normal_distribution<double> distribution_vel(this->mean_vel_, this->stddev_vel_);
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n);

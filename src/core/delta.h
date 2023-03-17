@@ -70,10 +70,10 @@ private:
 private:
 
     // Distribution constants
-    double mean_pos{};
-    double stddev_pos{};
-    double mean_vel{};
-    double stddev_vel{};
+    double mean_pos_{};
+    double stddev_pos_{};
+    double mean_vel_{};
+    double stddev_vel_{};
 
     // Constants set?
     bool constants_set{false};
