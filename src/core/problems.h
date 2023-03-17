@@ -9,6 +9,7 @@
 // Project libraries
 #include "base/constants.h"
 #include "tools/str.h"
+#include "quaternion.h"
 
 namespace problems
 {

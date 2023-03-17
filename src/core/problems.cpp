@@ -35,10 +35,13 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     DACE::AlgebraicVector<DACE::DA> q(4), omega(3), res(7);
 
     // Set positions: equal to the first three positions of the SCV (State Control Vector)
-    q[0] = scv[0]; // ?
-    q[1] = scv[1]; // ?
-    q[2] = scv[2]; // ?
-    q[3] = scv[3]; // ?
+    q[0] = scv[0]; // Previous state
+    q[1] = scv[1]; // Previous state
+    q[2] = scv[2]; // Previous state
+    q[3] = scv[3]; // Previous state
+
+    // Check for norm
+    quaternion::check_norm(&q);
 
     omega[0] = scv[4];
     omega[1] = scv[5];
@@ -59,13 +62,6 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     res[4] = (Jy - Jz) * omega[1] * omega[2] / Jx; // omega_y_dot
     res[5] = (Jz - Jx) * omega[1] * omega[0] / Jy; // omega_z_dot
     res[6] = (Jx - Jy) * omega[0] * omega[1] / Jz; // omega_z_dot
-
-    // Check the norm of the quaternion
-    auto q_norm = q.cons().vnorm();
-    auto line2write = tools::string::print2string("Integration point: \n\t'%.5f'", q_norm);
-
-    std::cout << line2write << std::endl;
-
 
     // Return result
     return res;

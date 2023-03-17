@@ -12,6 +12,12 @@
 #include <cmath>
 #include <vector>
 
+// DACE libraries
+#include "dace/dace.h"
+
+// Project libraries
+#include "tools/str.h"
+
 namespace quaternion {
 
     /**
@@ -55,4 +61,8 @@ namespace quaternion {
 
 
     std::vector<double> q8_multiply(std::vector<double> q1, std::vector<double> q2);
+
+    void scale(DACE::AlgebraicVector<DACE::DA> *q, double num);
+
+    void check_norm(DACE::AlgebraicVector<DACE::DA> *q);
 };
