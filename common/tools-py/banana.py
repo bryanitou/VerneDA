@@ -1,5 +1,5 @@
 # System imports
-import math
+import enum
 import os
 import sys
 
@@ -11,20 +11,31 @@ import euler
 # Import matplotlib stuff
 import matplotlib.pyplot as plt
 
-# 3d printer
-from mpl_toolkits.mplot3d import Axes3D
-
 # Import numpy
 import numpy as np
 
+def get_usage():
+    return "Usage:\n" \
+           "python3 banana.py --plot_type <string> --metrics <string> --silent <bool[OPIONAL]>\n" \
+           "Example for translation plot:\n" \
+           "->\t python3 banana.py --plot_type translation --metrics km --silent False\n" \
+           "Example for attitude plot:\n" \
+           "->\t python3 banana.py --plot_type orbit --metrics deg"
 
-def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, verbose: bool = False) -> None:
+class PlotType(enum.Enum):
+    translation = 0
+    attitude = 1
+
+
+def plot_banana(taylor: dict, output_prefix: [os.PathLike or str], plot_type: PlotType, metrics: str,
+                verbose: bool = False) -> None:
     """
     Plots the taylor
     :param taylor: dictionary containing the coefficients and the order
     :param span: Span that the plot will cover
-    :param output_path: where the plot should be saved.
-    :param metrics: what should we plot? Attitude, translation...
+    :param output_prefix: where the plot should be saved.
+    :param metrics: units to use: radians, degrees, meters, kilometers...
+    :param plot_type: what should we plot? Attitude, translation...
     :param verbose: verbosity indicator
     :return: None
     """
@@ -57,14 +68,34 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, v
                 else:
                     z.append(val)
 
-    if len(z) > 0:
-        plot_projections(x, y, z, unit_str, output_path[0])
+    # Call to plots relying on PlotType class
+    if plot_type == PlotType.attitude:
+        plot_attitude(x, y, z, unit_str=unit_str, prefix=output_prefix)
+    elif plot_type == PlotType.translation:
+        plot_translation(x, y, z, unit_str=unit_str, prefix=output_prefix)
+    else:
+        print("I can only do Translation and Attitude plots!")
+        exit(-1)
 
+
+
+def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output_path[1])
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
+
+    # Plot projections in three planes: XY, YZ, XZ
+    plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
 
     # Plot 3D vectors
-    plot_3d_vectors(x, y, z, output=output_path[2])
+    plot_3d_vectors(x, y, z, output=f"{prefix}-3D_rotations.png")
+
+
+def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
+    # Plot XY Projection
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
+
+    # Plot projections in three planes: XY, YZ, XZ
+    plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
 
 
 def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLike or str):
@@ -190,12 +221,11 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
     plt.savefig(output)
 
 
-def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
+def main(args: list = None, verbose: bool = False) -> None:
     """
     Main running function
 
     :param args: given arguments to the function
-    :param span: span that the plot will cover
     :param verbose: verbosity boolean
     :return:
     """
@@ -209,32 +239,33 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         # Parse given arguments
         parsed_dict = tools.parse_arguments(args, verbose=verbose)
 
-        # Metrics of the plot
-        metrics = ""
-
         # Re-set verbosity
         if "silent" in parsed_dict:
             verbose = False if str(parsed_dict["silent"]).lower() == "true" else True
-        if "span" in parsed_dict:
-            span = int(parsed_dict["span"])
         if "metrics" in parsed_dict:
             metrics = parsed_dict["metrics"]
+        else:
+            print("No <metrics> passed as argument!")
+            print(get_usage())
+            exit(-1)
+
+        # Check type
+        if "plot_type" in parsed_dict:
+            plot_type = PlotType.attitude if parsed_dict["plot_type"].lower() == "attitude" else PlotType.translation
+        else:
+            print("No <plot_type> passed as argument!")
+            print(get_usage())
+            exit(-1)
 
         # Now, we should get the information from the file
         taylor_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose)
 
         # From the file, get the parent folder and save it
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
-        txt_filename1 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_1.png')
-        txt_filename2 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_2.png')
-        txt_filename3 = os.path.split(parsed_dict['file'])[1].replace('.dd', '_3d.png')
-        output_path1 = os.path.join(parent_folder, f"{txt_filename1}")
-        output_path2 = os.path.join(parent_folder, f"{txt_filename2}")
-        output_path3 = os.path.join(parent_folder, f"{txt_filename3}")
+        output_prefix = os.path.join(parent_folder, "attitude" if plot_type == PlotType.attitude else "translation")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, output_path=[output_path1, output_path2, output_path3], metrics=metrics,
-                    verbose=verbose)
+        plot_banana(taylor_dict, output_prefix=output_prefix, plot_type=plot_type, metrics=metrics, verbose=verbose)
 
 
 if __name__ == '__main__':
