@@ -1,5 +1,5 @@
 /**
- *
+ * EP: Enum Parser space. Namespace dedicated to tools.
  */
 
 #include "ep.h"

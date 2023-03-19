@@ -27,6 +27,9 @@ public:
      */
     ~integrator() = default;
 
+private:
+    std::vector<int> vector;
+
 public:
     /**
      * This function will use some of the available integrators (i.e., Euler, RK4)

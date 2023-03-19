@@ -8,9 +8,12 @@
 
 // Project libraries
 #include "base/constants.h"
+#include "tools/str.h"
+#include "quaternion.h"
 
 namespace problems
 {
     DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t );
+    DACE::AlgebraicVector<DACE::DA> Attitude(DACE::AlgebraicVector<DACE::DA> scv, double t );
 
 };

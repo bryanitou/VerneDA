@@ -79,6 +79,8 @@ set(UCFLAGS " ")
 # Some user defined variables TODO: Set this outside here
 set(PYPLOT_SIMPLE_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/plotter.py")
 set(PYPLOT_BANANA_PATH "${CMAKE_SOURCE_DIR}/common/tools-py/banana.py")
+set(PYPLOT_TYPE_TRANSLATION "translation")
+set(PYPLOT_TYPE_ATTITUDE "attitude")
 
 # Application version information
 # This is automatic; do not touch anything
@@ -90,6 +92,8 @@ string(APPEND UCFLAGS " -D GIT_HASH=\"\\\"$(shell git log -1 --pretty=format:\"%
 string(APPEND UCFLAGS " -D USER_NAME=\"\\\"$(USER)\\\"\"")
 string(APPEND UCFLAGS " -D PYPLOT_SIMPLE=\"\\\"${PYPLOT_SIMPLE_PATH}\\\"\"")
 string(APPEND UCFLAGS " -D PYPLOT_BANANA=\"\\\"${PYPLOT_BANANA_PATH}\\\"\"")
+string(APPEND UCFLAGS " -D PYPLOT_TRANSLATION=\"\\\"${PYPLOT_TYPE_TRANSLATION}\\\"\"")
+string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 
 # Force re-compilation of STATIC_FLAGS.h
 # This phony target will always re-compile STATIC_FLAGS.h, thus always updating the compilation flag's values
@@ -171,10 +175,14 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/tools/io.cpp
         src/core/tools/vo.cpp
         src/core/tools/str.cpp
+        src/core/conversions/angles.cpp
+        src/core/geometry/point.cpp
+        src/core/solids/solid.cpp
         src/core/scv.cpp
         src/core/integrator.cpp
         src/core/problems.cpp
-        src/core/delta.cpp)
+        src/core/delta.cpp
+        src/core/quaternion.cpp)
 
 add_dependencies(core
         dace)
@@ -287,6 +295,29 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
+############################################
+# EXECUTABLES: DACE_VSO (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+set(EXECUTABLE_NAME "dace_vsad")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/dace_vsad.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
 # EXECUTABLES: DACE_VSO (DACE VERY SIMPLE ORBIT DETERMINATION)

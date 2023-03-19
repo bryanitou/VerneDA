@@ -1,5 +1,5 @@
 /**
- * Namespace dedicated to tools.
+ * IO: In / Out space. Namespace dedicated to tools.
  */
 
 #pragma once
@@ -7,6 +7,7 @@
 // System libraries
 #include <fstream>
 #include <filesystem>
+#include <unordered_map>
 
 // DA library
 #include "dace/dace.h"
@@ -20,6 +21,8 @@
 #include "tools/str.h"
 
 namespace tools::io
+{
+    namespace dace
     {
         /**
         * Dumps the images in a given file path
@@ -29,21 +32,24 @@ namespace tools::io
         * @param func_form variable form, point and derivative.
         * @param file_path file path.
         */
-        [[maybe_unused]] void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form, const std::string &var_form, const std::filesystem::path &file_path);
+        [[maybe_unused]] void dump_variables(DACE::DA &y, DACE::DA &x, const std::string &func_form,
+                                             const std::string &var_form, const std::filesystem::path &file_path);
 
         void dump_variables(DACE::DA &func, const std::string& id, const std::filesystem::path &file_path);
 
         void dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_v, const std::filesystem::path &file_path);
 
         void dump_deltas(delta* delta, const std::filesystem::path &file_path);
-        /**
-         * Calls to python file, passes the output file and executes it.
-         * @param path2file path to the output '.txt' file.
-         * @param python_executable path to the python script.
-         * @param span read python file to understand this argument.
-         * @param async asynchronous task.
-         * @param silent silent task.
-         */
-        [[maybe_unused]] void plot_variables(std::filesystem::path &path2file, const std::string &python_executable, int span = 1,
-                                             bool async = false, bool silent = true);
-    };
+    }
+
+
+    /**
+     * Calls to python file, passes the output file and executes it.
+     * @param python_executable [in] [std::string]
+     * @param args [in] [td::unordered_map<std::string, std::string>]
+     * @param async [in] [bool]
+     */
+    void plot_variables(const std::string &python_executable,
+                        const std::unordered_map<std::string, std::string> &args, bool async = false);
+
+};

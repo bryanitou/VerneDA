@@ -1,5 +1,5 @@
 /**
- * Namespace dedicated to tools.
+ * STR: String space. Namespace dedicated to tools.
  */
 
 #include "str.h"

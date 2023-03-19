@@ -1,10 +1,11 @@
 /**
- *
+ * IO: In / Out space. Namespace dedicated to tools.
  */
 
 #include "io.h"
 
-[[maybe_unused]] void tools::io::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form, const std::string & var_form, const std::filesystem::path & file_path)
+[[maybe_unused]] void tools::io::dace::dump_variables(DACE::DA &y, DACE::DA &x, const std::string & func_form,
+                                                const std::string & var_form, const std::filesystem::path & file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -28,7 +29,7 @@
     file2write.close();
 }
 
-void tools::io::dump_variables(DACE::DA &func, const std::string& id,  const std::filesystem::path &file_path)
+void tools::io::dace::dump_variables(DACE::DA &func, const std::string& id,  const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -81,7 +82,7 @@ void tools::io::write2stream_DA_parameters(std::iostream * iostream, DACE::DA da
     }
 }*/ //TODO: Finish this
 
-void tools::io::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_v, const std::filesystem::path &file_path)
+void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_v, const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -139,7 +140,7 @@ void tools::io::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA>& DA_
 
 }
 
-void tools::io::dump_deltas(delta* delta, const std::filesystem::path &file_path)
+void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &file_path)
 {
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -201,8 +202,9 @@ void tools::io::dump_deltas(delta* delta, const std::filesystem::path &file_path
 
 }
 
-[[maybe_unused]] void tools::io::plot_variables(std::filesystem::path & path2file, const std::string& python_executable, int span,
-                                                bool async, bool silent)
+[[maybe_unused]] void tools::io::plot_variables(const std::string& python_executable,
+                                                const std::unordered_map<std::string, std::string>& args,
+                                                bool async)
 {
     // Ensure system() is available
     if (std::system(nullptr))
@@ -215,23 +217,22 @@ void tools::io::dump_deltas(delta* delta, const std::filesystem::path &file_path
         cmd += " ";
         cmd += python_executable;
         cmd += " ";
-        cmd += "--file";
-        cmd += " ";
-        cmd += absolute(path2file);
-        cmd += " ";
-        cmd += "--span";
-        cmd += " ";
-        cmd += std::to_string(span);
-        cmd += " ";
-        cmd += "--silent";
-        cmd += " ";
-        cmd += silent ? "true" : "false";
 
-        // Is it async?
+        // Now, write all the arguments from the map
+        for(const auto& [arg, value] : args)
+        {
+            cmd += "--";
+            cmd += arg;
+            cmd += " ";
+            cmd += value;
+            cmd += " ";
+        }
+
+        // Is it an asynchronous process?
         if (async)
         {
-            cmd += " ";
             cmd += "&";
+            cmd += " ";
         }
 
         // Launch command

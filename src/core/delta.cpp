@@ -20,7 +20,7 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
+void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool attitude, bool quat2euler)
 {
     // Safety check that the deltas are still not generated
     if (this->scv_deltas_ != nullptr)
@@ -29,12 +29,23 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
     }
 
+    // Safety check that the constants are already set
+    if (!this->constants_set)
+    {
+        // WARNING! Must set constants for the distribution competition before
+        std::printf("WARNING: Deltas are not going to be computed. Need to provide pos/vel: mean and stddev. "
+                    "It has not been set yet. Exiting program.");
+
+        // Exit program
+        std::exit(-1);
+    }
+
     // If normal distribution chosen:
     switch (distribution)
     {
         case DISTRIBUTION::GAUSSIAN:
         {
-            this->generate_gaussian_deltas(n, state);
+            this->generate_gaussian_deltas(n, state, attitude);
             break;
         }
         default:
@@ -46,12 +57,12 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state)
     }
 
     // Once done, evaluate deltas with the polynomial which is already saved in memory
-    this->evaluate_deltas();
+    this->evaluate_deltas(quat2euler);
 
     // TODO: Show info message
 }
 
-void delta::generate_gaussian_deltas(int n, STATE state)
+void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
 {
     // Stack results here: no need to initialize!
     std::vector<std::shared_ptr<scv>> deltas;
@@ -67,10 +78,8 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-    double mean_pos = 100.0; double stddev_pos = 10.0;
-    double mean_vel = 10.0; double stddev_vel = 1.0;
-    std::normal_distribution<double> distribution_pos(mean_pos, stddev_pos);
-    std::normal_distribution<double> distribution_vel(mean_vel, stddev_vel);
+    std::normal_distribution<double> distribution_pos(this->mean_pos_, this->stddev_pos_);
+    std::normal_distribution<double> distribution_vel(this->mean_vel_, this->stddev_vel_);
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n);
@@ -78,46 +87,51 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     for (int i=0; i<n; ++i)
     {
         // Generate number from GAUSSIAN distribution
-        double number_pos = distribution_pos(generator);
-        double number_vel = distribution_vel(generator);
+        double random_pos = distribution_pos(generator);
+        double random_vel = distribution_vel(generator);
 
-        // TODO: Remove when clear
-        // Create Delta vector for DEBUG
-        // DACE::AlgebraicVector<DACE::DA> Deltax0(6);
-        // Deltax0[0] = 1.0;
-        // std::cout << Deltax0.toString() << std::endl;
+        // TODO: Discuss this logic, leave this demonstration for the while
+        std::vector<DACE::DA> new_delta;
+        if (attitude)
+        {
+            // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
+            // Get the quaternion
+            auto nq = quaternion::euler2quaternion(random_pos - mean_pos_,
+                                                   random_pos - mean_pos_,
+                                                   random_pos - mean_pos_);
+
+            // Safety check for norm
+            double nq_norm = quaternion::getnorm(nq);
+            bool is1norm = nq_norm == 1.0;
+
+            if (!is1norm)
+            {
+                std::string err_msg = tools::string::print2string(
+                        "This quaternion = ('%.2f', ''%.2f', '%.2f', ''%.2f') is not norm 1! Actual norm: '%.24f'",
+                        nq[0], nq[1], nq[2], nq[3], nq_norm);
+                std::cerr << err_msg << std::endl;
+                //std::exit(-1);
+            }
+            new_delta = {
+                    nq[0], nq[1], nq[2], nq[3],
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_};
+        }
+        else
+        {
+            new_delta = {
+                    random_pos - mean_pos_,
+                    random_pos - mean_pos_,
+                    random_pos - mean_pos_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_,
+                    random_vel - mean_vel_};
+        }
 
 
         // Generate the scv from the base csv
-        auto scv_delta = std::make_shared<scv>(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
-
-        // Change its value from the number given form the normal function
-        // Make the change in the adequate place: px, py, pz, vx, vy, vz...
-        // TODO: Revise this step:
-        // auto delta = scv_base_->get_state_value_copy(pos) + number;
-        // auto delta = number;
-
-        // Set the delta in the given place
-        // if (var2change == "POSITION")
-        // {
-        //     scv_delta->set_state_value(number, VELOCITY::X);
-        //     scv_delta->set_state_value(number, VELOCITY::Y);
-        //     scv_delta->set_state_value(number, VELOCITY::Z);
-        // }
-        // else
-        // {
-        //     scv_delta->set_state_value(number, VELOCITY::X);
-        //     scv_delta->set_state_value(number, VELOCITY::Y);
-        //     scv_delta->set_state_value(number, VELOCITY::Z);
-        // }
-
-        // TODO: Discuss this logic, leave this demonstration for the while
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::X);
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::Y);
-        scv_delta->set_state_value(number_pos - mean_pos, POSITION::Z);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::X);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::Y);
-        scv_delta->set_state_value(number_vel - mean_vel, VELOCITY::Z);
+        auto scv_delta = std::make_shared<scv>(new_delta);
 
         // Append scv in the list
         deltas.emplace_back(scv_delta);
@@ -131,19 +145,66 @@ void delta::generate_gaussian_deltas(int n, STATE state)
     // TODO: Info message
 }
 
-void delta::evaluate_deltas()
+void delta::evaluate_deltas(bool quat2euler)
 {
     // Local auxiliary variables
     std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
+    DACE::AlgebraicVector<DACE::DA> single_sol;
+
+    // Reserve space for optimal memory management
     taylor_list.reserve(this->scv_deltas_->size());
 
     // Evaluate each delta
     for (const auto& scv_delta : *scv_deltas_)
     {
         // Evaluate and save
-        taylor_list.emplace_back(this->base_poly_->eval(scv_delta->get_state_vector_copy()));
+        single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
+
+        // Check the norm
+        // TODO: DEBUG LINE
+        auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
+                                                      single_sol.cons().extract(0, 3).vnorm());
+        std::cout << line2write << std::endl;
+        std::cout << single_sol << std::endl;
+
+        // If it is attitude, we should convert the quaternion to Euler angles
+        if (quat2euler)
+        {
+            // Get the constants
+            auto quaternion = single_sol.cons().extract(0, 3);
+
+            // Convert to Euler
+            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+                                                             quaternion[1],
+                                                             quaternion[2],
+                                                             quaternion[3]);
+
+            // Replace the constant valuesç
+            // TODO: MAKE THIS MODULAR FROM THE MAIN
+            single_sol = {euler_angles[0]  * (180.0 / M_PI),
+                          euler_angles[1]  * (180.0 / M_PI),
+                          euler_angles[2]  * (180.0 / M_PI), single_sol[4], single_sol[5], single_sol[6]};
+
+            std::cout << single_sol << std::endl;
+        }
+
+        // Push back
+        taylor_list.emplace_back(single_sol);
     }
 
     // Make it ptr
     this->deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
+}
+
+void delta::set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel)
+{
+    // Set constants
+    this->mean_pos_ = mean_pos;
+    this->stddev_pos_ = stddev_pos;
+    this->mean_vel_ = mean_vel;
+    this->stddev_vel_ = stddev_vel;
+
+    // Notice
+    this->constants_set = true;
+
 }
