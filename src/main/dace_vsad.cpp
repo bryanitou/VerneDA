@@ -95,6 +95,14 @@ int main(int argc, char* argv[])
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
     tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
 
+    // Prepare arguments for python call
+    std::unordered_map<std::string, std::string> py_args = {
+            {"file", output_path_dd},
+            {"plot_type", PYPLOT_ATTITUDE},
+            {"metrics", "deg"},
+    };
+
+
     // Draw plots
-    tools::io::plot_variables(output_path_dd, PYPLOT_BANANA, "deg");
+    tools::io::plot_variables(PYPLOT_BANANA, py_args, true);
 }

@@ -7,6 +7,7 @@
 // System libraries
 #include <fstream>
 #include <filesystem>
+#include <unordered_map>
 
 // DA library
 #include "dace/dace.h"
@@ -41,18 +42,14 @@ namespace tools::io
         void dump_deltas(delta* delta, const std::filesystem::path &file_path);
     }
 
+
     /**
      * Calls to python file, passes the output file and executes it.
-     * @param path2file path to the output '.txt' file.
-     * @param python_executable path to the python script.
-     * @param metrics units of the plot.
-     * @param span read python file to understand this argument.
-     * @param async asynchronous task.
-     * @param silent silent task.
+     * @param python_executable [in] [std::string]
+     * @param args [in] [td::unordered_map<std::string, std::string>]
+     * @param async [in] [bool]
      */
-    [[maybe_unused]] void plot_variables(std::filesystem::path &path2file, const std::string &python_executable,
-                                         const std::string& metrics = "",
-                                         int span = 1,
-                                         bool async = false,
-                                         bool silent = true);
+    void plot_variables(const std::string &python_executable,
+                        const std::unordered_map<std::string, std::string> &args, bool async = false);
+
 };

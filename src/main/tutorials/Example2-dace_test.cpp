@@ -53,8 +53,29 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     tools::io::dace::dump_variables(y2, x, func_form2, var_form, y2_output_path);
     tools::io::dace::dump_variables(y1_y2, x, func_form3, var_form, y1_y2_output_path);
 
+    // Prepare arguments for python call
+    std::unordered_map<std::string, std::string> py_args1 = {
+            {"file", y1_output_path},
+            {"span", "10"},
+            {"silent", "false"},
+    };
+
+    std::unordered_map<std::string, std::string> py_args2 = {
+            {"file", y2_output_path},
+            {"span", "10"},
+            {"silent", "false"},
+    };
+
+    std::unordered_map<std::string, std::string> py_args3 = {
+            {"file", y1_y2_output_path},
+            {"span", "2"},
+            {"silent", "false"},
+    };
+
+
+
     // Plot all this stuff
-    tools::io::plot_variables(y1_output_path, PYPLOT_SIMPLE, 10,true);
-    tools::io::plot_variables(y2_output_path, PYPLOT_SIMPLE, 10,true);
-    tools::io::plot_variables(y1_y2_output_path, PYPLOT_SIMPLE, 2,true);
+    tools::io::plot_variables(PYPLOT_SIMPLE, py_args1,true);
+    tools::io::plot_variables(PYPLOT_SIMPLE, py_args2,true);
+    tools::io::plot_variables(PYPLOT_SIMPLE, py_args3,true);
 }

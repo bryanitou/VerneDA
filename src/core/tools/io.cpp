@@ -202,10 +202,9 @@ void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &fil
 
 }
 
-[[maybe_unused]] void tools::io::plot_variables(std::filesystem::path & path2file,
-                                                const std::string& python_executable,
-                                                const std::string& metrics, int span,
-                                                bool async, bool silent)
+[[maybe_unused]] void tools::io::plot_variables(const std::string& python_executable,
+                                                const std::unordered_map<std::string, std::string>& args,
+                                                bool async)
 {
     // Ensure system() is available
     if (std::system(nullptr))
@@ -218,29 +217,18 @@ void tools::io::dace::dump_deltas(delta* delta, const std::filesystem::path &fil
         cmd += " ";
         cmd += python_executable;
         cmd += " ";
-        cmd += "--file";
-        cmd += " ";
-        cmd += absolute(path2file);
-        cmd += " ";
-        cmd += "--span";
-        cmd += " ";
-        cmd += std::to_string(span);
-        cmd += " ";
-        cmd += "--silent";
-        cmd += " ";
-        cmd += silent ? "true" : "false";
-        cmd += " ";
 
-        // Metrics
-        if (!metrics.empty())
+        // Now, write all the arguments from the map
+        for(const auto& [arg, value] : args)
         {
-            cmd += "--metrics";
+            cmd += "--";
+            cmd += arg;
             cmd += " ";
-            cmd += metrics;
+            cmd += value;
             cmd += " ";
         }
 
-        // Is it async?
+        // Is it an asynchronous process?
         if (async)
         {
             cmd += "&";
