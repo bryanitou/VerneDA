@@ -14,13 +14,16 @@ import matplotlib.pyplot as plt
 # Import numpy
 import numpy as np
 
+
 def get_usage():
     return "Usage:\n" \
-           "python3 banana.py --plot_type <string> --metrics <string> --silent <bool:[OPTIONAL]>\n" \
+           "python3 banana.py --file <string or os.PathLike> --plot_type <string> --metrics <string> --silent <bool:[" \
+           "OPTIONAL]>\n" \
            "Example for translation plot:\n" \
-           "->\t python3 banana.py --plot_type translation --metrics km --silent False\n" \
+           "->\t python3 banana.py --file example.dd --plot_type translation --metrics km --silent False\n" \
            "Example for attitude plot:\n" \
-           "->\t python3 banana.py --plot_type orbit --metrics deg"
+           "->\t python3 banana.py --file example.dd --plot_type orbit --metrics deg"
+
 
 class PlotType(enum.Enum):
     translation = 0
@@ -76,7 +79,6 @@ def plot_banana(taylor: dict, output_prefix: [os.PathLike or str], plot_type: Pl
     else:
         print("I can only do Translation and Attitude plots!")
         exit(-1)
-
 
 
 def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
