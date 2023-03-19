@@ -219,6 +219,7 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
+    plt.show()
     plt.savefig(output)
 
 

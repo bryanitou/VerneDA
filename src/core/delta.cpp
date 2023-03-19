@@ -107,7 +107,7 @@ void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
             if (!is1norm)
             {
                 std::string err_msg = tools::string::print2string(
-                        "This quaternion = ('%.2f', '%.2f', '%.2f', '%.2f') is not norm 1! Actual norm: '%.32f'",
+                        "This quaternion = ('%.2f', ''%.2f', '%.2f', ''%.2f') is not norm 1! Actual norm: '%.24f'",
                         nq[0], nq[1], nq[2], nq[3], nq_norm);
                 std::cerr << err_msg << std::endl;
                 //std::exit(-1);
@@ -165,7 +165,7 @@ void delta::evaluate_deltas(bool quat2euler)
         auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
                                                       single_sol.cons().extract(0, 3).vnorm());
         std::cout << line2write << std::endl;
-        // std::cout << single_sol << std::endl; // DEBUG LINE
+        std::cout << single_sol << std::endl;
 
         // If it is attitude, we should convert the quaternion to Euler angles
         if (quat2euler)
@@ -185,7 +185,7 @@ void delta::evaluate_deltas(bool quat2euler)
                           euler_angles[1]  * (180.0 / M_PI),
                           euler_angles[2]  * (180.0 / M_PI), single_sol[4], single_sol[5], single_sol[6]};
 
-            // std::cout << single_sol << std::endl; // DEBUG LINE
+            std::cout << single_sol << std::endl;
         }
 
         // Push back
