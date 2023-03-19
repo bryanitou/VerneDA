@@ -16,7 +16,7 @@ import numpy as np
 
 def get_usage():
     return "Usage:\n" \
-           "python3 banana.py --plot_type <string> --metrics <string> --silent <bool[OPIONAL]>\n" \
+           "python3 banana.py --plot_type <string> --metrics <string> --silent <bool:[OPTIONAL]>\n" \
            "Example for translation plot:\n" \
            "->\t python3 banana.py --plot_type translation --metrics km --silent False\n" \
            "Example for attitude plot:\n" \
