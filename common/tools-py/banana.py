@@ -58,58 +58,16 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, v
                     z.append(val)
 
     if len(z) > 0:
-        # Initialise the subplot function using number of rows and columns
-        figure, ax = plt.subplots(1, 3, figsize=(16, 9))
+        plot_projections(x, y, z, unit_str, output_path[0])
 
-        # Creating plot
-        ax[0].scatter(x, y, color="green", s=0.4)
-        ax[1].scatter(y, z, color="green", s=0.4)
-        ax[2].scatter(x, z, color="green", s=0.4)
+    # Plot XY Projection
+    plot_xy_projection(x, y, unit_str, output_path[1])
 
-        # Labels
-        ax[0].set_xlabel(f"x [{unit_str}]")
-        ax[0].set_ylabel(f"y [{unit_str}]")
-        ax[1].set_xlabel(f"y [{unit_str}]")
-        ax[1].set_ylabel(f"z [{unit_str}]")
-        ax[2].set_xlabel(f"x [{unit_str}]")
-        ax[2].set_ylabel(f"z [{unit_str}]")
+    # Plot 3D vectors
+    plot_3d_vectors(x, y, z, output=output_path[2])
 
-        # Titles
-        ax[0].set_title("XY Projection")
-        ax[1].set_title("YZ Projection")
-        ax[2].set_title("XZ Projection")
 
-        # Tilt labels
-        [ticks.set_rotation(45) for ticks in ax[0].get_xticklabels()]
-        [ticks.set_rotation(45) for ticks in ax[1].get_xticklabels()]
-        [ticks.set_rotation(45) for ticks in ax[2].get_xticklabels()]
-
-        # Don't show y label for middle plot but maintain the grids Refer to:
-        # https://stackoverflow.com/questions/20416609/remove-the-x-axis-ticks-while-keeping-the-grids-matplotlib, for
-        # the code explanation
-        for tick in ax[1].yaxis.get_major_ticks():
-            tick.tick1line.set_visible(False)
-            tick.tick2line.set_visible(False)
-            tick.label1.set_visible(False)
-            tick.label2.set_visible(False)
-
-        # Set y-axis labels of the right plot to the right
-        ax[2].yaxis.tick_right()
-
-        # Enable grid
-        ax[0].grid(True)
-        ax[1].grid(True)
-        ax[2].grid(True)
-
-        # Set subtitle
-        plt.suptitle("Final position distribution")
-
-        # Save plot
-        plt.savefig(output_path[0])
-
-        # Clear
-        plt.close(figure)
-
+def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLike or str):
     # Set the size
     plt.figure(figsize=(16, 9))
 
@@ -125,10 +83,61 @@ def plot_banana(taylor: dict, output_path: [os.PathLike or str], metrics: str, v
     plt.grid(True)
 
     # Save second plot
-    plt.savefig(output_path[1])
+    plt.savefig(output)
 
-    # Plot 3D vectors
-    plot_3d_vectors(x, y, z, output=output_path[2])
+
+def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+    # Initialise the subplot function using number of rows and columns
+    figure, ax = plt.subplots(1, 3, figsize=(16, 9))
+
+    # Creating plot
+    ax[0].scatter(x, y, color="green", s=0.4)
+    ax[1].scatter(y, z, color="green", s=0.4)
+    ax[2].scatter(x, z, color="green", s=0.4)
+
+    # Labels
+    ax[0].set_xlabel(f"x [{unit_str}]")
+    ax[0].set_ylabel(f"y [{unit_str}]")
+    ax[1].set_xlabel(f"y [{unit_str}]")
+    ax[1].set_ylabel(f"z [{unit_str}]")
+    ax[2].set_xlabel(f"x [{unit_str}]")
+    ax[2].set_ylabel(f"z [{unit_str}]")
+
+    # Titles
+    ax[0].set_title("XY Projection")
+    ax[1].set_title("YZ Projection")
+    ax[2].set_title("XZ Projection")
+
+    # Tilt labels
+    [ticks.set_rotation(45) for ticks in ax[0].get_xticklabels()]
+    [ticks.set_rotation(45) for ticks in ax[1].get_xticklabels()]
+    [ticks.set_rotation(45) for ticks in ax[2].get_xticklabels()]
+
+    # Don't show y label for middle plot but maintain the grids Refer to:
+    # https://stackoverflow.com/questions/20416609/remove-the-x-axis-ticks-while-keeping-the-grids-matplotlib, for
+    # the code explanation
+    for tick in ax[1].yaxis.get_major_ticks():
+        tick.tick1line.set_visible(False)
+        tick.tick2line.set_visible(False)
+        tick.label1.set_visible(False)
+        tick.label2.set_visible(False)
+
+    # Set y-axis labels of the right plot to the right
+    ax[2].yaxis.tick_right()
+
+    # Enable grid
+    ax[0].grid(True)
+    ax[1].grid(True)
+    ax[2].grid(True)
+
+    # Set subtitle
+    plt.suptitle("Final position distribution")
+
+    # Save plot
+    plt.savefig(output)
+
+    # Clear
+    plt.close(figure)
 
 
 def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
@@ -224,7 +233,8 @@ def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
         output_path3 = os.path.join(parent_folder, f"{txt_filename3}")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, output_path=[output_path1, output_path2, output_path3], metrics=metrics, verbose=verbose)
+        plot_banana(taylor_dict, output_path=[output_path1, output_path2, output_path3], metrics=metrics,
+                    verbose=verbose)
 
 
 if __name__ == '__main__':
