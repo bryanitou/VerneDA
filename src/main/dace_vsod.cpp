@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_constants(error, 10.0, error, 10.0);
 
     // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, STATE::PX);
+    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Set output path
     std::filesystem::path output_path_avd = "./out/tbp2/taylor_expression_RK4.avd";
