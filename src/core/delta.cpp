@@ -45,7 +45,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool
     {
         case DISTRIBUTION::GAUSSIAN:
         {
-            this->generate_gaussian_deltas(n, attitude);
+            this->generate_gaussian_deltas(n, attitude, q_sampling);
             break;
         }
         default:
