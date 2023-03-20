@@ -20,7 +20,7 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool attitude, bool quat2euler)
+void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool quat2euler)
 {
     // Safety check that the deltas are still not generated
     if (this->scv_deltas_ != nullptr)
@@ -45,7 +45,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool a
     {
         case DISTRIBUTION::GAUSSIAN:
         {
-            this->generate_gaussian_deltas(n, state, attitude);
+            this->generate_gaussian_deltas(n, attitude);
             break;
         }
         default:
@@ -62,15 +62,10 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, STATE state, bool a
     // TODO: Show info message
 }
 
-void delta::generate_gaussian_deltas(int n, STATE state, bool attitude)
+void delta::generate_gaussian_deltas(int n, bool attitude)
 {
     // Stack results here: no need to initialize!
     std::vector<std::shared_ptr<scv>> deltas;
-
-    // Check what we have to change
-    auto attempt_pos = tools::enums::STATE2POSITION(state);
-    auto attempt_vel = tools::enums::STATE2VELOCITY(state);
-    std::string var2change = attempt_pos != POSITION::NA ? "POSITION" : "VELOCITY";
 
     // Compute deltas: by hard set values
     // n: experiments
