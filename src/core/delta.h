@@ -46,7 +46,7 @@ public:
      * @param n [in] [int]
      * @param state [in] [STATE]
      */
-    void compute_deltas(DISTRIBUTION type, int n, bool attitude = false, bool quat2euler = false);
+    void compute_deltas(DISTRIBUTION type, int n, bool attitude = false, bool quat2euler = false,  QUATERNION_SAMPLING q_sampling = QUATERNION_SAMPLING::NA);
 
     /**
      * Get deltas polynomial.
@@ -85,7 +85,7 @@ private:
 
 private:
     // Deltas calculators relying on the distribution type
-    void generate_gaussian_deltas(int n,  bool attitude);
+    void generate_gaussian_deltas(int n,  bool attitude, QUATERNION_SAMPLING q_sampling);
 
     // Evaluate
     void evaluate_deltas(bool quat2euler);

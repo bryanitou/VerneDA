@@ -85,7 +85,8 @@ int main(int argc, char* argv[])
     deltas_engine->set_constants(error, 0.01, error, 0.01);
 
     // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, true, true);
+    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, true, true,
+                                  QUATERNION_SAMPLING::SEED_GAUSSIAN);
 
     // Set output path
     std::filesystem::path output_path_avd = "./out/attp/taylor_expression_RK4.avd";

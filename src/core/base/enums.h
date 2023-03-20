@@ -54,3 +54,14 @@ enum class DISTRIBUTION
     GAUSSIAN,
     UNIFORM
 };
+
+/**
+* Type of sampling for quaternion
+*/
+enum class QUATERNION_SAMPLING
+{
+    EULER_GAUSSIAN,
+    SEED_GAUSSIAN,
+    NA,
+
+};

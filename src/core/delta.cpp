@@ -20,7 +20,7 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool quat2euler)
+void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool quat2euler,  QUATERNION_SAMPLING q_sampling)
 {
     // Safety check that the deltas are still not generated
     if (this->scv_deltas_ != nullptr)
@@ -62,7 +62,7 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool
     // TODO: Show info message
 }
 
-void delta::generate_gaussian_deltas(int n, bool attitude)
+void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q_sampling)
 {
     // Stack results here: no need to initialize!
     std::vector<std::shared_ptr<scv>> deltas;
@@ -90,10 +90,32 @@ void delta::generate_gaussian_deltas(int n, bool attitude)
         if (attitude)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
+
+            // Declare new quaternion
+            std::vector<double> nq;
+
             // Get the quaternion
-            auto nq = quaternion::euler2quaternion(random_pos - mean_pos_,
-                                                   random_pos - mean_pos_,
-                                                   random_pos - mean_pos_);
+            switch (q_sampling)
+            {
+                case QUATERNION_SAMPLING::EULER_GAUSSIAN:
+                {
+                    nq = quaternion::euler2quaternion(random_pos - mean_pos_,
+                                                      random_pos - mean_pos_,
+                                                      random_pos - mean_pos_);
+                    break;
+                }
+                case QUATERNION_SAMPLING::SEED_GAUSSIAN:
+                {
+                    nq = quaternion::q8_normal_01(1234);
+                    break;
+                }
+                default:
+                {
+                    std::printf("Cannot find how to sample the quaternion!");
+                    break;
+                }
+
+            }
 
             // Safety check for norm
             double nq_norm = quaternion::getnorm(nq);
