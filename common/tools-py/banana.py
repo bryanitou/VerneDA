@@ -102,7 +102,7 @@ def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: 
 
 def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLike or str):
     # Set the size
-    plt.figure(figsize=(16, 9))
+    fig = plt.figure(figsize=(16, 9))
 
     # Finally, we can plot everything
     plt.scatter(x, y, s=0.4)
@@ -115,13 +115,18 @@ def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLik
     # Plt show grid
     plt.grid(True)
 
-    # Save second plot
+    # Save fig
     plt.savefig(output)
+
+    # Clear
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
 
 
 def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
     # Initialise the subplot function using number of rows and columns
-    figure, ax = plt.subplots(1, 3, figsize=(16, 9))
+    fig, ax = plt.subplots(1, 3, figsize=(16, 9))
 
     # Creating plot
     ax[0].scatter(x, y, color="green", s=0.4)
@@ -166,11 +171,13 @@ def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: 
     # Set subtitle
     plt.suptitle("Final position distribution")
 
-    # Save plot
+    # Save fig
     plt.savefig(output)
 
     # Clear
-    plt.close(figure)
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
 
 
 def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
@@ -220,6 +227,11 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
     plt.savefig(output)
+
+    # Close stuff
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
 
 
 def main(args: list = None, verbose: bool = False) -> None:
