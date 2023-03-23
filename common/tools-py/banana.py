@@ -129,10 +129,15 @@ def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLik
 
 def plot_quaternion(w: [float], x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
     # Convert from quaternion to Euler angles
-    [roll, pitch, yaw] = euler.euler_from_quaternion(x, y, z, w)
+    roll, pitch, yaw = [], [], []
+
+    for i in range(len(w) - 1):
+        [roll_val, pitch_val, yaw_val] = euler.euler_from_quaternion(x[i], y[i], z[i], w[i])
+        roll.append(roll_val), pitch.append(pitch_val), yaw.append(yaw_val)
 
     # Print from there
-    plot_projections(roll, pitch, yaw, unit_str, output)
+    plot_3d_vectors(roll, pitch, yaw, unit_str, output)
+
 
 def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
     # Initialise the subplot function using number of rows and columns
@@ -190,7 +195,7 @@ def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: 
     plt.close(fig)
 
 
-def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
+def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, output: str):
     # The initial orientation was: [x: 0, y: 0, z: 1]
     initial_vector_x = np.array([1, 0, 0]).transpose()  # Initial attitude
     initial_vector_y = np.array([0, 1, 0]).transpose()  # Initial attitude
@@ -206,7 +211,7 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
 
     for i in range(0, size):
         # Get rotation matrix
-        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx")
+        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx", unit=unit_str)
 
         # Final vector
         final_vector_x = np.matmul(rot_matrix, initial_vector_x)
