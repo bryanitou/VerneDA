@@ -83,6 +83,7 @@ def get_vector(taylor: dict, idx: int, verbose: bool = False) -> [[float]]:
 
     return v
 
+
 def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
     plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
@@ -125,6 +126,13 @@ def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLik
     plt.cla()
     plt.close(fig)
 
+
+def plot_quaternion(w: [float], x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+    # Convert from quaternion to Euler angles
+    [roll, pitch, yaw] = euler.euler_from_quaternion(x, y, z, w)
+
+    # Print from there
+    plot_projections(roll, pitch, yaw, unit_str, output)
 
 def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
     # Initialise the subplot function using number of rows and columns
