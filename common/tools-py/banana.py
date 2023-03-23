@@ -43,43 +43,45 @@ def plot_banana(taylor: dict, output_prefix: [os.PathLike or str], plot_type: Pl
     :return: None
     """
 
+    # Get vectors
+    v = get_vector(taylor, idx=2, verbose=verbose)
+
+    # Units
+    unit_str = "-" if metrics == "" else metrics
+
+    # Call to plots relying on PlotType class
+    if plot_type == PlotType.attitude:
+        plot_attitude(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+    elif plot_type == PlotType.translation:
+        plot_translation(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+    else:
+        print("I can only do Translation and Attitude plots!")
+        exit(-1)
+
+
+def get_vector(taylor: dict, idx: int, verbose: bool = False) -> [[float]]:
     # Safety check
     if not isinstance(taylor, dict):
         if verbose:
             print("Expected input 'taylor' is not a dictionary!")
             exit(-1)
 
-    # Units
-    unit_str = "-" if metrics == "" else metrics
-
     # Now, should collect X-Y coordinates
     # TODO: Make this work for quaternion AND for orbit
-    x = []
-    y = []
-    z = []
+    idx = idx + 1
+    v = [[] for i in range(idx)]
+    var2retrieve = [str(i) for i in range(idx)]
+
     for delta in taylor:
         for var in taylor[delta]:
-            if var == "0" or var == "1" or var == "2":
+            if var in var2retrieve:
                 # Get index and coef
                 val = taylor[delta][var]["1"]["coef"]
 
                 # Expanding this line
-                if var == "0":
-                    x.append(val)
-                elif var == "1":
-                    y.append(val)
-                else:
-                    z.append(val)
+                v[int(var)].append(val)
 
-    # Call to plots relying on PlotType class
-    if plot_type == PlotType.attitude:
-        plot_attitude(x, y, z, unit_str=unit_str, prefix=output_prefix)
-    elif plot_type == PlotType.translation:
-        plot_translation(x, y, z, unit_str=unit_str, prefix=output_prefix)
-    else:
-        print("I can only do Translation and Attitude plots!")
-        exit(-1)
-
+    return v
 
 def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
@@ -226,6 +228,9 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
+
+    # Save fig
+    plt.show()
     plt.savefig(output)
 
     # Close stuff
