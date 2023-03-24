@@ -65,3 +65,14 @@ enum class QUATERNION_SAMPLING
     NA,
 
 };
+
+/**
+* Type of option inside delta generator
+*/
+enum class DELTA_GENERATOR_OPTION
+{
+    QUAT2EULER,
+    ATTITUDE,
+    TRANSLATION,
+    QUATERNION_SAMPLING
+};
