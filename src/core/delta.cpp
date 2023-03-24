@@ -89,14 +89,21 @@ void delta::generate_gaussian_deltas(int n)
             {
                 case QUATERNION_SAMPLING::EULER_GAUSSIAN:
                 {
-                    nq = quaternion::euler2quaternion(random_pos - mean_pos_,
-                                                      random_pos - mean_pos_,
-                                                      random_pos - mean_pos_);
+                    nq = quaternion::euler2quaternion(distribution_pos(generator) - mean_pos_,
+                                                      distribution_pos(generator) - mean_pos_,
+                                                      distribution_pos(generator) - mean_pos_);
                     break;
                 }
                 case QUATERNION_SAMPLING::SEED_GAUSSIAN:
                 {
                     nq = quaternion::q8_normal_01(1234);
+                    break;
+                }
+                case QUATERNION_SAMPLING::OMPL_GAUSSIAN:
+                {
+                    nq = quaternion::euler2quaternion_fromGaussian(distribution_pos(generator) - this->mean_pos_,
+                                                                   distribution_pos(generator) - this->mean_pos_,
+                                                                   distribution_pos(generator) - this->mean_pos_);
                     break;
                 }
                 default:

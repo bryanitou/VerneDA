@@ -25,8 +25,18 @@ namespace quaternion {
      * @param roll [in] [double]
      * @param pitch [in] [double]
      * @param yaw [in] [double]
+     * @return quaternion
      */
     std::vector<double> euler2quaternion(double roll, double pitch, double yaw);
+
+    /**
+     * Set quaternion form xyz Gaussian sampled
+     * @param x [in] [double]
+     * @param y [in] [double]
+     * @param z [in] [double]
+     * @return quaternion
+     */
+    std::vector<double> euler2quaternion_fromGaussian(double x, double y, double z);
 
      /**
       * Get the norm of the quaterion.

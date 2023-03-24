@@ -270,7 +270,7 @@ def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: o
     ax.plot_surface(xs, ys, zs, cmap=plt.cm.YlGnBu_r, alpha=.4)
 
     # Do scatter
-    ax.scatter(x, y, z, marker='o', c='r')
+    ax.scatter(x, y, z, marker='x', c='r', linewidths=0.2)
 
     # Set labels
     ax.set_xlabel(f"x [{unit_str}]")

@@ -31,24 +31,35 @@ int main(int argc, char* argv[])
     cylinder->addpoints(point_list);
     double radius = 2.0;
 
-    // Get initial quaternion
-    auto q_control = quaternion::euler2quaternion(0.0, 0.0, 0.0);
+    // Initial conditions of attitude
+    double roll = 0.0;
+    double pitch = 0.0;
+    double yaw = 0.0;
 
-    // Set error
-    double error = 0.1;
+    // Error in attitude
+    double error_att = M_PI / 2;
+    double stddev_att = 0.1;
+    double error_vel = 0.1;
+    double stddev_vel = 0.01;
+
+    // Get initial quaternion
+    // TODO: Error should be computed here
+    auto q_control = quaternion::euler2quaternion(roll, pitch,  yaw);
+    auto q_with_error = quaternion::euler2quaternion(roll + error_att, pitch + error_att, yaw + error_att);
+    auto q_error = quaternion::q8_multiply(q_with_error, q_control);
 
     // Declare the state control vector
     std::vector<DACE::DA> scv0 = {
-            q_control[0],   // q0
-            q_control[1],   // q1
-            q_control[2],   // q2
-            q_control[3],   // q3
-            0.01,          // w1 -> rotation around 1 axis
-            0.01,          // w2 -> rotation around 2 axis
-            0.0  };         // w3 -> rotation around 3 axis
+            q_control[0] + DACE::DA(1) * q_error[0],    // q0
+            q_control[1] + DACE::DA(2) * q_error[1],    // q1
+            q_control[2] + DACE::DA(3) * q_error[2],    // q2
+            q_control[3] + DACE::DA(4) * q_error[3],    // q3
+            0.01 + DACE::DA(5) * error_vel,             // w1 -> rotation around 1 axis
+            0.01 + DACE::DA(6) * error_vel,             // w2 -> rotation around 2 axis
+            0.0  + DACE::DA(7) * error_vel };           // w3 -> rotation around 3 axis
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(scv0, true, error);
+    auto s0 = std::make_unique<scv>(scv0);
     auto s0_cte = std::make_unique<scv>(scv0);
 
     // Now, should initialize all the dace variables from the initial conditions
@@ -83,7 +94,7 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(error, 0.01, error, 0.01);
+    deltas_engine->set_constants(error_att, stddev_att, error_vel, stddev_vel);
 
     // Set options for the generator
     deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::ATTITUDE, true);

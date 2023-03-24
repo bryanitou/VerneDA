@@ -62,6 +62,7 @@ enum class QUATERNION_SAMPLING
 {
     EULER_GAUSSIAN,
     SEED_GAUSSIAN,
+    OMPL_GAUSSIAN,
     NA,
 
 };

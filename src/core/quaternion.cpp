@@ -14,7 +14,7 @@ std::vector<double> quaternion::euler2quaternion(double roll, double pitch, doub
     double sin_yaw = sin(yaw/2);
     double cos_yaw = cos(yaw/2);
 
-    // Declare quaternion
+    // Declare and initialize quaternion
     std::vector<double> q1(4);
 
     // Save the quaternion
@@ -25,6 +25,30 @@ std::vector<double> quaternion::euler2quaternion(double roll, double pitch, doub
 
     // Return got quaternion
     return q1;
+}
+
+std::vector<double> quaternion::euler2quaternion_fromGaussian(double x, double y, double z)
+{
+    // Compute theta
+    double theta = std::sqrt(x * x + y * y + z * z);
+
+    // Compute half theta
+    double half_theta = theta / 2.0;
+
+    // Compute s: TODO: What is s? I think it is an scaling value.
+    double s = std::sin(half_theta) / theta;
+
+    // Declare and initialize quaternion
+    std::vector<double> q(4);
+
+    // Pre-compute values for efficiency
+    q[0] = cos(half_theta);
+    q[1] = s * x;
+    q[2] = s * y;
+    q[3] = s * z;
+
+    // Return got quaternion
+    return q;
 }
 
 void quaternion::scale(DACE::AlgebraicVector<DACE::DA>* q, double num)
@@ -125,7 +149,7 @@ std::vector<double>  quaternion::inverse(std::vector<double> q2inv)
     return q_inv;
 }
 
-std::vector<double> quaternion::q8_multiply (std::vector<double>  q1, std::vector<double>  q2)
+std::vector<double> quaternion::q8_multiply(std::vector<double>  q1, std::vector<double>  q2)
 {
     std::vector<double> q3(4);
 
