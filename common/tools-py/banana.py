@@ -214,9 +214,9 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
         rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx", unit=unit_str)
 
         # Final vector
-        final_vector_x = np.matmul(rot_matrix, initial_vector_x)
-        final_vector_y = np.matmul(rot_matrix, initial_vector_y)
-        final_vector_z = np.matmul(rot_matrix, initial_vector_z)
+        final_vector_x = np.matmul(rot_matrix, initial_vector_x)  # Rotated vector: x = [1, 0, 0]
+        final_vector_y = np.matmul(rot_matrix, initial_vector_y)  # Rotated vector: y = [0, 1, 0]
+        final_vector_z = np.matmul(rot_matrix, initial_vector_z)  # Rotated vector: z = [0, 0, 1]
 
         # Append result
         final_attitude_x.append(final_vector_x)
@@ -243,7 +243,49 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
     ax.set_zlim([-1, 1])
 
     # Save fig
+    # plt.show()
+    plt.savefig(output)
+
+    # Close stuff
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
+
+    # Plot also scatter if needed
+    plot_3d_scatter(xx, yx, zx, unit_str=unit_str, output=output)
+
+
+def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+    # Set figure
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    # Plot the sphere
+    u, v = np.mgrid[0:2 * np.pi:30j, 0:np.pi:20j]
+    xs = np.cos(u) * np.sin(v)
+    ys = np.sin(u) * np.sin(v)
+    zs = np.cos(v)
+
+    # Plot surface
+    ax.plot_surface(xs, ys, zs, cmap=plt.cm.YlGnBu_r, alpha=.4)
+
+    # Do scatter
+    ax.scatter(x, y, z, marker='o', c='r')
+
+    # Set labels
+    ax.set_xlabel(f"x [{unit_str}]")
+    ax.set_ylabel(f"y [{unit_str}]")
+    ax.set_zlabel(f"z [{unit_str}]")
+
+    # Set axes limits
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+
+    # Show if required
     plt.show()
+
+    # Save stuff
     plt.savefig(output)
 
     # Close stuff

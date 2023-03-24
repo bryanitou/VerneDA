@@ -13,7 +13,7 @@ def main():
     v = banana.get_vector(dd_dict, idx=3, verbose=True)
 
     # Use quaternion plotter
-    banana.plot_quaternion(v[0], v[1], v[2], v[3], unit_str="rad", output=output)
+    banana.plot_quaternion(v[0], v[1], v[2], v[3], unit_str="-", output=output)
 
 
 if __name__ == '__main__':
