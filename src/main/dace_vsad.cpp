@@ -1,6 +1,6 @@
 /**
  * DACE_VSOD (VERY SIMPLE ATTITUDE DETERMINATION): aims to solve a problem where the initial orientation is known and
- * we want to compute the future attitude of the spacecraft after a given time using DACE.
+ * we want to compute the future attitude_ of the spacecraft after a given time using DACE.
  */
 // DACE libraries
 #include "dace/dace.h"
@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0, true, error);
+    auto s0_cte = std::make_unique<scv>(scv0);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
@@ -84,21 +85,33 @@ int main(int argc, char* argv[])
     // Set distribution
     deltas_engine->set_constants(error, 0.01, error, 0.01);
 
-    // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000, true, true,
-                                  QUATERNION_SAMPLING::SEED_GAUSSIAN);
+    // Set options for the generator
+    deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::ATTITUDE, true);
+    deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
+    deltas_engine->set_option_sampling(QUATERNION_SAMPLING::EULER_GAUSSIAN);
+
+    // Generate deltas
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+
+    // Insert nominal delta
+    deltas_engine->insert_nominal(*s0_cte);
+
+    // Evaluate deltas
+    deltas_engine->evaluate_deltas();
 
     // Set output path
     std::filesystem::path output_path_avd = "./out/attp/taylor_expression_RK4.avd";
-    std::filesystem::path output_path_dd = "./out/attp/deltas_expression_RK4.dd";
+    std::filesystem::path output_eval_deltas_path_dd = "./out/attp/eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd = "./out/attp/non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
+    tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_path_dd},
+            {"file",    output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_ATTITUDE},
             {"metrics", "deg"},
     };

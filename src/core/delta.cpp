@@ -20,18 +20,16 @@ void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& ta
 
 }
 
-void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool quat2euler,  QUATERNION_SAMPLING q_sampling)
+void delta::generate_deltas(DISTRIBUTION type, int n)
 {
     // Safety check that the deltas are still not generated
-    if (this->scv_deltas_ != nullptr)
-    {
+    if (this->scv_deltas_ != nullptr) {
         // WARNING: deltas are gonna be replaced
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
     }
 
     // Safety check that the constants are already set
-    if (!this->constants_set)
-    {
+    if (!this->constants_set_) {
         // WARNING! Must set constants for the distribution competition before
         std::printf("WARNING: Deltas are not going to be computed. Need to provide pos/vel: mean and stddev. "
                     "It has not been set yet. Exiting program.");
@@ -41,28 +39,20 @@ void delta::compute_deltas(DISTRIBUTION distribution, int n, bool attitude, bool
     }
 
     // If normal distribution chosen:
-    switch (distribution)
-    {
-        case DISTRIBUTION::GAUSSIAN:
-        {
-            this->generate_gaussian_deltas(n, attitude, q_sampling);
+    switch (type) {
+        case DISTRIBUTION::GAUSSIAN: {
+            this->generate_gaussian_deltas(n);
             break;
         }
-        default:
-        {
+        default: {
             // Throw FATAL
             std::printf("FATAL: Couldn't find enum '%s'",
-                        tools::enums::DISTRIBUTION2str(distribution).c_str());
+                        tools::enums::DISTRIBUTION2str(type).c_str());
         }
     }
-
-    // Once done, evaluate deltas with the polynomial which is already saved in memory
-    this->evaluate_deltas(quat2euler);
-
-    // TODO: Show info message
 }
 
-void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q_sampling)
+void delta::generate_gaussian_deltas(int n)
 {
     // Stack results here: no need to initialize!
     std::vector<std::shared_ptr<scv>> deltas;
@@ -77,7 +67,7 @@ void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q
     std::normal_distribution<double> distribution_vel(this->mean_vel_, this->stddev_vel_);
 
     // Reserve memory for CPU efficiency
-    deltas.reserve(n);
+    deltas.reserve(n+1);
 
     for (int i=0; i<n; ++i)
     {
@@ -87,7 +77,7 @@ void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q
 
         // TODO: Discuss this logic, leave this demonstration for the while
         std::vector<DACE::DA> new_delta;
-        if (attitude)
+        if (this->attitude_)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
 
@@ -95,7 +85,7 @@ void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q
             std::vector<double> nq;
 
             // Get the quaternion
-            switch (q_sampling)
+            switch (this->q_sampling_)
             {
                 case QUATERNION_SAMPLING::EULER_GAUSSIAN:
                 {
@@ -162,8 +152,14 @@ void delta::generate_gaussian_deltas(int n, bool attitude, QUATERNION_SAMPLING q
     // TODO: Info message
 }
 
-void delta::evaluate_deltas(bool quat2euler)
+void delta::evaluate_deltas()
 {
+    // Safety check
+    if (!this->nominal_inserted_)
+    {
+        std::fprintf(stderr, "Cannot evaluate deltas!, Must insert the nominal first. Exiting program.");
+        std::exit(-1);
+    }
     // Local auxiliary variables
     std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
     DACE::AlgebraicVector<DACE::DA> single_sol;
@@ -184,8 +180,8 @@ void delta::evaluate_deltas(bool quat2euler)
         std::cout << line2write << std::endl;
         // std::cout << single_sol << std::endl; DEBUG LINE
 
-        // If it is attitude, we should convert the quaternion to Euler angles
-        if (quat2euler)
+        // If it is attitude_, we should convert the quaternion to Euler angles
+        if (this->quat2euler_)
         {
             // Get the constants
             auto quaternion = single_sol.cons().extract(0, 3);
@@ -210,7 +206,7 @@ void delta::evaluate_deltas(bool quat2euler)
     }
 
     // Make it ptr
-    this->deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
+    this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
 }
 
 void delta::set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel)
@@ -222,6 +218,21 @@ void delta::set_constants(double mean_pos, double stddev_pos, double mean_vel, d
     this->stddev_vel_ = stddev_vel;
 
     // Notice
-    this->constants_set = true;
+    this->constants_set_ = true;
 
+}
+
+void delta::insert_nominal(const scv& scv_nominal)
+{
+    // Check if already exist
+    if (!this->scv_deltas_)
+    {
+        std::printf("Deltas have not been generated! Generate them before inserting the nominal SCV.");
+    }
+
+    // Insert nominal in the last position
+    this->scv_deltas_->push_back(std::make_shared<scv>(scv_nominal));
+
+    // Set boolean to true
+    this->nominal_inserted_ = true;
 }
