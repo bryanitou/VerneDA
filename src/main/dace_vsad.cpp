@@ -32,9 +32,9 @@ int main(int argc, char* argv[])
     double radius = 2.0;
 
     // Initial conditions of attitude
-    double roll = 0.0;
-    double pitch = 0.0;
-    double yaw = 0.0;
+    double roll = 0.00;
+    double pitch = 0.00;
+    double yaw = 0.00;
 
     // Error in attitude
     double error_att = M_PI / 2;
@@ -48,19 +48,29 @@ int main(int argc, char* argv[])
     auto q_with_error = quaternion::euler2quaternion(roll + error_att, pitch + error_att, yaw + error_att);
     auto q_error = quaternion::q8_multiply(q_with_error, q_control);
 
-    // Declare the state control vector
+    // Declare state control vector without DA
+    std::vector<DACE::DA> scv_no_DA = {
+            q_control[0],   // q0
+            q_control[1],   // q1
+            q_control[2],   // q2
+            q_control[3],   // q3
+            0.01,           // w1 -> rotation around 1 axis
+            0.0 ,           // w2 -> rotation around 2 axis
+            0.0 };          // w3 -> rotation around 3 axis
+
+    // Declare the state control vector with DA
     std::vector<DACE::DA> scv0 = {
-            q_control[0] + DACE::DA(1) * q_error[0],    // q0
-            q_control[1] + DACE::DA(2) * q_error[1],    // q1
-            q_control[2] + DACE::DA(3) * q_error[2],    // q2
-            q_control[3] + DACE::DA(4) * q_error[3],    // q3
-            0.01 + DACE::DA(5) * error_vel,             // w1 -> rotation around 1 axis
-            0.01 + DACE::DA(6) * error_vel,             // w2 -> rotation around 2 axis
-            0.0  + DACE::DA(7) * error_vel };           // w3 -> rotation around 3 axis
+            scv_no_DA[0] +  DACE::DA(1) * q_error[0],   // q0
+            scv_no_DA[1] +  DACE::DA(2) * q_error[1],   // q1
+            scv_no_DA[2] +  DACE::DA(3) * q_error[2],   // q2
+            scv_no_DA[3] +  DACE::DA(4) * q_error[3],   // q3
+            scv_no_DA[4] +  DACE::DA(5) * error_vel,    // w1 -> rotation around 1 axis
+            scv_no_DA[5] +  DACE::DA(6) * error_vel,    // w2 -> rotation around 2 axis
+            scv_no_DA[6] +  DACE::DA(7) * error_vel };  // w3 -> rotation around 3 axis
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
-    auto s0_cte = std::make_unique<scv>(scv0);
+    auto s0_no_da = std::make_unique<scv>(scv_no_DA);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
@@ -89,9 +99,27 @@ int main(int argc, char* argv[])
     //  Debug line
     std::cout << scvf_DA->get_state_vector_copy().cons()<< std::endl;
     std::cout << scvf_DA->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
+    std::cout << xf_DA.cons() << std::endl;
+    std::cout << xf_DA.cons().extract(0, 3).vnorm() << std::endl;
 
+    // TODO: FIX THIS MESS
+    // DACE::AlgebraicVector<DACE::DA> test = {
+    //         0.0,   // q0
+    //         0.0,   // q1
+    //         0.0,   // q2
+    //         0.0,   // q3
+    //         0.0,    // w1 -> rotation around 1 axis
+    //         0.0,           // w2 -> rotation around 2 axis
+    //         0.0 };          // w3 -> rotation around 3 axis
+
+    // auto test_evaled = xf_DA.eval(test);
+    // std::cout << test_evaled.cons() << std::endl;
+    // std::cout << test_evaled.cons().extract(0, 3).vnorm() << std::endl;
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
+
+    // Set mean state
+    deltas_engine->mean_state_ = DACE::AlgebraicVector<DACE::DA>(scv_no_DA).cons();
 
     // Set distribution
     deltas_engine->set_constants(error_att, stddev_att, error_vel, stddev_vel);
@@ -99,26 +127,32 @@ int main(int argc, char* argv[])
     // Set options for the generator
     deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::ATTITUDE, true);
     deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
-    deltas_engine->set_option_sampling(QUATERNION_SAMPLING::EULER_GAUSSIAN);
+    deltas_engine->set_option_sampling(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
 
     // Generate deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
-    deltas_engine->insert_nominal(*s0_cte);
+    DACE::AlgebraicVector<DACE::DA> zeroed(7);
+    auto scv_nominal = scv(zeroed);
+    deltas_engine->insert_nominal(scv_nominal);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
 
-    // Set output path
+    // Set output path for results
     std::filesystem::path output_path_avd = "./out/attp/taylor_expression_RK4.avd";
     std::filesystem::path output_eval_deltas_path_dd = "./out/attp/eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd = "./out/attp/non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
+
+    // Dump non evaluated deltas
     tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
+
+    // Dump evaluated deltas
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {

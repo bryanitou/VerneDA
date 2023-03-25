@@ -92,7 +92,7 @@ def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.
     plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
 
     # Plot 3D vectors
-    plot_3d_vectors(x, y, z, output=f"{prefix}-3D_rotations.png")
+    plot_3d_vectors(x, y, z, unit_str, output=f"{prefix}-3D_rotations.png")
 
 
 def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
@@ -243,7 +243,6 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
     ax.set_zlim([-1, 1])
 
     # Save fig
-    # plt.show()
     plt.savefig(output)
 
     # Close stuff
@@ -282,11 +281,8 @@ def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: o
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
 
-    # Show if required
-    plt.show()
-
     # Save stuff
-    plt.savefig(output)
+    plt.savefig(output.replace(".png", "-scatter.png"))
 
     # Close stuff
     plt.clf()

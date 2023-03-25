@@ -104,6 +104,9 @@ private:
     // List of results:
     std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> eval_deltas_poly_ = nullptr;
 
+public:
+    std::vector<double> mean_state_;
+
 private:
 
     // Distribution constants

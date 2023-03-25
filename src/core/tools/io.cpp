@@ -120,6 +120,9 @@ void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA
 
 void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path)
 {
+    // Auxiliary variable
+    bool monomial_skipped;
+
     // Get directory
     auto out_dir = file_path.parent_path();
 
@@ -150,6 +153,9 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
             DACE::DA da_var = (*deltas_poly)[d][v];
             int n_da_var = static_cast<int>(da_var.size());
 
+            // Are skipping it?
+            monomial_skipped = true;
+
             for (int i = 1; i <= n_da_var; i++)
             {
                 // Monomial
@@ -171,6 +177,16 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
 
                 // Write line
                 file2write << line2write << std::endl;
+
+                // Monomial not skipped
+                monomial_skipped = false;
+            }
+
+            // Check if skipped
+            if (monomial_skipped)
+            {
+                // Info
+                std::printf("INFO: Delta num: %d, variable: %d: was skipped due to zeros.\n", d, v);
             }
         }
     }
@@ -183,6 +199,9 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
 // TODO: Try to merge this funciton with the one above since they are almost the same
 void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::path &file_path)
 {
+    // Auxiliary variables
+    bool monomial_skipped;
+
     // Get directory
     auto out_dir = file_path.parent_path();
 
@@ -216,6 +235,9 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
             auto da_var = scv[v];
             int n_da_var = static_cast<int>(da_var.size());
 
+            // Are skipping it?
+            monomial_skipped = true;
+
             for (int i = 1; i <= n_da_var; i++)
             {
                 // Monomial
@@ -237,6 +259,16 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
 
                 // Write line
                 file2write << line2write << std::endl;
+
+                // Monomial not skipped
+                monomial_skipped = false;
+            }
+
+            // Check if skipped
+            if (monomial_skipped)
+            {
+                // Info
+                std::printf("INFO: Delta num: %d, variable: %d: was skipped due to zeros.\n", d, v);
             }
         }
     }
@@ -278,6 +310,9 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
             cmd += "&";
             cmd += " ";
         }
+
+        // Info
+        std::printf("Launching command: %s", cmd.c_str());
 
         // Launch command
         std::system(cmd.c_str());

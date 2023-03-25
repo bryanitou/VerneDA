@@ -63,8 +63,8 @@ void delta::generate_gaussian_deltas(int n)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-    std::normal_distribution<double> distribution_pos(this->mean_pos_, this->stddev_pos_);
-    std::normal_distribution<double> distribution_vel(this->mean_vel_, this->stddev_vel_);
+    std::normal_distribution<double> distribution_pos(0.0, this->stddev_pos_);
+    std::normal_distribution<double> distribution_vel(0.0, this->stddev_vel_);
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n+1);
@@ -89,9 +89,9 @@ void delta::generate_gaussian_deltas(int n)
             {
                 case QUATERNION_SAMPLING::EULER_GAUSSIAN:
                 {
-                    nq = quaternion::euler2quaternion(distribution_pos(generator) - mean_pos_,
-                                                      distribution_pos(generator) - mean_pos_,
-                                                      distribution_pos(generator) - mean_pos_);
+                    nq = quaternion::euler2quaternion(distribution_pos(generator),
+                                                      distribution_pos(generator),
+                                                      distribution_pos(generator));
                     break;
                 }
                 case QUATERNION_SAMPLING::SEED_GAUSSIAN:
@@ -101,9 +101,9 @@ void delta::generate_gaussian_deltas(int n)
                 }
                 case QUATERNION_SAMPLING::OMPL_GAUSSIAN:
                 {
-                    nq = quaternion::euler2quaternion_fromGaussian(distribution_pos(generator) - this->mean_pos_,
-                                                                   distribution_pos(generator) - this->mean_pos_,
-                                                                   distribution_pos(generator) - this->mean_pos_);
+                    nq = quaternion::euler2quaternion_fromGaussian(distribution_pos(generator),
+                                                                   distribution_pos(generator),
+                                                                   distribution_pos(generator));
                     break;
                 }
                 default:
@@ -127,20 +127,23 @@ void delta::generate_gaussian_deltas(int n)
                 //std::exit(-1);
             }
             new_delta = {
-                    nq[0], nq[1], nq[2], nq[3],
-                    random_vel - mean_vel_,
-                    random_vel - mean_vel_,
-                    random_vel - mean_vel_};
+                    nq[0] - this->mean_state_[0],
+                    nq[1] - this->mean_state_[1],
+                    nq[2] - this->mean_state_[2],
+                    nq[3] - this->mean_state_[3],
+                    random_vel - this->mean_state_[4],
+                    random_vel - this->mean_state_[5],
+                    random_vel - this->mean_state_[6]};
         }
         else
         {
             new_delta = {
-                    random_pos - mean_pos_,
-                    random_pos - mean_pos_,
-                    random_pos - mean_pos_,
-                    random_vel - mean_vel_,
-                    random_vel - mean_vel_,
-                    random_vel - mean_vel_};
+                    random_pos,
+                    random_pos,
+                    random_pos,
+                    random_vel,
+                    random_vel,
+                    random_vel};
         }
 
 
@@ -198,6 +201,21 @@ void delta::evaluate_deltas()
                                                              quaternion[1],
                                                              quaternion[2],
                                                              quaternion[3]);
+
+            if (scv_delta == scv_deltas_->back())
+            {
+                // INITIAL
+                std::cout << "INITIAL" << std::endl;
+                std::cout << "\t" << scv_delta->get_state_vector_copy().cons() << std::endl;
+                std::cout << "\t" << scv_delta->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
+
+                // FINAL
+                auto cons = single_sol.cons();
+                std::cout << "FINAL" << std::endl;
+                std::cout << "\t" << cons << std::endl;
+                std::cout << "\t" << cons.extract(0, 3).vnorm() << std::endl;
+
+            }
 
             // Replace the constant valuesç
             // TODO: MAKE THIS MODULAR FROM THE MAIN
