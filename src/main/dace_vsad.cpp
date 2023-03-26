@@ -20,8 +20,12 @@
  */
 int main(int argc, char* argv[])
 {
+    // Number of variables and order
+    int n_var = 7;
+    int n_ord = 2;
+
     // Initialize DACE with 6 variables
-    DACE::DA::init(2, 7);
+    DACE::DA::init(n_ord, n_var);
 
     // Declare a geometric figure: cylinder
     auto upper_base_center = point(0.0, 0.0, 2.0);
@@ -102,40 +106,26 @@ int main(int argc, char* argv[])
     std::cout << xf_DA.cons() << std::endl;
     std::cout << xf_DA.cons().extract(0, 3).vnorm() << std::endl;
 
-    // TODO: FIX THIS MESS
-    // DACE::AlgebraicVector<DACE::DA> test = {
-    //         0.0,   // q0
-    //         0.0,   // q1
-    //         0.0,   // q2
-    //         0.0,   // q3
-    //         0.0,    // w1 -> rotation around 1 axis
-    //         0.0,           // w2 -> rotation around 2 axis
-    //         0.0 };          // w3 -> rotation around 3 axis
-
-    // auto test_evaled = xf_DA.eval(test);
-    // std::cout << test_evaled.cons() << std::endl;
-    // std::cout << test_evaled.cons().extract(0, 3).vnorm() << std::endl;
+    // -----------------------------------------DELTAS ENGINE STUFF ----------------------------------------------------
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set mean state
-    deltas_engine->mean_state_ = DACE::AlgebraicVector<DACE::DA>(scv_no_DA).cons();
+    deltas_engine->set_mean_quaternion_option(q_control);
 
     // Set distribution
-    deltas_engine->set_constants(error_att, stddev_att, error_vel, stddev_vel);
+    deltas_engine->set_constants(stddev_att, stddev_vel);
 
-    // Set options for the generator
-    deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::ATTITUDE, true);
-    deltas_engine->set_option<bool>(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
-    deltas_engine->set_option_sampling(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
+    // Set options for the generator -----------------------------------------------------------------------------------
+    deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
+    deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
+    deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
 
     // Generate deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
-    DACE::AlgebraicVector<DACE::DA> zeroed(7);
-    auto scv_nominal = scv(zeroed);
-    deltas_engine->insert_nominal(scv_nominal);
+    deltas_engine->insert_nominal(n_var);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();

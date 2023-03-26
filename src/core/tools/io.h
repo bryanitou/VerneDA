@@ -55,6 +55,18 @@ namespace tools::io
          * @param file_path [in] [std::filesystem::path]
          */
         void dump_non_eval_deltas(delta* delta, const std::filesystem::path &file_path);
+
+        /**
+         * Function used by other functions here within this same scope. Prints monomials in a stream.
+         * @param file2write [in] [std::ofstream]
+         * @param da_var [in] [DACE::DA]
+         * @param n_da_var [in] [bool]
+         * @param monomial_masked [in] [bool]
+         * @param d [in] [int]
+         * @param v [in] [int]
+         */
+        void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked, int d,
+                                 int v);
     }
 
     /**

@@ -7,6 +7,7 @@
 #include <random>
 #include <cmath>
 #include <unordered_map>
+#include <utility>
 
 // Project libraries
 #include "scv.h"
@@ -29,7 +30,7 @@ public:
      */
     ~delta() = default;
 
-public:
+public: // Set constants
 
     /**
      * Set constants for the deltas generation
@@ -38,29 +39,33 @@ public:
      * @param mean_vel [in] [double]
      * @param stddev_vel [in] [double]
      */
-    void set_constants(double mean_pos, double stddev_pos, double mean_vel, double stddev_vel);
+    void set_constants(double stddev_pos, double stddev_vel);
 
-    template<typename T> void set_option(DELTA_GENERATOR_OPTION option,  T value)
-    {
-        // If case relying on the option
-        if (option == DELTA_GENERATOR_OPTION::ATTITUDE)
-        {
-            this->attitude_ = value;
-        }
-        else if (option == DELTA_GENERATOR_OPTION::QUAT2EULER)
-        {
-            this->quat2euler_ = value;
-        }
-    }
+public: // Set options
+    /**
+     * Set bool options necessary for this class
+     * @param option [in] [DELTA_GENERATOR_OPTION]
+     * @param value [in] [bool]
+     */
+    void set_bool_option(DELTA_GENERATOR_OPTION option, bool value);
 
+    /**
+     * Set sampling option.
+     * @param q_sampling_option
+     */
+    void set_sampling_option(QUATERNION_SAMPLING q_sampling_option) { this->q_sampling_ = q_sampling_option; }
 
-    void set_option_sampling(QUATERNION_SAMPLING q_sampling_option) {this->q_sampling_ = q_sampling_option;}
+    /**
+     * Set mean quaternion option, necessary for the attitude.
+     * @param mean_q
+     */
+    void set_mean_quaternion_option(std::vector<double> mean_q) { this->mean_quaternion_ = std::move(mean_q); }
 
     /**
      * Insert the nominal SCV StateControlVector
-     * @param scv_nominal [in] [scv]
+     * @param n [in] [scv]
      */
-    void insert_nominal(const scv& scv_nominal);
+    void insert_nominal(int n);
 
     /**
      * Compute the deltas. Constants need to be set for this.
@@ -70,7 +75,9 @@ public:
      */
     void generate_deltas(DISTRIBUTION type, int n);
 
-    // Evaluate
+    /**
+     * Evaluate prepared deltas
+     */
     void evaluate_deltas();
 
 public: // Getters
@@ -104,15 +111,10 @@ private:
     // List of results:
     std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> eval_deltas_poly_ = nullptr;
 
-public:
-    std::vector<double> mean_state_;
-
 private:
 
     // Distribution constants
-    double mean_pos_{};
     double stddev_pos_{};
-    double mean_vel_{};
     double stddev_vel_{};
 
     // Constants set?
@@ -125,13 +127,24 @@ private:
     bool attitude_{false};
     bool quat2euler_{false};
     QUATERNION_SAMPLING q_sampling_{QUATERNION_SAMPLING::NA};
+    std::vector<double> mean_quaternion_{};
 
-private:
-    // Allocators
+private: // Allocators
+    /**
+     * Allocate scv base
+     * @param scv_base
+     * @param poly
+     */
     void allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& poly);
 
-private:
-    // Deltas calculators relying on the distribution type
+private: // Class functions
+    /**
+     * Deltas calculators relying on the distribution type
+     * @param n
+     */
     void generate_gaussian_deltas(int n);
+
+private: // Safety checks
+    void attitude_safety_checks();
 
 };

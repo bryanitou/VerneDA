@@ -121,7 +121,7 @@ void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA
 void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path)
 {
     // Auxiliary variable
-    bool monomial_skipped;
+    bool monomial_masked;
 
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -140,6 +140,13 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     // Get the pointer where all the evaluations are
     auto deltas_poly = delta->get_eval_deltas_poly();
 
+    // Safety check in case of nullptr
+    if (!deltas_poly)
+    {
+        std::fprintf(stderr, "Evalutated deltas polynomial has not been allocated!. Aborting...");
+        std::exit(-1);
+    }
+
     // Write the header
     file2write << "DELTA_ID, VARIABLE, INDEX, COEFFICIENT, ORDER, EXPONENTS" << std::endl;
 
@@ -153,41 +160,12 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
             DACE::DA da_var = (*deltas_poly)[d][v];
             int n_da_var = static_cast<int>(da_var.size());
 
-            // Are skipping it?
-            monomial_skipped = true;
+            // Should we mask?
+            // TODO: revise this masking... not very clear why this masking is needed
+            monomial_masked = n_da_var == 0;
 
-            for (int i = 1; i <= n_da_var; i++)
-            {
-                // Monomial
-                auto mono = da_var.getMonomial(i);
-
-                // Coef
-                auto coef = mono.m_coeff;
-
-                // Order
-                auto order = mono.order();
-
-                // String
-                auto exponents = mono.m_jj;
-                auto exponents_str = tools::vector::int2string(exponents, " ");
-
-                // Prepare line to write
-                auto line2write = tools::string::print2string("%i, %i, %i, %0.8f, %i, %s",
-                                                              d, v, i, coef, order, exponents_str.c_str());
-
-                // Write line
-                file2write << line2write << std::endl;
-
-                // Monomial not skipped
-                monomial_skipped = false;
-            }
-
-            // Check if skipped
-            if (monomial_skipped)
-            {
-                // Info
-                std::printf("INFO: Delta num: %d, variable: %d: was skipped due to zeros.\n", d, v);
-            }
+            // Print each monomial
+            tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, d, v);
         }
     }
 
@@ -200,7 +178,7 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
 void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::path &file_path)
 {
     // Auxiliary variables
-    bool monomial_skipped;
+    bool monomial_masked;
 
     // Get directory
     auto out_dir = file_path.parent_path();
@@ -235,47 +213,52 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
             auto da_var = scv[v];
             int n_da_var = static_cast<int>(da_var.size());
 
-            // Are skipping it?
-            monomial_skipped = true;
+            // Should we mask?
+            // TODO: revise this masking... not very clear why this masking is needed
+            monomial_masked = n_da_var == 0;
 
-            for (int i = 1; i <= n_da_var; i++)
-            {
-                // Monomial
-                auto mono = da_var.getMonomial(i);
-
-                // Coef
-                auto coef = mono.m_coeff;
-
-                // Order
-                auto order = mono.order();
-
-                // String
-                auto exponents = mono.m_jj;
-                auto exponents_str = tools::vector::int2string(exponents, " ");
-
-                // Prepare line to write
-                auto line2write = tools::string::print2string("%i, %i, %i, %0.8f, %i, %s",
-                                                              d, v, i, coef, order, exponents_str.c_str());
-
-                // Write line
-                file2write << line2write << std::endl;
-
-                // Monomial not skipped
-                monomial_skipped = false;
-            }
-
-            // Check if skipped
-            if (monomial_skipped)
-            {
-                // Info
-                std::printf("INFO: Delta num: %d, variable: %d: was skipped due to zeros.\n", d, v);
-            }
+            // Print each monomial
+            tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, d, v);
         }
     }
 
     // Close the stream
     file2write.close();
 
+}
+
+void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE::DA& da_var, bool n_da_var, bool monomial_masked, int d, int v)
+{
+    for (int i = monomial_masked ? 0 : 1; i <= n_da_var; i++)
+    {
+        // Monomial
+        auto mono = da_var.getMonomial(i);
+
+        // Coef
+        auto coef = mono.m_coeff;
+
+        // Order
+        auto order = mono.order();
+
+        // String
+        auto exponents = mono.m_jj;
+        auto exponents_str = tools::vector::int2string(exponents, " ");
+
+        // Prepare line to write
+        auto line2write = tools::string::print2string("%i, %i, %i, %0.8f, %i, %s",
+                                                      d, v, monomial_masked ? i + 1 : i,
+                                                      coef, order, exponents_str.c_str());
+
+        // Write line
+        file2write << line2write << std::endl;
+    }
+
+    // Check if skipped
+    if (monomial_masked)
+    {
+        // Info
+        std::printf("INFO: Delta num: %d, variable: %d: was masked due to zeros.\n", d, v);
+    }
 }
 
 [[maybe_unused]] void tools::io::plot_variables(const std::string& python_executable,

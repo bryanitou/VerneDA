@@ -18,8 +18,12 @@
  */
 int main(int argc, char* argv[])
 {
+    // Number of variables and order
+    int n_var = 6;
+    int n_ord = 2;
+
     // Initialize DACE with 6 variables
-    DACE::DA::init(2, 6);
+    DACE::DA::init(n_ord, n_var);
 
     // Define some constants
     double const ecc = 0.0;
@@ -71,10 +75,16 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(error, 10.0, error, 10.0);
+    deltas_engine->set_constants(10.0, 10.0);
 
     // Compute deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+
+    // Insert nominal delta
+    deltas_engine->insert_nominal(n_var);
+
+    // Evaluate deltas
+    deltas_engine->evaluate_deltas();
 
     // Set output path
     std::filesystem::path output_path_avd = "./out/tbp2/taylor_expression_RK4.avd";
