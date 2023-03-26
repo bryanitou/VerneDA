@@ -41,9 +41,7 @@ int main(int argc, char* argv[])
     double yaw = 0.00;
 
     // Error in attitude
-    double error_att = M_PI / 2;
     double stddev_att = 0.1;
-    double error_vel = 0.1;
     double stddev_vel = 0.01;
 
     // Get initial quaternion
@@ -116,7 +114,7 @@ int main(int argc, char* argv[])
     // Set distribution
     deltas_engine->set_constants(stddev_att, stddev_vel);
 
-    // Set options for the generator -----------------------------------------------------------------------------------
+    // Set options for the generator
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
     deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
