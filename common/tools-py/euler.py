@@ -1,8 +1,9 @@
 import numpy as np
+import math
 
 
 # This function was extracted from: https://programming-surgeon.com/en/euler-angle-python-en/
-def rotation_matrix(theta1, theta2, theta3, order='xyz'):
+def rotation_matrix(theta1, theta2, theta3, order='xyz', unit: str = "deg"):
     """
     input
         theta1, theta2, theta3 = rotation angles in rotation order (degrees)
@@ -14,12 +15,12 @@ def rotation_matrix(theta1, theta2, theta3, order='xyz'):
     matrix = None
 
     # Pre-compute all the angles
-    c1 = np.cos(theta1 * np.pi / 180.0)
-    s1 = np.sin(theta1 * np.pi / 180.0)
-    c2 = np.cos(theta2 * np.pi / 180.0)
-    s2 = np.sin(theta2 * np.pi / 180.0)
-    c3 = np.cos(theta3 * np.pi / 180.0)
-    s3 = np.sin(theta3 * np.pi / 180.0)
+    c1 = np.cos(theta1 * np.pi / 180.0 if unit == "deg" else theta1)
+    s1 = np.sin(theta1 * np.pi / 180.0 if unit == "deg" else theta1)
+    c2 = np.cos(theta2 * np.pi / 180.0 if unit == "deg" else theta2)
+    s2 = np.sin(theta2 * np.pi / 180.0 if unit == "deg" else theta2)
+    c3 = np.cos(theta3 * np.pi / 180.0 if unit == "deg" else theta3)
+    s3 = np.sin(theta3 * np.pi / 180.0 if unit == "deg" else theta3)
 
     # Switch case rotation to be done
     if order == 'xzx':
@@ -72,3 +73,26 @@ def rotation_matrix(theta1, theta2, theta3, order='xyz'):
                            [-c2 * s3, s2, c2 * c3]])
 
     return matrix
+
+
+def euler_from_quaternion(x, y, z, w):
+    """
+    Convert a quaternion into euler angles (roll, pitch, yaw)
+    roll is rotation around x in radians (counterclockwise)
+    pitch is rotation around y in radians (counterclockwise)
+    yaw is rotation around z in radians (counterclockwise)
+    """
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll_x = math.atan2(t0, t1)
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch_y = math.asin(t2)
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw_z = math.atan2(t3, t4)
+
+    return roll_x, pitch_y, yaw_z  # in radians

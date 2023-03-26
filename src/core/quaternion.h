@@ -25,8 +25,18 @@ namespace quaternion {
      * @param roll [in] [double]
      * @param pitch [in] [double]
      * @param yaw [in] [double]
+     * @return quaternion
      */
     std::vector<double> euler2quaternion(double roll, double pitch, double yaw);
+
+    /**
+     * Set quaternion form xyz Gaussian sampled
+     * @param x [in] [double]
+     * @param y [in] [double]
+     * @param z [in] [double]
+     * @return quaternion
+     */
+    std::vector<double> euler2quaternion_fromGaussian(double x, double y, double z);
 
      /**
       * Get the norm of the quaterion.
@@ -67,4 +77,8 @@ namespace quaternion {
     void check_norm(DACE::AlgebraicVector<DACE::DA> *q);
 
     std::vector<double> quaternion2euler(double w, double x, double y, double z);
+
+    std::vector<double> q8_normal_01(int seed);
+
+    double *r8vec_uniform_01_new(int n, int &seed);
 };

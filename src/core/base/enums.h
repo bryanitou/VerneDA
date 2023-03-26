@@ -54,3 +54,26 @@ enum class DISTRIBUTION
     GAUSSIAN,
     UNIFORM
 };
+
+/**
+* Type of sampling for quaternion
+*/
+enum class QUATERNION_SAMPLING
+{
+    EULER_GAUSSIAN,
+    SEED_GAUSSIAN,
+    OMPL_GAUSSIAN,
+    NA,
+
+};
+
+/**
+* Type of option inside delta generator
+*/
+enum class DELTA_GENERATOR_OPTION
+{
+    QUAT2EULER,
+    ATTITUDE,
+    TRANSLATION,
+    QUATERNION_SAMPLING
+};
