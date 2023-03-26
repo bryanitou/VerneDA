@@ -212,7 +212,7 @@ void delta::evaluate_deltas()
                                                              quaternion[2],
                                                              quaternion[3]);
 
-            if (scv_delta == scv_deltas_->back())
+            if (scv_delta == scv_deltas_->back() && this->attitude_)
             {
                 // Some debugging information
                 auto scv_cons = scv_delta->get_state_vector_copy().cons();
