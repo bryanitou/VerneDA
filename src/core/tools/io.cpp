@@ -295,7 +295,7 @@ void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE:
         }
 
         // Info
-        std::printf("Launching command: %s", cmd.c_str());
+        std::fprintf(stdout, "INFO: Launching command: %s", cmd.c_str());
 
         // Launch command
         std::system(cmd.c_str());
