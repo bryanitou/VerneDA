@@ -260,8 +260,13 @@ void delta::insert_nominal(int n)
     // Check if already exist
     if (!this->scv_deltas_)
     {
-        std::printf("Deltas have not been generated! Generate them before inserting the nominal SCV.");
+        // Throw error
+        std::fprintf(stderr, "FATAL: Deltas have not been generated! Generate them before inserting the nominal SCV.");
+
+        // Exit program
+        std::exit(-1);
     }
+
     // The nominal is a bunch of zeros
     DACE::AlgebraicVector<DACE::DA> zeroed(n);
     auto scv_nominal = scv(zeroed);

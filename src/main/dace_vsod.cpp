@@ -86,17 +86,23 @@ int main(int argc, char* argv[])
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
 
-    // Set output path
-    std::filesystem::path output_path_avd = "./out/tbp2/taylor_expression_RK4.avd";
-    std::filesystem::path output_path_dd = "./out/tbp2/deltas_expression_RK4.dd";
+    // Set output path for results
+    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression_RK4.avd";
+    std::filesystem::path output_eval_deltas_path_dd = "./out/tbp/eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd = "./out/tbp/non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_path_dd);
+
+    // Dump non evaluated deltas
+    tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
+
+    // Dump evaluated deltas
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_path_dd},
+            {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
     };
