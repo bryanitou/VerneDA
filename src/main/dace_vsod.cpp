@@ -18,8 +18,12 @@
  */
 int main(int argc, char* argv[])
 {
+    // Number of variables and order
+    int n_var = 6;
+    int n_ord = 2;
+
     // Initialize DACE with 6 variables
-    DACE::DA::init(2, 6);
+    DACE::DA::init(n_ord, n_var);
 
     // Define some constants
     double const ecc = 0.0;
@@ -71,22 +75,34 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(error, 10.0, error, 10.0);
+    deltas_engine->set_constants(10.0, 10.0);
 
     // Compute deltas
-    deltas_engine->compute_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
-    // Set output path
-    std::filesystem::path output_path_avd = "./out/tbp2/taylor_expression_RK4.avd";
-    std::filesystem::path output_path_dd = "./out/tbp2/deltas_expression_RK4.dd";
+    // Insert nominal delta
+    deltas_engine->insert_nominal(n_var);
+
+    // Evaluate deltas
+    deltas_engine->evaluate_deltas();
+
+    // Set output path for results
+    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression_RK4.avd";
+    std::filesystem::path output_eval_deltas_path_dd = "./out/tbp/eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd = "./out/tbp/non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
-    tools::io::dace::dump_deltas(deltas_engine.get(), output_path_dd);
+
+    // Dump non evaluated deltas
+    tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
+
+    // Dump evaluated deltas
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_path_dd},
+            {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
     };

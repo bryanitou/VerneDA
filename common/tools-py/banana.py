@@ -43,42 +43,45 @@ def plot_banana(taylor: dict, output_prefix: [os.PathLike or str], plot_type: Pl
     :return: None
     """
 
+    # Get vectors
+    v = get_vector(taylor, idx=2, verbose=verbose)
+
+    # Units
+    unit_str = "-" if metrics == "" else metrics
+
+    # Call to plots relying on PlotType class
+    if plot_type == PlotType.attitude:
+        plot_attitude(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+    elif plot_type == PlotType.translation:
+        plot_translation(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+    else:
+        print("I can only do Translation and Attitude plots!")
+        exit(-1)
+
+
+def get_vector(taylor: dict, idx: int, verbose: bool = False) -> [[float]]:
     # Safety check
     if not isinstance(taylor, dict):
         if verbose:
             print("Expected input 'taylor' is not a dictionary!")
             exit(-1)
 
-    # Units
-    unit_str = "-" if metrics == "" else metrics
-
     # Now, should collect X-Y coordinates
     # TODO: Make this work for quaternion AND for orbit
-    x = []
-    y = []
-    z = []
+    idx = idx + 1
+    v = [[] for i in range(idx)]
+    var2retrieve = [str(i) for i in range(idx)]
+
     for delta in taylor:
         for var in taylor[delta]:
-            if var == "0" or var == "1" or var == "2":
+            if var in var2retrieve:
                 # Get index and coef
                 val = taylor[delta][var]["1"]["coef"]
 
                 # Expanding this line
-                if var == "0":
-                    x.append(val)
-                elif var == "1":
-                    y.append(val)
-                else:
-                    z.append(val)
+                v[int(var)].append(val)
 
-    # Call to plots relying on PlotType class
-    if plot_type == PlotType.attitude:
-        plot_attitude(x, y, z, unit_str=unit_str, prefix=output_prefix)
-    elif plot_type == PlotType.translation:
-        plot_translation(x, y, z, unit_str=unit_str, prefix=output_prefix)
-    else:
-        print("I can only do Translation and Attitude plots!")
-        exit(-1)
+    return v
 
 
 def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
@@ -89,7 +92,7 @@ def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.
     plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
 
     # Plot 3D vectors
-    plot_3d_vectors(x, y, z, output=f"{prefix}-3D_rotations.png")
+    plot_3d_vectors(x, y, z, unit_str, output=f"{prefix}-3D_rotations.png")
 
 
 def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
@@ -102,7 +105,7 @@ def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: 
 
 def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLike or str):
     # Set the size
-    plt.figure(figsize=(16, 9))
+    fig = plt.figure(figsize=(16, 9))
 
     # Finally, we can plot everything
     plt.scatter(x, y, s=0.4)
@@ -115,13 +118,30 @@ def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLik
     # Plt show grid
     plt.grid(True)
 
-    # Save second plot
+    # Save fig
     plt.savefig(output)
+
+    # Clear
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
+
+
+def plot_quaternion(w: [float], x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+    # Convert from quaternion to Euler angles
+    roll, pitch, yaw = [], [], []
+
+    for i in range(len(w) - 1):
+        [roll_val, pitch_val, yaw_val] = euler.euler_from_quaternion(x[i], y[i], z[i], w[i])
+        roll.append(roll_val), pitch.append(pitch_val), yaw.append(yaw_val)
+
+    # Print from there
+    plot_3d_vectors(roll, pitch, yaw, unit_str, output)
 
 
 def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
     # Initialise the subplot function using number of rows and columns
-    figure, ax = plt.subplots(1, 3, figsize=(16, 9))
+    fig, ax = plt.subplots(1, 3, figsize=(16, 9))
 
     # Creating plot
     ax[0].scatter(x, y, color="green", s=0.4)
@@ -166,14 +186,16 @@ def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: 
     # Set subtitle
     plt.suptitle("Final position distribution")
 
-    # Save plot
+    # Save fig
     plt.savefig(output)
 
     # Clear
-    plt.close(figure)
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
 
 
-def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
+def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, output: str):
     # The initial orientation was: [x: 0, y: 0, z: 1]
     initial_vector_x = np.array([1, 0, 0]).transpose()  # Initial attitude
     initial_vector_y = np.array([0, 1, 0]).transpose()  # Initial attitude
@@ -189,12 +211,12 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
 
     for i in range(0, size):
         # Get rotation matrix
-        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx")
+        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx", unit=unit_str)
 
         # Final vector
-        final_vector_x = np.matmul(rot_matrix, initial_vector_x)
-        final_vector_y = np.matmul(rot_matrix, initial_vector_y)
-        final_vector_z = np.matmul(rot_matrix, initial_vector_z)
+        final_vector_x = np.matmul(rot_matrix, initial_vector_x)  # Rotated vector: x = [1, 0, 0]
+        final_vector_y = np.matmul(rot_matrix, initial_vector_y)  # Rotated vector: y = [0, 1, 0]
+        final_vector_z = np.matmul(rot_matrix, initial_vector_z)  # Rotated vector: z = [0, 0, 1]
 
         # Append result
         final_attitude_x.append(final_vector_x)
@@ -219,7 +241,53 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], output: str):
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
+
+    # Save fig
     plt.savefig(output)
+
+    # Close stuff
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
+
+    # Plot also scatter if needed
+    plot_3d_scatter(xx, yx, zx, unit_str=unit_str, output=output)
+
+
+def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+    # Set figure
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    # Plot the sphere
+    u, v = np.mgrid[0:2 * np.pi:30j, 0:np.pi:20j]
+    xs = np.cos(u) * np.sin(v)
+    ys = np.sin(u) * np.sin(v)
+    zs = np.cos(v)
+
+    # Plot surface
+    ax.plot_surface(xs, ys, zs, cmap=plt.cm.YlGnBu_r, alpha=.4)
+
+    # Do scatter
+    ax.scatter(x, y, z, marker='x', c='r', linewidths=0.2)
+
+    # Set labels
+    ax.set_xlabel(f"x [{unit_str}]")
+    ax.set_ylabel(f"y [{unit_str}]")
+    ax.set_zlabel(f"z [{unit_str}]")
+
+    # Set axes limits
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+
+    # Save stuff
+    plt.savefig(output.replace(".png", "-scatter.png"))
+
+    # Close stuff
+    plt.clf()
+    plt.cla()
+    plt.close(fig)
 
 
 def main(args: list = None, verbose: bool = False) -> None:
