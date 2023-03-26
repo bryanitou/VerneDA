@@ -193,12 +193,17 @@ void delta::evaluate_deltas()
         // Evaluate and save
         single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
 
-        // Check the norm
-        // TODO: DEBUG LINE
-        auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
-                                                      single_sol.cons().extract(0, 3).vnorm());
-        std::fprintf(stdout, "DEBUG: %s\n", line2write.c_str());
-        // std::cout << single_sol << std::endl; DEBUG LINE
+        // Check the norm for DEBUG PURPOSES
+        if (this->attitude_)
+        {
+            // Get line to write...
+            auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
+                                                          single_sol.cons().extract(0, 3).vnorm());
+
+            // Write line...
+            std::fprintf(stdout, "DEBUG: %s\n", line2write.c_str());
+        }
+
 
         // If it is attitude_, we should convert the quaternion to Euler angles
         if (this->quat2euler_)
