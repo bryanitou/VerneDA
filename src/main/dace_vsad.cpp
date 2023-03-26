@@ -41,9 +41,7 @@ int main(int argc, char* argv[])
     double yaw = 0.00;
 
     // Error in attitude
-    double error_att = M_PI / 2;
     double stddev_att = 0.1;
-    double error_vel = 0.1;
     double stddev_vel = 0.01;
 
     // Get initial quaternion
