@@ -102,7 +102,7 @@ void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA
 
             // String
             auto exponents = mono.m_jj;
-            auto exponents_str = tools::vector::int2string(exponents, " ");
+            auto exponents_str = tools::vector::num2string<unsigned int>(exponents, " ");
 
             // Prepare line to write
             auto line2write = tools::string::print2string("%i, %i, %0.8f, %i, %s",
@@ -242,7 +242,7 @@ void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE:
 
         // String
         auto exponents = mono.m_jj;
-        auto exponents_str = tools::vector::int2string(exponents, " ");
+        auto exponents_str = tools::vector::num2string<unsigned int>(exponents, " ");
 
         // Prepare line to write
         auto line2write = tools::string::print2string("%i, %i, %i, %0.8f, %i, %s",

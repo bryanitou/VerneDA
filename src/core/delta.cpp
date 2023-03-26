@@ -177,7 +177,7 @@ void delta::evaluate_deltas()
     // Safety check
     if (!this->nominal_inserted_)
     {
-        std::fprintf(stderr, "Cannot evaluate deltas!, Must insert the nominal first. Exiting program.");
+        std::fprintf(stderr, "FATAL: Cannot evaluate deltas!, Must insert the nominal first. Exiting program.");
         std::exit(-1);
     }
     // Local auxiliary variables
@@ -197,7 +197,7 @@ void delta::evaluate_deltas()
         // TODO: DEBUG LINE
         auto line2write = tools::string::print2string("Norm after evaluation: '%.5f'",
                                                       single_sol.cons().extract(0, 3).vnorm());
-        std::cout << line2write << std::endl;
+        std::fprintf(stdout, "DEBUG: %s\n", line2write.c_str());
         // std::cout << single_sol << std::endl; DEBUG LINE
 
         // If it is attitude_, we should convert the quaternion to Euler angles
@@ -214,16 +214,20 @@ void delta::evaluate_deltas()
 
             if (scv_delta == scv_deltas_->back())
             {
+                // Some debugging information
+                auto scv_cons = scv_delta->get_state_vector_copy().cons();
+                auto scv_cons_str = tools::vector::num2string<double>(scv_cons);
+                double scv_q_norm = scv_delta->get_state_vector_copy().cons().extract(0, 3).vnorm();
                 // INITIAL
-                std::cout << "INITIAL" << std::endl;
-                std::cout << "\t" << scv_delta->get_state_vector_copy().cons() << std::endl;
-                std::cout << "\t" << scv_delta->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
+                std::fprintf(stdout, "DEBUG: Initial state: %s, quaternion norm: '%.2f'.\n",
+                             scv_cons_str.c_str(), scv_q_norm);
 
                 // FINAL
-                auto cons = single_sol.cons();
-                std::cout << "FINAL" << std::endl;
-                std::cout << "\t" << cons << std::endl;
-                std::cout << "\t" << cons.extract(0, 3).vnorm() << std::endl;
+                auto single_sol_cons = single_sol.cons();
+                auto single_sol_cons_str = tools::vector::num2string<double>(single_sol_cons);
+                double single_sol_q_norm = single_sol_cons.extract(0, 3).vnorm();
+                std::fprintf(stdout, "DEBUG: Final state: %s, quaternion norm: '%.2f'.\n",
+                             single_sol_cons_str.c_str(), single_sol_q_norm);
 
             }
 
