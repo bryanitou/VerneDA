@@ -256,8 +256,8 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
 
 
 def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
-    # Set figure
-    fig = plt.figure()
+    # Set the size
+    fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(projection='3d')
 
     # Plot the sphere
@@ -282,7 +282,10 @@ def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: o
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
 
-    # Save stuff
+    # Change gimbal
+    ax.view_init(10, -10)
+
+    # Save plot
     plt.savefig(output.replace(".png", "-scatter.png"))
 
     # Close stuff
