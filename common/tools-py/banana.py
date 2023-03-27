@@ -1,3 +1,4 @@
+#!env/python
 # System imports
 import enum
 import os

@@ -1,3 +1,4 @@
+#!env/python
 import reader
 import banana
 
