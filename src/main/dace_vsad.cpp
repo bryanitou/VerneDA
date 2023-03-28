@@ -35,6 +35,21 @@ int main(int argc, char* argv[])
     cylinder->addpoints(point_list);
     double radius = 2.0;
 
+    // Stuff to compute the inertia: EXAMPLE: CYLINDER
+    double r = 2;
+    double h = 6;
+    double mass = 1000;
+    double Jx = (mass * h * h) / 12 + (mass * r * r) / 4;
+    double Jy = (mass * h * h) / 12 + (mass * r * r) / 4;
+    double Jz = (mass * r * r) / 4;
+
+    // Inertia matrix of the object
+    double inertia[3][3] = {
+            {Jx, 0.0, 0.0},
+            {0.0, Jy, 0.0},
+            {0.0, 0.0, Jz}
+    };
+
     // Initial conditions of attitude
     double roll = 0.00;
     double pitch = 0.00;
@@ -89,8 +104,11 @@ int main(int argc, char* argv[])
     // Initialize integrator
     auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
 
+    // Declare the problem object
+    auto prob = problems();
+
     // Define problem to solve
-    auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::Attitude);
+    auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::FreeTorqueMotion);
 
     // Apply integrator
     auto xf_DA =

@@ -29,7 +29,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     return res;
 }
 
-DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::DA> scv, double t )
+DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t )
 {
     // Create attitude and resultant vector
     DACE::AlgebraicVector<DACE::DA> q(4), omega(3), res(7);
@@ -48,13 +48,6 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
     omega[1] = scv[5];
     omega[2] = scv[6];
 
-    double r = 2;
-    double h = 6;
-    double mass = 1000;
-    double Jx = (mass * h * h) / 12 + (mass * r * r) / 4;
-    double Jy = (mass * h * h) / 12 + (mass * r * r) / 4;
-    double Jz = (mass * r * r) / 4;
-
     // Set result
     res[0] = 0.5 * ( omega[2] * q[1] - omega[1] * q[2] + omega[0] * q[3]); // theta_x_dot
     res[1] = 0.5 * (-omega[2] * q[0] + omega[0] * q[2] + omega[1] * q[3]); // theta_x_dot
@@ -66,4 +59,35 @@ DACE::AlgebraicVector<DACE::DA> problems::Attitude(DACE::AlgebraicVector<DACE::D
 
     // Return result
     return res;
+}
+
+void problems::set_inertia_matrix(double inertia[3][3])
+{
+    // Show info to the user
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            this->inertia_[i][j] = inertia[i][j];
+            std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'", i, j, this->inertia_[i][j]);
+        }
+    }
+}
+
+void problems::get_inverse_matrix(double a[3][3])
+{
+    // Get the determinant
+    double det = problems::get_determinant(a);
+
+
+}
+
+double problems::get_determinant(double a[3][3])
+{
+    double det = a[0][0] * (a[1][1]*a[2][2] - a[1][2]*a[2][1])
+                - a[0][1] * (a[1][0]*a[2][2] - a[2][0]*a[1][2])
+                + a[0][2] * (a[1][0]*a[2][1] - a[1][1]*a[2][0]);
+
+    // Return determinant
+    return det;
 }
