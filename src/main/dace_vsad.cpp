@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     double const t0 = 0.0;
 
     // How many periods do we want to integrate?
-    double const tf = 100;
+    double const tf = 1000;
 
     // Initialize integrator
     auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
@@ -120,8 +120,7 @@ int main(int argc, char* argv[])
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
 
-    // TODO: Add this to the delta set
-    //  Debug line
+    // Debug line
     std::cout << scvf_DA->get_state_vector_copy().cons()<< std::endl;
     std::cout << scvf_DA->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
     std::cout << xf_DA.cons() << std::endl;

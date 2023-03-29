@@ -16,7 +16,7 @@ class problems
 {
 public:
     // Constructor
-    problems(PROBLEM type);
+    explicit problems(PROBLEM type);
 
     // Destructor
     ~problems();
@@ -32,6 +32,10 @@ private:
 public:
     // Setters
     void set_inertia_matrix(double inertia[3][3]);
+
+public:
+    // Getters
+    PROBLEM get_type(){return this->type_;}
 
 private:
     // Attributes

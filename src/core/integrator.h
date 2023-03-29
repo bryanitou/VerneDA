@@ -11,6 +11,9 @@
 #include "base/enums.h"
 #include "problems.h"
 
+// Project tools
+#include "tools/vo.h"
+
 // DACE libraries
 #include "dace/dace.h"
 
@@ -78,8 +81,10 @@ private:
      * @param t1            [in] [double]
      * @return DACE::AlgebraicVector<DACE::DA>
      */
-    DACE::AlgebraicVector<DACE::DA> RK4(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1) const;
+    DACE::AlgebraicVector<DACE::DA> RK4(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1);
 
     template<typename T>
     DACE::AlgebraicVector<T> RK78(int N, DACE::AlgebraicVector<T> Y0, double X0, double X1);
+
+    void print_detailed_information(const DACE::AlgebraicVector<DACE::DA> &x, int i, double t);
 };
