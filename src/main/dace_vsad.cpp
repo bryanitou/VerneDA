@@ -107,6 +107,9 @@ int main(int argc, char* argv[])
     // Declare the problem object
     auto prob = problems();
 
+    // Insert the inertia matrix to the problem
+    prob.set_inertia_matrix(inertia);
+
     // Define problem to solve
     auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::FreeTorqueMotion);
 

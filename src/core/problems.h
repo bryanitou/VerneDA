@@ -15,10 +15,10 @@ class problems
 {
 public:
     // Constructor
-    problems() = default;
+    problems();
 
     // Destructor
-    ~problems() = default;
+    ~problems();
 
 public:
     // Problems
@@ -31,5 +31,12 @@ public:
 
 private:
     // Attributes
-    double inertia_[3][3];
+    double** inertia_;
+    double** inverse_;
+
+    static double** get_inverse_matrix(double **a);
+
+    static double get_determinant(double **a);
+
+    static void memory_frees(double **a);
 };

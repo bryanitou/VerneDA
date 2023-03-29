@@ -5,6 +5,43 @@
 
 #include "problems.h"
 
+problems::problems()
+{
+    // Initialize matrices
+    int n = 3; // rows
+    int m = 3; // cols
+
+    // Initialize rows
+    this->inertia_ = new double *[n];
+    this->inverse_ = new double *[n];
+
+    // For loop
+    for (int i = 0; i < n; i++)
+    {
+        // For each row, allocate m columns
+        this->inertia_[i] = new double [m];
+        this->inverse_[i] = new double [m];
+    }
+}
+
+problems::~problems() {
+    // Initialize matrices
+    int n = 3; // rows
+
+    // For loop
+    for (int i = 0; i < n; i++)
+    {
+        // For each row, allocate m columns
+        delete[] this->inertia_[i];
+        delete[] this->inverse_[i];
+    }
+
+    // Also delete main pointer
+    delete[] this->inertia_;
+    delete[] this->inverse_;
+}
+
+
 DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t )
 {
     // Create position and resultant vector
@@ -72,22 +109,86 @@ void problems::set_inertia_matrix(double inertia[3][3])
             std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'", i, j, this->inertia_[i][j]);
         }
     }
+
+    // Now, compute the inverse and set it
+    // First of all, delete previous
+    problems::memory_frees(this->inverse_);
+    this->inverse_ = problems::get_inverse_matrix(this->inertia_);
+
+    // Once done, print result as info
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            std::fprintf(stdout, "DEBUG: Inertia inverse matrix I['%d']['%d'] = '%.5f'", i, j, this->inverse_[i][j]);
+        }
+    }
 }
 
-void problems::get_inverse_matrix(double a[3][3])
+double** problems::get_inverse_matrix(double** a)
 {
     // Get the determinant
     double det = problems::get_determinant(a);
 
+    // Get the adjoin
+    double a11 = a[1][1]*a[2][2] - a[2][1]*a[1][2];
+    double a12 = a[0][2]*a[2][1] - a[2][2]*a[0][1];
+    double a13 = a[0][1]*a[1][2] - a[1][1]*a[0][2];
 
+    double a21 = a[1][2]*a[2][0] - a[2][2]*a[1][0];
+    double a22 = a[0][0]*a[2][2] - a[2][0]*a[0][2];
+    double a23 = a[0][2]*a[1][0] - a[1][2]*a[0][0];
+
+    double a31 = a[1][0]*a[2][1] - a[2][0]*a[1][1];
+    double a32 = a[0][1]*a[2][0] - a[2][1]*a[0][0];
+    double a33 = a[0][0]*a[1][1] - a[1][0]*a[0][1];
+
+    // Build adjoin matrix
+    double adj_aux[3][3] = {
+            {a11/det, a12/det, a13/det},
+            {a21/det, a22/det, a23/det},
+            {a31/det, a32/det, a33/det}
+    };
+
+    // Declare result
+    auto** adj = new double * [3];
+
+    // Initialize each column
+    for (int i = 0; i < 3; i++)
+    {
+        adj[i] = new double [3];
+        for (int j = 0; j < 3; j++)
+        {
+            adj[i][j] = adj_aux[i][j];
+        }
+    }
+
+    // Now, should return result
+    return adj;
 }
 
-double problems::get_determinant(double a[3][3])
+double problems::get_determinant(double **a)
 {
     double det = a[0][0] * (a[1][1]*a[2][2] - a[1][2]*a[2][1])
-                - a[0][1] * (a[1][0]*a[2][2] - a[2][0]*a[1][2])
-                + a[0][2] * (a[1][0]*a[2][1] - a[1][1]*a[2][0]);
+                 - a[0][1] * (a[1][0]*a[2][2] - a[2][0]*a[1][2])
+                 + a[0][2] * (a[1][0]*a[2][1] - a[1][1]*a[2][0]);
 
     // Return determinant
     return det;
+}
+
+void problems::memory_frees(double **a)
+{
+    // Initialize matrices
+    int n = 3; // rows
+
+    // For loop
+    for (int i = 0; i < n; i++)
+    {
+        // For each row, allocate m columns
+        delete[] a[i];
+    }
+
+    // Also delete main pointer
+    delete[] a;
 }
