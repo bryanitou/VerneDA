@@ -8,6 +8,7 @@
 
 // Project libraries
 #include "base/constants.h"
+#include "base/enums.h"
 #include "tools/str.h"
 #include "quaternion.h"
 
@@ -15,15 +16,18 @@ class problems
 {
 public:
     // Constructor
-    problems();
+    problems(PROBLEM type);
 
     // Destructor
     ~problems();
 
 public:
+    DACE::AlgebraicVector<DACE::DA> solve(const DACE::AlgebraicVector<DACE::DA>& scv, double t);
+
+private:
     // Problems
-    DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t );
-    DACE::AlgebraicVector<DACE::DA> FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t );
+    static DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t);
+    DACE::AlgebraicVector<DACE::DA> FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t);
 
 public:
     // Setters
@@ -33,6 +37,9 @@ private:
     // Attributes
     double** inertia_;
     double** inverse_;
+
+    // Type of problem
+    PROBLEM type_{PROBLEM::NA};
 
     static double** get_inverse_matrix(double **a);
 

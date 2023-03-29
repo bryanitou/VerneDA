@@ -5,8 +5,11 @@
 
 #include "problems.h"
 
-problems::problems()
+problems::problems(PROBLEM type)
 {
+    // Set problem type
+    this->type_ = type;
+
     // Initialize matrices
     int n = 3; // rows
     int m = 3; // cols
@@ -212,4 +215,33 @@ void problems::memory_frees(double **a)
 
     // Also delete main pointer
     delete[] a;
+}
+
+DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE::DA>& scv, double t)
+{
+    // Result here
+    DACE::AlgebraicVector<DACE::DA> res;
+
+    switch (this->type_)
+    {
+        case PROBLEM::TWO_BODY:
+        {
+            // Call Free Torque Motion problem
+            res = problems::TwoBodyProblem(scv, t);
+            break;
+        }
+        case PROBLEM::FREE_TORQUE:
+        {
+            // Call Free Torque Motion problem
+            res = this->FreeTorqueMotion(scv, t);
+            break;
+        }
+        default:
+        {
+            // Info
+            std::fprintf(stdout, "Should be Two Body Problem or Free Torque Motion Problem.\n");
+            break;
+        }
+    }
+    return res;
 }

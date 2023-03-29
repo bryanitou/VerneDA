@@ -29,7 +29,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA
     // Iterate
     for( int i = 0; i < steps; i++ )
     {
-        x = x + h * (probl_->FreeTorqueMotion(x, t));
+        x = x + h * (probl_->solve(x, t));
         t += h;
     }
 
@@ -58,10 +58,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     for( int i = 0; i < steps; i++ )
     {
         // Compute points in between
-        k1 = probl_->FreeTorqueMotion(x, t);
-        k2 = probl_->FreeTorqueMotion(x + h * (k1/3), t + h/3);
-        k3 = probl_->FreeTorqueMotion(x + h * (-k1/3 + k2), t + 2*h/3);
-        k4 = probl_->FreeTorqueMotion(x + h * (k1 - k2 + k3), t + h);
+        k1 = probl_->solve(x, t);
+        k2 = probl_->solve(x + h * (k1/3), t + h/3);
+        k3 = probl_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
+        k4 = probl_->solve(x + h * (k1 - k2 + k3), t + h);
 
         // Compute the single step
         x = x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
@@ -313,7 +313,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
                 Y0[I] = H*Y0[I] + Z[I][0];
             }
 
-            Y1 = probl_->FreeTorqueMotion(Y0, X+H*A[J]);
+            Y1 = probl_->solve(Y0, X+H*A[J]);
 
             for (I = 0; I<N; I++)
             {
