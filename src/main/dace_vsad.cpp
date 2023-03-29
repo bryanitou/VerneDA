@@ -110,12 +110,12 @@ int main(int argc, char* argv[])
     // Insert the inertia matrix to the problem
     prob.set_inertia_matrix(inertia);
 
-    // Define problem to solve
-    auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::FreeTorqueMotion);
+    // Set the problem in the integrator
+    objIntegrator->set_problem_object(&prob);
 
     // Apply integrator
     auto xf_DA =
-            objIntegrator->integrate(scv0_DA, attitudeProblem, t0, tf);
+            objIntegrator->integrate(scv0_DA, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);

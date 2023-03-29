@@ -127,7 +127,7 @@ void problems::set_inertia_matrix(double inertia[3][3])
         for (int j = 0; j < 3; j++)
         {
             this->inertia_[i][j] = inertia[i][j];
-            std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'", i, j, this->inertia_[i][j]);
+            std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'\n", i, j, this->inertia_[i][j]);
         }
     }
 
@@ -141,7 +141,7 @@ void problems::set_inertia_matrix(double inertia[3][3])
     {
         for (int j = 0; j < 3; j++)
         {
-            std::fprintf(stdout, "DEBUG: Inertia inverse matrix I['%d']['%d'] = '%.5f'", i, j, this->inverse_[i][j]);
+            std::fprintf(stdout, "DEBUG: Inertia inverse matrix I^-1['%d']['%d'] = '%.5f'\n", i, j, this->inverse_[i][j]);
         }
     }
 }
