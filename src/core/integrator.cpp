@@ -15,7 +15,6 @@ integrator::integrator(INTEGRATOR integrator, double stepmax)
 
 
 DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA> x,
-                                                  DACE::AlgebraicVector<DACE::DA> (*formula)(DACE::AlgebraicVector<DACE::DA>, double),
                                                   double t0, double t1) const
 {
     // Num of steps
@@ -30,7 +29,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA
     // Iterate
     for( int i = 0; i < steps; i++ )
     {
-        x = x + h * (formula(x, t));
+        x = x + h * (probl_->solve(x, t));
         t += h;
     }
 
@@ -38,9 +37,13 @@ DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA
 }
 
 DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x,
-                                                  DACE::AlgebraicVector<DACE::DA> (*pFunction)(DACE::AlgebraicVector<DACE::DA>, double),
-                                                  double t0, double t1) const
-{
+                                                  double t0, double t1) {
+    // Auxiliary variable for debug
+    std::string str2debug;
+    std::string str4euler;
+    std::vector<double> euler2debug;
+    DACE::AlgebraicVector<double> q_cons;
+
     // Auxiliary variables for the loop
     DACE::AlgebraicVector<DACE::DA> k1;
     DACE::AlgebraicVector<DACE::DA> k2;
@@ -59,11 +62,14 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     // Iterate
     for( int i = 0; i < steps; i++ )
     {
+        // Print detailed info
+        this->print_detailed_information(x, i, t);
+
         // Compute points in between
-        k1 = pFunction(x, t);
-        k2 = pFunction(x + h * (k1/3), t + h/3);
-        k3 = pFunction(x + h * (-k1/3 + k2), t + 2*h/3);
-        k4 = pFunction(x + h * (k1 - k2 + k3), t + h);
+        k1 = probl_->solve(x, t);
+        k2 = probl_->solve(x + h * (k1/3), t + h/3);
+        k3 = probl_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
+        k4 = probl_->solve(x + h * (k1 - k2 + k3), t + h);
 
         // Compute the single step
         x = x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
@@ -72,30 +78,60 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         t += h;
     }
 
+
     return x;
 }
 
-DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x,
-                                                      DACE::AlgebraicVector<DACE::DA> (*pFunction)(
-                                                              DACE::AlgebraicVector<DACE::DA>, double), double t0,
-                                                      double t1) {
+void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA>& x, int i, double t)
+{
+    // Get the information of x
+    auto str2debug = tools::vector::da_cons2string(x, ", ", "%3.8f");
+
+    // Common info shared on bot attitude and orbit determination
+    auto str2print = tools::string::print2string("TRACE: i: %6d | t: %10.2f | v: %s", i, t,
+                                                 str2debug.c_str());
+
+    // If it is attitude, go this way...
+    if (this->probl_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+    {
+        // Extract the quaternion from here if attitude
+        auto q_cons = x.cons().extract(0, 3);
+
+        // Extract the Euler angles if attitude
+        auto euler2debug = quaternion::quaternion2euler(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
+
+        // Euler to string
+        auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
+
+        str2print += tools::string::print2string(" | euler: %s", str4euler.c_str());
+    }
+
+    // Debug information
+    std::fprintf(stdout,"%s\n", str2print.c_str());
+
+}
+
+DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x, double t0,
+                                                      double t1)
+
+{
     DACE::AlgebraicVector<DACE::DA> result;
 
     switch (this->type)
     {
         case INTEGRATOR::EULER:
         {
-            result = this->euler(x, pFunction, t0, t1);
+            result = this->euler(x,  t0, t1);
             break;
         }
         case INTEGRATOR::RK4:
         {
-            result = this->RK4(x, pFunction, t0, t1);
+            result = this->RK4(x, t0, t1);
             break;
         }
         case INTEGRATOR::RK78:
         {
-            result = this->RK78(6, x, pFunction, t0, t1);
+            result = this->RK78(6, x, t0, t1);
             break;
         }
         default:
@@ -143,8 +179,7 @@ double normtmp( int N, std::vector<double> X)
     return res;
 }
 
-template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0 ,
-        DACE::AlgebraicVector<DACE::DA> (*pFunction)(DACE::AlgebraicVector<DACE::DA>, double), double X0, double X1)
+template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0, double X0, double X1)
 {
     // TODO: Investigate what is this
     double ERREST;
@@ -316,7 +351,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
                 Y0[I] = H*Y0[I] + Z[I][0];
             }
 
-            Y1 = pFunction(Y0, X+H*A[J]);
+            Y1 = probl_->solve(Y0, X+H*A[J]);
 
             for (I = 0; I<N; I++)
             {

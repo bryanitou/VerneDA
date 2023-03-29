@@ -77,3 +77,14 @@ enum class DELTA_GENERATOR_OPTION
     TRANSLATION,
     QUATERNION_SAMPLING
 };
+
+
+/**
+* Type of problem
+*/
+enum class PROBLEM
+{
+    TWO_BODY,
+    FREE_TORQUE_MOTION,
+    NA,
+};

@@ -9,6 +9,10 @@
 
 // Project libraries
 #include "base/enums.h"
+#include "problems.h"
+
+// Project tools
+#include "tools/vo.h"
 
 // DACE libraries
 #include "dace/dace.h"
@@ -40,12 +44,17 @@ public:
      * @return DACE::AlgebraicVector<DACE::DA>
      */
     DACE::AlgebraicVector<DACE::DA> integrate(const DACE::AlgebraicVector<DACE::DA>& x,
-                                              DACE::AlgebraicVector<DACE::DA>
-                                                      (*pFunction)(DACE::AlgebraicVector<DACE::DA>, double),
                                               double t0, double t1);
+
+public:
+    // Setters
+    void set_problem_object(problems* probl) {this->probl_ = probl; };
 
 private:
     // Private attributes
+
+    // Class containing problems
+    problems* probl_ = nullptr;
 
     // Integrator type
     INTEGRATOR type;
@@ -63,8 +72,6 @@ private:
      * @return DACE::AlgebraicVector<DACE::DA>
      */
     DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x,
-                                          DACE::AlgebraicVector<DACE::DA>
-                                                  (*formula)(DACE::AlgebraicVector<DACE::DA>, double),
                                           double t0, double t1) const;
     /**
      * This function will integrate using the RK4 (Range-Kutta 4) method
@@ -74,13 +81,10 @@ private:
      * @param t1            [in] [double]
      * @return DACE::AlgebraicVector<DACE::DA>
      */
-    DACE::AlgebraicVector<DACE::DA> RK4(DACE::AlgebraicVector<DACE::DA> x,
-                                        DACE::AlgebraicVector<DACE::DA>
-                                                (*pFunction)(DACE::AlgebraicVector<DACE::DA>,
-                                                                                     double), double t0, double t1) const;
+    DACE::AlgebraicVector<DACE::DA> RK4(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1);
 
     template<typename T>
-    DACE::AlgebraicVector<T> RK78(int N, DACE::AlgebraicVector<T> Y0,
-                                  DACE::AlgebraicVector<DACE::DA> (*pFunction)(DACE::AlgebraicVector<DACE::DA>, double),
-                                  double X0, double X1);
+    DACE::AlgebraicVector<T> RK78(int N, DACE::AlgebraicVector<T> Y0, double X0, double X1);
+
+    void print_detailed_information(const DACE::AlgebraicVector<DACE::DA> &x, int i, double t);
 };

@@ -35,6 +35,21 @@ int main(int argc, char* argv[])
     cylinder->addpoints(point_list);
     double radius = 2.0;
 
+    // Stuff to compute the inertia: EXAMPLE: CYLINDER
+    double r = 2;
+    double h = 6;
+    double mass = 1000;
+    double Jx = (mass * h * h) / 12 + (mass * r * r) / 4;
+    double Jy = (mass * h * h) / 12 + (mass * r * r) / 4;
+    double Jz = (mass * r * r) / 4;
+
+    // Inertia matrix of the object
+    double inertia[3][3] = {
+            {Jx, 0.0, 0.0},
+            {0.0, Jy, 0.0},
+            {0.0, 0.0, Jz}
+    };
+
     // Initial conditions of attitude
     double roll = 0.00;
     double pitch = 0.00;
@@ -84,23 +99,28 @@ int main(int argc, char* argv[])
     double const t0 = 0.0;
 
     // How many periods do we want to integrate?
-    double const tf = 100;
+    double const tf = 1000;
 
     // Initialize integrator
     auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
 
-    // Define problem to solve
-    auto attitudeProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::Attitude);
+    // Declare the problem object
+    auto prob = problems(PROBLEM::FREE_TORQUE_MOTION);
+
+    // Insert the inertia matrix to the problem
+    prob.set_inertia_matrix(inertia);
+
+    // Set the problem in the integrator
+    objIntegrator->set_problem_object(&prob);
 
     // Apply integrator
     auto xf_DA =
-            objIntegrator->integrate(scv0_DA, attitudeProblem, t0, tf);
+            objIntegrator->integrate(scv0_DA, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
 
-    // TODO: Add this to the delta set
-    //  Debug line
+    // Debug line
     std::cout << scvf_DA->get_state_vector_copy().cons()<< std::endl;
     std::cout << scvf_DA->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
     std::cout << xf_DA.cons() << std::endl;

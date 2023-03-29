@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     double const vy = sqrt(constants::earth::mu / a) * sqrt(1 + ecc);
 
     // Set error
-    double error = 100.0;
+    double error = 10.0;
 
     // Set initial state
     std::vector<DACE::DA> scv0 = {
@@ -63,10 +63,13 @@ int main(int argc, char* argv[])
     auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK78, 1);
 
     // Define problem to solve
-    auto twoBodyProblem = reinterpret_cast<DACE::AlgebraicVector<DACE::DA> (*)(DACE::AlgebraicVector<DACE::DA>, double)>(&problems::TwoBodyProblem);
+    auto prob = problems(PROBLEM::TWO_BODY);
+
+    // Set problem into integrator
+    objIntegrator->set_problem_object(&prob);
 
     // Apply integrator
-    auto xf_DA = objIntegrator->integrate(scv0_DA, twoBodyProblem, t0, tf);
+    auto xf_DA = objIntegrator->integrate(scv0_DA, t0, tf);
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);
@@ -75,7 +78,7 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(10.0, 10.0);
+    deltas_engine->set_constants(error, error);
 
     // Compute deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
@@ -87,9 +90,9 @@ int main(int argc, char* argv[])
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_path_avd = "./out/tbp/taylor_expression_RK4.avd";
-    std::filesystem::path output_eval_deltas_path_dd = "./out/tbp/eval_deltas_expression_RK4.dd";
-    std::filesystem::path output_non_eval_deltas_path_dd = "./out/tbp/non_eval_deltas_expression.dd";
+    std::filesystem::path output_path_avd = "./out/tbp1/taylor_expression_RK4.avd";
+    std::filesystem::path output_eval_deltas_path_dd = "./out/tbp1/eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd = "./out/tbp1/non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
