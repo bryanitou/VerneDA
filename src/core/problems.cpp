@@ -230,7 +230,7 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
             res = problems::TwoBodyProblem(scv, t);
             break;
         }
-        case PROBLEM::FREE_TORQUE:
+        case PROBLEM::FREE_TORQUE_MOTION:
         {
             // Call Free Torque Motion problem
             res = this->FreeTorqueMotion(scv, t);

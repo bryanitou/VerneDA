@@ -92,7 +92,7 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
                                                  str2debug.c_str());
 
     // If it is attitude, go this way...
-    if (this->probl_->get_type() == PROBLEM::FREE_TORQUE)
+    if (this->probl_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
     {
         // Extract the quaternion from here if attitude
         auto q_cons = x.cons().extract(0, 3);

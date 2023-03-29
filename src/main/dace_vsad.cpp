@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
 
     // Declare the problem object
-    auto prob = problems(PROBLEM::FREE_TORQUE);
+    auto prob = problems(PROBLEM::FREE_TORQUE_MOTION);
 
     // Insert the inertia matrix to the problem
     prob.set_inertia_matrix(inertia);

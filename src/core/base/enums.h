@@ -85,6 +85,6 @@ enum class DELTA_GENERATOR_OPTION
 enum class PROBLEM
 {
     TWO_BODY,
-    FREE_TORQUE,
+    FREE_TORQUE_MOTION,
     NA,
 };
