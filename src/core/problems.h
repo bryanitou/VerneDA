@@ -39,4 +39,6 @@ private:
     static double get_determinant(double **a);
 
     static void memory_frees(double **a);
+
+    DACE::AlgebraicVector<DACE::DA> get_cross_product(DACE::AlgebraicVector<DACE::DA> omega);
 };

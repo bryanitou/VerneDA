@@ -85,17 +85,38 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
     omega[1] = scv[5];
     omega[2] = scv[6];
 
+    // Get the cross product result
+    auto c = this->get_cross_product(omega);
+
     // Set result
     res[0] = 0.5 * ( omega[2] * q[1] - omega[1] * q[2] + omega[0] * q[3]); // theta_x_dot
     res[1] = 0.5 * (-omega[2] * q[0] + omega[0] * q[2] + omega[1] * q[3]); // theta_x_dot
     res[2] = 0.5 * ( omega[1] * q[0] - omega[0] * q[1] + omega[2] * q[3]); // theta_x_dot
     res[3] = 0.5 * (-omega[0] * q[0] - omega[1] * q[1] - omega[2] * q[2]); // theta_x_dot
-    res[4] = (Jy - Jz) * omega[1] * omega[2] / Jx; // omega_y_dot
-    res[5] = (Jz - Jx) * omega[1] * omega[0] / Jy; // omega_z_dot
-    res[6] = (Jx - Jy) * omega[0] * omega[1] / Jz; // omega_z_dot
+    res[4] = this->inverse_[0][0] * c[0] + this->inverse_[0][1] * c[1] + this->inverse_[0][2] * c[2];; // omega_y_dot
+    res[5] = this->inverse_[1][0] * c[0] + this->inverse_[1][1] * c[1] + this->inverse_[1][2] * c[2];; // omega_z_dot
+    res[6] = this->inverse_[2][0] * c[0] + this->inverse_[2][1] * c[1] + this->inverse_[2][2] * c[2];; // omega_z_dot
 
     // Return result
     return res;
+}
+
+DACE::AlgebraicVector<DACE::DA> problems::get_cross_product(DACE::AlgebraicVector<DACE::DA> omega)
+{
+    DACE::AlgebraicVector<DACE::DA> b(3), c(3);
+
+    // Compute I*omega
+    b[0] = this->inertia_[0][0] * omega[0] + this->inertia_[0][1] * omega[1] + this->inertia_[0][2] * omega[2];
+    b[1] = this->inertia_[1][0] * omega[0] + this->inertia_[1][1] * omega[1] + this->inertia_[1][2] * omega[2];
+    b[2] = this->inertia_[2][0] * omega[0] + this->inertia_[2][1] * omega[1] + this->inertia_[2][2] * omega[2];
+
+    // Compute cross product
+    c[0] =   omega[1]*b[2] - b[1]*omega[2];
+    c[1] = -(omega[0]*b[2] - b[2]*omega[2]);
+    c[2] =   omega[0]*b[1] - b[0]*omega[1];
+
+    // Return cross product
+    return c;
 }
 
 void problems::set_inertia_matrix(double inertia[3][3])
