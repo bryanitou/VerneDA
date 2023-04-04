@@ -145,6 +145,26 @@ DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVecto
     return result;
 }
 
+void integrator::set_problem_object(problems *probl)
+{
+    // Set problem pointer
+    this->probl_ = probl;
+
+    // Get the type of problem inserted
+    auto problem_type = this->probl_->get_type();
+
+    // Set the amount of variables needed
+    this->nvar_ = problem_type == PROBLEM::FREE_TORQUE_MOTION ? 7 :
+                  problem_type == PROBLEM::TWO_BODY ? 6 : 0;
+
+    // Safety check
+    if (this->nvar_ == 0)
+    {
+        std::fprintf(stderr, "Couldn't set the amount of variables to be used in the integrator. N. of "
+                             "variables: '%d'", this->nvar_);
+    }
+}
+
 
 // Some auxiliary functions for the RK78, TODO: Can we get rid of min/max?
 double min( double a, double b)
@@ -315,8 +335,14 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     RFNORM = 0.0;
     ERREST = 0.0;
 
+    // Iteration
+    int idx = 0;
+
     while(X != X1)
     {
+        // Print detailed info
+        this->print_detailed_information(Y1, idx, X);
+
         // compute new stepsize
         if (RFNORM != 0)
         {
@@ -394,6 +420,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             VIHMAX = max(VIHMAX,H);
             ERREST = ERREST + RFNORM;
         }
+
+        idx++;
     }
 
     for (I = 0; I<N; I++)
