@@ -32,19 +32,28 @@ int main(int argc, char* argv[])
     double const vy = sqrt(constants::earth::mu / a) * sqrt(1 + ecc);
 
     // Set error
-    double error = 10.0;
+    double K = 10;// [0.1, 0.5, 1, 5, 10]
+    double stddev_x = 0.02;
+    double stddev_y = stddev_x;
+    double stddev_z = 0.03;
+    double stddev_vx = K*0.1;
+    double stddev_vy = K*0.1;
+    double stddev_vz = K*0.1;
+
+    // Generate vector of uncertainties
+    std::vector<double> stddevs = {stddev_x, stddev_y, stddev_z, stddev_vx, stddev_vy, stddev_vz};
 
     // Set initial state
     std::vector<DACE::DA> scv0 = {
-            a,      //
-            0.0,    //
-            0.0,    //
-            0.0,    //
-            vy,     //
-            0.0};   //
+            a   + DACE::DA(1) * stddevs[0],  // x
+            0.0 + DACE::DA(2) * stddevs[1],  // y
+            0.0 + DACE::DA(3) * stddevs[2],  // z
+            0.0 + DACE::DA(4) * stddevs[3],  // vx
+            vy  + DACE::DA(5) * stddevs[4],  // vy
+            0.0 + DACE::DA(6) * stddevs[5] };// vz
 
     // Declare and initialize class
-    auto s0 = std::make_unique<scv>(scv0, true, error);
+    auto s0 = std::make_unique<scv>(scv0);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
@@ -78,7 +87,7 @@ int main(int argc, char* argv[])
     auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
 
     // Set distribution
-    deltas_engine->set_constants(error, error);
+    deltas_engine->set_constants(stddevs);
 
     // Compute deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
@@ -90,9 +99,10 @@ int main(int argc, char* argv[])
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_path_avd = "./out/tbp1/taylor_expression_RK4.avd";
-    std::filesystem::path output_eval_deltas_path_dd = "./out/tbp1/eval_deltas_expression_RK4.dd";
-    std::filesystem::path output_non_eval_deltas_path_dd = "./out/tbp1/non_eval_deltas_expression.dd";
+    std::filesystem::path output_dir = "./out/tbp1";
+    std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
+    std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
