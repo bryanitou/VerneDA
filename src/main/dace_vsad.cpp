@@ -43,28 +43,53 @@ int main(int argc, char* argv[])
     double Jy = (mass * h * h) / 12 + (mass * r * r) / 4;
     double Jz = (mass * r * r) / 4;
 
+    // Inertia matrix found in paper: On-board spacecraft relative pose estimation with high-order extended Kalman filter
+    double inertia_chaser[3][3] = {
+            {2040.0, 130.0, 25.0},
+            {130.0, 1670.0, -55.0},
+            {25.0, -55.0, 2570.0}
+    };
+
+    double inertia_target[3][3] = {
+            {17023.3, 397.1, -2171.4},
+            {397.1, 124825.7, 344.2},
+            {-2171.4, 344.2, 129112.2}
+    };
+
     // Inertia matrix of the object
-    double inertia[3][3] = {
+    double inertia_cylinder[3][3] = {
             {Jx, 0.0, 0.0},
             {0.0, Jy, 0.0},
             {0.0, 0.0, Jz}
     };
+
+    // Select the testing inertia matrix
+    auto inertia = inertia_chaser;
 
     // Initial conditions of attitude
     double roll = 0.00;
     double pitch = 0.00;
     double yaw = 0.00;
 
-    // Error in attitude
-    double error_att = M_PI / 2;
-    double stddev_att = 0.1;
-    double error_vel = 0.1;
-    double stddev_vel = 0.01;
+    // Sensitivity to initial rotational dynamics
+    double K = 0.1; // Possible values: [0.1, 0.5, 1, 5, 10]
+    double stddev_roll  = 0.003;
+    double stddev_pitch = stddev_roll;
+    double stddev_yaw   = 0.006;
+    double stddev_vel_x = K*0.01;
+    double stddev_vel_y = K*0.01;
+    double stddev_vel_z = K*0.01;
+
+    // Generate vector of uncertainties
+    std::vector<double> stddevs = {stddev_roll, stddev_pitch, stddev_yaw, stddev_vel_x, stddev_vel_y, stddev_vel_z};
 
     // Get initial quaternion
     // TODO: Error should be computed here
     auto q_control = quaternion::euler2quaternion(roll, pitch,  yaw);
-    auto q_with_error = quaternion::euler2quaternion(roll + error_att, pitch + error_att, yaw + error_att);
+    auto q_with_error = quaternion::euler2quaternion(
+            roll + stddev_roll,
+            pitch + stddev_pitch,
+            yaw + stddev_yaw);
     auto q_error = quaternion::q8_multiply(q_with_error, q_control);
 
     // Declare state control vector without DA
@@ -79,13 +104,13 @@ int main(int argc, char* argv[])
 
     // Declare the state control vector with DA
     std::vector<DACE::DA> scv0 = {
-            scv_no_DA[0] +  DACE::DA(1) * q_error[0],   // q0
-            scv_no_DA[1] +  DACE::DA(2) * q_error[1],   // q1
-            scv_no_DA[2] +  DACE::DA(3) * q_error[2],   // q2
-            scv_no_DA[3] +  DACE::DA(4) * q_error[3],   // q3
-            scv_no_DA[4] +  DACE::DA(5) * error_vel,    // w1 -> rotation around 1 axis
-            scv_no_DA[5] +  DACE::DA(6) * error_vel,    // w2 -> rotation around 2 axis
-            scv_no_DA[6] +  DACE::DA(7) * error_vel };  // w3 -> rotation around 3 axis
+            scv_no_DA[0] +  DACE::DA(1) * q_error[0],       // q0
+            scv_no_DA[1] +  DACE::DA(2) * q_error[1],       // q1
+            scv_no_DA[2] +  DACE::DA(3) * q_error[2],       // q2
+            scv_no_DA[3] +  DACE::DA(4) * q_error[3],       // q3
+            scv_no_DA[4] +  DACE::DA(5) * stddev_vel_x,     // w1 -> rotation around 1 axis
+            scv_no_DA[5] +  DACE::DA(6) * stddev_vel_y,     // w2 -> rotation around 2 axis
+            scv_no_DA[6] +  DACE::DA(7) * stddev_vel_z };   // w3 -> rotation around 3 axis
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
@@ -134,7 +159,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_mean_quaternion_option(q_control);
 
     // Set distribution
-    deltas_engine->set_constants(stddev_att, stddev_vel);
+    deltas_engine->set_constants(stddevs);
 
     // Set options for the generator
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
@@ -151,9 +176,10 @@ int main(int argc, char* argv[])
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_path_avd = "./out/attp/taylor_expression_RK4.avd";
-    std::filesystem::path output_eval_deltas_path_dd = "./out/attp/eval_deltas_expression_RK4.dd";
-    std::filesystem::path output_non_eval_deltas_path_dd = "./out/attp/non_eval_deltas_expression.dd";
+    std::filesystem::path output_dir = "./out/attp_paper";
+    std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
+    std::filesystem::path output_eval_deltas_path_dd = output_dir / "eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_non_eval_deltas_path_dd = output_dir /  "non_eval_deltas_expression.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
@@ -173,5 +199,5 @@ int main(int argc, char* argv[])
 
 
     // Draw plots
-    tools::io::plot_variables(PYPLOT_BANANA, py_args, true);
+    tools::io::plot_variables(PYPLOT_BANANA, py_args, false);
 }

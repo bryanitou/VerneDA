@@ -80,8 +80,16 @@ void delta::generate_gaussian_deltas(int n)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-    std::normal_distribution<double> distribution_pos(0.0, this->stddev_pos_);
-    std::normal_distribution<double> distribution_vel(0.0, this->stddev_vel_);
+
+    std::vector< std::normal_distribution<double>> stddevs_distr;
+
+    // Generate all distribution objects
+    for (const auto & std : this->stddevs_)
+    {
+        // Get other distribution engines
+        stddevs_distr.emplace_back(0.0, std);
+    }
+
 
     // Reserve memory for CPU efficiency
     deltas.reserve(n + 1);
@@ -101,9 +109,9 @@ void delta::generate_gaussian_deltas(int n)
             {
                 case QUATERNION_SAMPLING::EULER_GAUSSIAN:
                 {
-                    nq = quaternion::euler2quaternion(distribution_pos(generator),
-                                                      distribution_pos(generator),
-                                                      distribution_pos(generator));
+                    nq = quaternion::euler2quaternion(stddevs_distr[0](generator),
+                                                      stddevs_distr[1](generator),
+                                                      stddevs_distr[2](generator));
                     break;
                 }
                 case QUATERNION_SAMPLING::SEED_GAUSSIAN:
@@ -113,9 +121,9 @@ void delta::generate_gaussian_deltas(int n)
                 }
                 case QUATERNION_SAMPLING::OMPL_GAUSSIAN:
                 {
-                    nq = quaternion::euler2quaternion_fromGaussian(distribution_pos(generator),
-                                                                   distribution_pos(generator),
-                                                                   distribution_pos(generator));
+                    nq = quaternion::euler2quaternion_fromGaussian(stddevs_distr[0](generator),
+                                                                   stddevs_distr[1](generator),
+                                                                   stddevs_distr[2](generator));
                     break;
                 }
                 default:
@@ -141,19 +149,19 @@ void delta::generate_gaussian_deltas(int n)
                     nq[1] - this->mean_quaternion_[1],
                     nq[2] - this->mean_quaternion_[2],
                     nq[3] - this->mean_quaternion_[3],
-                    distribution_vel(generator),
-                    distribution_vel(generator),
-                    distribution_vel(generator)};
+                    stddevs_distr[3](generator),
+                    stddevs_distr[4](generator),
+                    stddevs_distr[5](generator)};
         }
         else
         {
             new_delta = {
-                    distribution_pos(generator),
-                    distribution_pos(generator),
-                    distribution_pos(generator),
-                    distribution_vel(generator),
-                    distribution_vel(generator),
-                    distribution_vel(generator)};
+                    stddevs_distr[0](generator),
+                    stddevs_distr[1](generator),
+                    stddevs_distr[2](generator),
+                    stddevs_distr[3](generator),
+                    stddevs_distr[4](generator),
+                    stddevs_distr[5](generator)};
         }
 
 
@@ -253,11 +261,10 @@ void delta::evaluate_deltas()
     this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
 }
 
-void delta::set_constants(double stddev_pos, double stddev_vel)
+void delta::set_constants(std::vector<double> stddevs)
 {
     // Set constants
-    this->stddev_pos_ = stddev_pos;
-    this->stddev_vel_ = stddev_vel;
+    this->stddevs_ = stddevs;
 
     // Notice
     this->constants_set_ = true;

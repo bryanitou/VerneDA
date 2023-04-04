@@ -35,12 +35,9 @@ public: // Set constants
 
     /**
      * Set constants for the deltas generation
-     * @param mean_pos [in] [double]
-     * @param stddev_pos [in] [double]
-     * @param mean_vel [in] [double]
-     * @param stddev_vel [in] [double]
+     * @param stddevs [in] [std::vector<double>]
      */
-    void set_constants(double stddev_pos, double stddev_vel);
+    void set_constants(std::vector<double> stddevs);
 
 public: // Set options
     /**
@@ -115,8 +112,7 @@ private:
 private:
 
     // Distribution constants
-    double stddev_pos_{};
-    double stddev_vel_{};
+    std::vector<double> stddevs_{};
 
     // Constants set?
     bool constants_set_{false};
