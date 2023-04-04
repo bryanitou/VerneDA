@@ -48,13 +48,16 @@ public:
 
 public:
     // Setters
-    void set_problem_object(problems* probl) {this->probl_ = probl; };
+    void set_problem_object(problems* probl);
 
 private:
     // Private attributes
 
     // Class containing problems
     problems* probl_ = nullptr;
+
+    // Number of variables to be used
+    int nvar_{0};
 
     // Integrator type
     INTEGRATOR type;
@@ -71,7 +74,7 @@ private:
      * @param t1            [in] [double]
      * @return DACE::AlgebraicVector<DACE::DA>
      */
-    DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x,
+    [[nodiscard]] DACE::AlgebraicVector<DACE::DA> euler(DACE::AlgebraicVector<DACE::DA> x,
                                           double t0, double t1) const;
     /**
      * This function will integrate using the RK4 (Range-Kutta 4) method
