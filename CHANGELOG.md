@@ -1,6 +1,6 @@
 # CHANGELOG
 
-This is a curated historical list of all the implementations of getting2knowDace.
+Historical detailed commit information of this repository **getting2knowDace**.
 
 ### Abbreviations
 
@@ -9,7 +9,7 @@ This is a curated historical list of all the implementations of getting2knowDace
 
 ## v1.0
 
-### Major implementations
+### Major upgrades
 - TBD
 
 ### Commit detail (chronological)
