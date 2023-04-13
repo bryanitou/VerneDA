@@ -341,7 +341,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     while(X != X1)
     {
         // Print detailed info
-        this->print_detailed_information(Y1, idx, X);
+        this->print_detailed_information(Y0, idx, X);
 
         // compute new stepsize
         if (RFNORM != 0)
