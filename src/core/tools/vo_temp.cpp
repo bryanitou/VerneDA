@@ -22,8 +22,11 @@ std::string tools::vector::num2string(std::vector<T> v, const std::string& separ
         result += separator;
     }
 
-    // Close vector at the back
-    result += std::to_string(v.back()) + "]";
+    // Write last value
+    result += do_precision ? tools::string::print2string(precision, v.back()) : std::to_string(v.back());
+
+    // Close vector
+    result += "]";
 
     // Return string
     return result;
