@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_dir = "./out/tbp1";
+    std::filesystem::path output_dir = "./out/tbp_paper";
     std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
     std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
