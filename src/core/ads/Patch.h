@@ -6,11 +6,16 @@
 //  Created by Daniele Antonio Santeramo on 01/10/16.                                        /
 //                                                                                           /
 /********************************************************************************************/
-#ifndef PATCH_H_INCLUDED_
-#define PATCH_H_INCLUDED_
+#pragma once
 
+// System libraries
+#include <algorithm>
+
+// DACE libraries
 #include <dace/DA.h>
 #include <dace/AlgebraicVector.h>
+
+// Project libraries
 #include "SplittingHistory.h"
 
 struct Observable;
@@ -54,4 +59,3 @@ std::pair<Patch, Patch> split( int dir = 0, DACE::AlgebraicVector<DACE::DA> obj 
 
 };
 
-#endif // PATCH_H_INCLUDED_

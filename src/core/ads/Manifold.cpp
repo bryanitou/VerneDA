@@ -6,12 +6,7 @@
 //  Created by Daniele Antonio Santeramo on 01/10/16.                                        /
 //                                                                                           /
 /********************************************************************************************/
-#include <dace/dace.h>
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <iterator>
-#include <algorithm>
+
 #include "Manifold.h"
 
 struct Observable;

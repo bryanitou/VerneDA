@@ -6,12 +6,18 @@
 //  Created by Daniele Antonio Santeramo on 01/10/16.                                        /
 //                                                                                           /
 /********************************************************************************************/
-#ifndef SPLITTINGHISTORY_H_INCLUDED_
-#define SPLITTINGHISTORY_H_INCLUDED_
+#pragma once
 
-#include <dace/DA.h>
-#include <dace/AlgebraicVector.h>
+// System libraries
 #include <vector>
+#include <cmath>
+
+// DACE libraries
+#include "dace/DA.h"
+#include "dace/AlgebraicVector.h"
+
+// Project libraries
+
 
 class SplittingHistory : public std::vector<int>
 {
@@ -48,5 +54,3 @@ std::vector<double> width();                                                    
 bool contain (std::vector<double> pt);                                                                        // >! Function to verify the point belonging of point
 
 };
-
-#endif //SPLITTINGHISTORY_H_INCLUDED_

@@ -6,14 +6,8 @@
 //  Created by Daniele Antonio Santeramo on 01/10/16.                                        /
 //                                                                                           /
 /********************************************************************************************/
-#include <dace/dace.h>
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <algorithm>
-#include <vector>
+
 #include "Patch.h"
-#include "SplittingHistory.h"
 
 struct Observable;
 
@@ -135,7 +129,7 @@ std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> o
         /*it is possible to use the automatic splitting direction computation if only if the Truncation error is evaluated on the domain itself
         and not if exist a function expanded on the domain, in this last case the direction MUST be compute outside the Patch class and gives as input */
         auto errors = this -> Patch::getTruncationErrors();
-        int pos = std::distance(errors.begin(), max_element(errors.begin(), errors.end()) );
+        int pos = std::distance(errors.begin(), std::max_element(errors.begin(), errors.end()) );
         dir = Patch::getSplittingDirection(pos);
     }
 

@@ -6,12 +6,17 @@
 //  Created by Daniele Antonio Santeramo on 01/10/16.                                        /
 //                                                                                           /
 /********************************************************************************************/
-#ifndef _MANIFOLD_H_INCLUDED_
-#define _MANIFOLD_H_INCLUDED_
+#pragma once
 
+// System libraries
 #include <deque>
-#include <dace/AlgebraicVector.h>
-#include <dace/DA.h>
+#include <algorithm>
+
+// DACE libraries
+#include "dace/AlgebraicVector.h"
+#include "dace/DA.h"
+
+// Project libraries
 #include "Patch.h"
 
 struct Observable;
@@ -42,5 +47,3 @@ public:
 
     DACE::AlgebraicVector<double> pointEvaluationManifold( DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
 };
-
-#endif //_MANIFOLD_H_INCLUDED_

@@ -1,3 +1,6 @@
+/**
+ * ADS Test Propagation.
+ */
 
 // System libraries
 #include <iostream>
@@ -22,9 +25,6 @@ template<typename T, typename U> DACE::AlgebraicVector<T> KeplerProp(DACE::Algeb
 {
     // Get the maximum order at which DACE have been initialized
     int ord = DACE::DA::getMaxOrder();
-
-    // Info
-    //cout << ord << endl;
 
     // Set DACE final state vector
     DACE::AlgebraicVector<T> rv_fin(6);
@@ -60,9 +60,9 @@ template<typename T, typename U> DACE::AlgebraicVector<T> KeplerProp(DACE::Algeb
     auto hh_str = tools::vector::da_cons2string(hh, "," , "%10.2f");
 
     // Print resulting vector of the cross product
-    std::fprintf(stdout, "Position: '%s' km\n", rr_str.c_str());
-    std::fprintf(stdout, "Velocity: '%s' km s^-1\n", vv_str.c_str());
-    std::fprintf(stdout, "Cross product resulting vector is: '%s' km^2 s^-1 kg^-1\n", hh_str.c_str());
+    std::fprintf(stdout, "Position (R)          : '%s' km\n", rr_str.c_str());
+    std::fprintf(stdout, "Velocity (V)          : '%s' km s^-1\n", vv_str.c_str());
+    std::fprintf(stdout, "R x V                 : '%s' km^2 s^-1 kg^-1\n", hh_str.c_str());
 
     // Get the norm of all the vectors
     auto h  = DACE::vnorm(hh);
@@ -70,29 +70,43 @@ template<typename T, typename U> DACE::AlgebraicVector<T> KeplerProp(DACE::Algeb
     auto v0 = DACE::vnorm(vv0);
 
     // Info
-    std::fprintf(stdout, "Norm Position: '%f' km\n", r0.cons());
-    std::fprintf(stdout, "Norm Velocity: '%f' km s^-1\n", v0.cons());
-    std::fprintf(stdout, "Norm R x V   : '%f' km^2 s^-1 kg^-1\n", h.cons());
+    std::fprintf(stdout, "Norm R                : '%f' km\n", r0.cons());
+    std::fprintf(stdout, "Norm V                : '%f' km s^-1\n", v0.cons());
+    std::fprintf(stdout, "Norm R x V            : '%f' km^2 s^-1 kg^-1\n", h.cons());
 
-    // Compute some variables TODO: What are they?
+    // Compute some variables
+    // Semi-major axis
     auto a = mu / (2 * mu / r0 - v0*v0);
+
+    // Semi-latus rectum
+    // See this web-page for further knowledge:
+    // https://galileoandeinstein.phys.virginia.edu/7010/CM_14_Math_for_Orbits.html
     auto p = h*h / mu;
+
+    // What is this?
     auto sigma0 = DACE::dot(rr0,vv0) / std::sqrt(mu);
 
     // Info
-    std::fprintf(stdout, "a: '%f' km\n", a.cons());
-    std::fprintf(stdout, "p: '%f' km\n", p.cons());
-    std::fprintf(stdout, "sigma0: '%f' km kg^-2\n", sigma0.cons());
+    std::fprintf(stdout, "Semi-major axis (a)   : '%f' km\n", a.cons());
+    std::fprintf(stdout, "Semi-latum rectum (p) : '%f' km\n", p.cons());
+    std::fprintf(stdout, "sigma0                : '%f' km kg^-2\n", sigma0.cons());
 
+    // Tolerance
     double tol = 1.0;
+
+    // Iterator
     int iter = 0;
+
+    // SCL: it's not used, what is it?
     double scl = 1e-4;
-    
+
+    // Create F, Ft, G and Gt from template, which will be DACE::AlgebraicVector<T>
     T F, Ft, G, Gt;
-    //cout << cons(a) << endl;
-    
-    if (cons(a)>0)
+
+    // Check if the semi-major access is positive
+    if (DACE::cons(a)>0)
     {
+        //
         T MmM0 = t * sqrt(mu/a/a/a);
         T EmE0 = cons(MmM0);
         //cout << "EmE0 " << cons(EmE0) << endl;
