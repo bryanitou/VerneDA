@@ -407,6 +407,7 @@ add_executable(${EXECUTABLE_NAME}
 target_link_libraries(${EXECUTABLE_NAME}
         ads
         dacelib
+        core
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
