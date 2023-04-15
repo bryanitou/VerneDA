@@ -11,25 +11,43 @@
 
 struct Observable;
 
-Manifold::Manifold() : std::deque< Patch >() {
+Manifold::Manifold() : std::deque< Patch >()
+{
+
 }
 
-Manifold::Manifold( unsigned int n ) : std::deque< Patch >(n) {
+Manifold::Manifold( unsigned int n ) : std::deque< Patch >(n)
+{
+
 }
 
-Manifold::Manifold( const Manifold& m) : std::deque< Patch >(m) {
+Manifold::Manifold( const Manifold& m) : std::deque< Patch >(m)
+{
+
 }
 
-Manifold::Manifold( const Patch& p) {
+Manifold::Manifold( const Patch& p)
+{
+    // Create a temporal Manifold
     Manifold temp;
+
+    // Push back the input patch to a temporal Manifold
     temp.push_back(p);
+
+    // TODO: WTF: Set the created temporal Manifold to "this" class instance
     *this = temp;
 
 }
 
-Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p) {
+Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
+{
+    // Create a patch from the DA vector
     Patch temp = p;
+
+    // TODO: WTF: Create Manifold from a Patch
     Manifold aux(temp);
+
+    // TODO: WTF: Set aux to "this" class instance from a temporal Patch
     *this = aux;
 }
 

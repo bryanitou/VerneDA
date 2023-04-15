@@ -20,18 +20,32 @@
 
 struct Observable;
 
-class Manifold : public std::deque< Patch > {
-public:
+/**
+ * Manifold class gets inheritance from std::deque class.
+ * @details https://en.cppreference.com/w/cpp/container/deque
+ */
+class Manifold : public std::deque<Patch>
+{
+public: // Constructors
     Manifold();
 
     Manifold( unsigned int n );
 
     Manifold( const Manifold& m);
 
-    Manifold( const Patch& p);
+    /**
+     * Build class from Patch object
+     * @param p [in] [patch]
+     */
+    explicit Manifold( const Patch& p);
 
-    Manifold( const DACE::AlgebraicVector<DACE::DA>& p);
+    /**
+     * Build class from DA Algebraic Vector
+     * @param p [in] [DACE::AlgebraicVector<DACE::DA>]
+     */
+    explicit Manifold( const DACE::AlgebraicVector<DACE::DA>& p);
 
+public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA> ), const double errToll, const int nSplitMax, int posOverride = 0);
 
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, double ), const double errtol, const int nSplitMax, const double mu, int posOverride = 0);

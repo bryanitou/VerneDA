@@ -264,14 +264,21 @@ int main()
     int nSplitMax = 6 ;
 
     // Initialize patch
+    // TODO: This is never used
     Patch set(rv);
 
     // Initialize manifold
     Manifold stack(rv);
 
+    // Set clock
+    // TODO: Unused
     clock_t split_time = clock();
+
+    // Call to main running function
     Manifold RVsplit = stack.getSplitDomain(KeplerProp, errToll, nSplitMax, DT,  mu );
-    std::cout << " It creates " <<  RVsplit.size()  << " domains " << std::endl;
+
+    // Info to the user
+    std::fprintf(stdout," It creates '%zu' domains.", RVsplit.size());
 
     // Close function with exit code 0
     return 0;
