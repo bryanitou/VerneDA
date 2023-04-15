@@ -68,6 +68,17 @@ set(CMAKE_3RDPARTY_DIR "${CMAKE_SOURCE_DIR}/build/getting2knowDace-3rdparty"
 message(STATUS "CMAKE_3RDPARTY_DIR: ${CMAKE_3RDPARTY_DIR}")
 string(APPEND UCFLAGS " -D CMAKE_3RDPARTY_DIR=\"\\\"${CMAKE_3RDPARTY_DIR}\\\"\"")
 
+# DACE directories
+set(CMAKE_3RDPARTY_DIR_DACE_MASTER "${CMAKE_3RDPARTY_DIR}/dace-master"
+        CACHE STRING "Default directory to extracted 3rd parties: dace-master")
+message(STATUS "CMAKE_3RDPARTY_DIR_DACE_MASTER: ${CMAKE_3RDPARTY_DIR_DACE_MASTER}")
+string(APPEND UCFLAGS " -D CMAKE_3RDPARTY_DIR_DACE_MASTER=\"\\\"${CMAKE_3RDPARTY_DIR_DACE_MASTER}\\\"\"")
+
+set(CMAKE_3RDPARTY_DIR_DACE_AFOSSA "${CMAKE_3RDPARTY_DIR}/dace-afossa"
+        CACHE STRING "Default directory to extracted 3rd parties: dace-afossa")
+message(STATUS "CMAKE_3RDPARTY_DIR_DACE_AFOSSA: ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}")
+string(APPEND UCFLAGS " -D CMAKE_3RDPARTY_DIR_DACE_AFOSSA=\"\\\"${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}\\\"\"")
+
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/bin/")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib/")
@@ -123,14 +134,15 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 include(ExternalProject)
 
 ## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
+## TODO: Let the user choose between CMAKE_3RDPARTY_DIR_DACE_MASTER or CMAKE_3RDPARTY_DIR_DACE_AFOSSA
 ExternalProject_Add(dace
-        SOURCE_DIR ${CMAKE_3RDPARTY_DIR}/dace-master/
-        PREFIX ${CMAKE_3RDPARTY_DIR}/dace-master/
+        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
+        PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
         CMAKE_COMMAND cmake ..
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace-master/
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
         BUILD_COMMAND make -j${N_CORES}
-        INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace-master/
+        INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
         INSTALL_COMMAND make install
         )
 
