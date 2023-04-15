@@ -187,20 +187,24 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, double, double), const std::vector<double> errToll, const int nSplitMax, const double Dt, const double mu, int posOverride) {
     /* Member function elaborating the ADS of initial Manifold (initial Domain)
      !>> input: (*func) is the expansion function whose error is estimate
-     std::vector<double> errToll is the threshold for the estimation error for aech component of Patch
-     double nSplitMax is the threshold for the maximun number of split for each box
+     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
+     double nSplitMax is the threshold for the maximum number of split for each box
      !<< return Manifold containing the generating Patch */
     
-    /*automatic Domain splitting*/
-    
+    /*Automatic Domain Splitting*/
     Manifold results;
     
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
-    while ( !this -> empty() ) {
-        
-        Patch p = this -> front();
-        this -> pop_front();
-        
+    /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
+    // While runs until the vector gets emptied >> (std::deque< Patch >)
+    while (!this->empty())
+    {
+        // Creates new patch from the first position in this Manifold
+        Patch p = this->front();
+
+        // Removes the one in front
+        this->pop_front();
+
+        // Builds patch "f" from
         Patch f(func(p, Dt, mu), p.history);
         if ( errToll.size() != f.size() ) throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tollerance vector must have the same size of Patchs ");
         
