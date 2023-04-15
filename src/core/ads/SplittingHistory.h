@@ -13,8 +13,7 @@
 #include <cmath>
 
 // DACE libraries
-#include "dace/DA.h"
-#include "dace/AlgebraicVector.h"
+#include "dace/dace.h"
 
 // Project libraries
 

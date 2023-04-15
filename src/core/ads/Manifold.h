@@ -13,8 +13,7 @@
 #include <algorithm>
 
 // DACE libraries
-#include "dace/AlgebraicVector.h"
-#include "dace/DA.h"
+#include "dace/dace.h"
 
 // Project libraries
 #include "Patch.h"
