@@ -1,0 +1,3 @@
+[submodule "reps/dace/afossa"]
+	path = reps/dace/afossa
+	url = git@github.com:afossa/dace.git
