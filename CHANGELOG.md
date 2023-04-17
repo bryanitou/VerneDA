@@ -13,6 +13,9 @@ Historical detailed commit information of this repository **getting2knowDace**.
 - TBD
 
 ### Commit detail (chronological)
+- a9b8a0c0 (2023-04-17):
+  - Alberto Fossa fork added as a git submodule into this git repository. Added CMake Lists options, updated
+  readme.md accordingly.
 - 61c075f0 (2023-04-04): 
   - Generalized the standard deviation set up in _Deltas_ class: standard deviation (_stddev_) has 
   to be set for every state variable.
