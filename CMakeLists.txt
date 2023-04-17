@@ -53,6 +53,30 @@ message(STATUS "N_CORES: ${N_CORES}")
 set(CTEST_BUILD_FLAGS -j${N_CORES})
 
 ############################################
+# CMAKE OPTIONS
+############################################
+option(BUILD_DACE_MASTER_LIBS "Build DACE library from MASTER" OFF)
+option(BUILD_DACE_AFOSSA_LIBS "Build DACE library from AFOSSA fork" OFF)
+
+# Options safety checks
+if (BUILD_DACE_MASTER_LIBS EQUAL BUILD_DACE_AFOSSA_LIBS OR (NOT BUILD_DACE_MASTER_LIBS) EQUAL (NOT BUILD_DACE_AFOSSA_LIBS))
+    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
+    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
+    MESSAGE( FATAL_ERROR "Please choose at least one: BUILD_DACE_MASTER_LIBS or BUILD_DACE_AFOSSA_LIBS. Not both.")
+endif ()
+
+if (BUILD_DACE_MASTER_LIBS)
+    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
+    MESSAGE( STATUS "DACE will be built from git MASTER branch tared file: version on Oct 22, 2022. <- Frozen version.")
+endif ()
+
+if (BUILD_DACE_AFOSSA_LIBS)
+    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
+    MESSAGE( STATUS "DACE will be built from git AFOSSA (Alberto Fossa) fork. <- Version of this fork and updates are
+     totally user responsible.")
+endif ()
+
+############################################
 # SET OUTPUT DIRECTORIES
 ############################################
 
@@ -135,17 +159,29 @@ include(ExternalProject)
 
 ## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
 ## TODO: Let the user choose between CMAKE_3RDPARTY_DIR_DACE_MASTER or CMAKE_3RDPARTY_DIR_DACE_AFOSSA
-ExternalProject_Add(dace
-        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-        PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-        CMAKE_COMMAND cmake ..
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-        BUILD_COMMAND make -j${N_CORES}
-        INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-        INSTALL_COMMAND make install
-        )
-
+if (BUILD_DACE_MASTER_LIBS)
+    ExternalProject_Add(dace
+            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
+            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
+            CMAKE_COMMAND cmake ..
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+            BUILD_COMMAND make -j${N_CORES}
+            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+            INSTALL_COMMAND make install
+            )
+elseif (BUILD_DACE_AFOSSA_LIBS)
+    ExternalProject_Add(dace
+            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
+            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
+            CMAKE_COMMAND cmake ..
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+            BUILD_COMMAND make -j${N_CORES}
+            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+            INSTALL_COMMAND make install
+            )
+endif ()
 ############################################
 # EXTERNAL INFORMATION
 ############################################
