@@ -38,6 +38,10 @@ current_dir=$(realpath .)
 source_dir="${current_dir}"
 dir_3rdparty="${source_dir}/build/getting2knowDace-3rdparty"
 
+# Get other parameters
+# TODO: Modularize this in the future... For the while hard set
+dace_fossa_dir="${source_dir}/reps/dace/afossa/"
+
 while test $# != 0; do
   case "$1" in
   -c | --clean-dirs) clean_dirs=true ;;
@@ -151,6 +155,20 @@ for file_3rdparty in "${list_3rdparty[@]}"; do
 done
 
 # Finish script and return
-echo "ALL 3RD PARTY LIBRARIES UNPACKED."
+echo "|--> ALL 3RD PARTY LIBRARIES UNPACKED."
+
+# Info
+echo "COPY PASTING DACE SUBMODULES...:"
+
+if [[ -d "${dace_fossa_dir}" ]] ; then
+    echo "|--> OK: Submodule ${dace_fossa_dir} found in this project!"
+    else
+      echo "|--> ERROR: Submodule ${dace_fossa_dir} is not cloned in this project!"
+fi
+
+rm -rf "${dir_3rdparty}/dace-afossa/"
+mkdir "${dir_3rdparty}/dace-afossa/"
+cp -r "${dace_fossa_dir}."  "${dir_3rdparty}/dace-afossa"
+echo "|--> ALL DACE SUBMODULES COPIED."
 
 exit 0
