@@ -1,23 +1,46 @@
 # getting2knowDace
 Basic repository where DACE library will be treated as a thirdparty, where some mains will be used to use its functions and features.
 
-## Build
+## Installation
 
 Follow the steps to successfully build the project, this section is dedicated to the people
 who have just downloaded the repository, set-ups and installations are detailed here.
 
 - Go to dependencies section and install all of them.
 
+Install git submodules
+```bash
+# Download the repository from github, ensure github is installed before
+git clone git@github.com:bryanitou/getting2knowDace.git
+
+# Move into the project folder
+cd getting2knowDace
+
+# Initialize the submodules
+git submodule init
+git submodule sync
+git submodule update
+```
+
 Install third parties, this bash code will unpack all the tared packages in this folder. This is 
 done to economize space in the repository.
 ```shell
 bash scripts/install_3rdparties.sh
 ```
+##  Build
 
 Set the installation prefix of the application in the recommended folder using the CMake options 
 (change it if needed).
+
+Consider the following two CMAKE OPTIONS:
+
+|         Option         | Type | Default | Description                                            |
+|:----------------------:|:----:|:-------:|--------------------------------------------------------|
+| BUILD_DACE_MASTER_LIBS | BOOL |   OFF   | Builds DACE library from a frozen version Oct 22, 2022 |
+| BUILD_DACE_AFOSSA_LIBS | BOOL |   OFF   | Builds DACE library from Alberto Fossa Fork.           |
+
 ```shell
-cmake -DCMAKE_INSTALL_PREFIX=build/getting2knowDace-install-debug
+cmake -DCMAKE_INSTALL_PREFIX=build/getting2knowDace-install-debug -DBUILD_DACE_<choice>_LIBS=ON
 ```
 
 Build the project (8 is the number of threads to be used by the build):
@@ -135,12 +158,15 @@ versions do not have it)
 
 8 - Add to options `-DCMAKE_INSTALL_PREFIX=../getting2knowDace-install-debug` (TODO: to match with `build_all.sh`).
 
-9 - Set 'Build directory' to `build/getting2knowDace-build-debug` (TODO: to match with `build_all.sh`, this
+9 - Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_MASTER_LIBS=OFF`. Only choose one, please read the 
+above this CMAKE options.
+
+10 - Set 'Build directory' to `build/getting2knowDace-build-debug` (TODO: to match with `build_all.sh`, this
 script is still to be done).
 
-10 - 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
+11 - 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
 
-11 - After accepting, CLion will run cmake. If it fails, check step 1 and reload cmake from CLion's window.
+12 - After accepting, CLion will run cmake. If it fails, check step 1 and reload cmake from CLion's window.
 
 Note that you will have to reload CLion's CMake manually when necessary from the CMake bottom window.
 
