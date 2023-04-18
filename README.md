@@ -158,8 +158,8 @@ versions do not have it)
 
 8 - Add to options `-DCMAKE_INSTALL_PREFIX=../getting2knowDace-install-debug` (TODO: to match with `build_all.sh`).
 
-9 - Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_MASTER_LIBS=OFF`. Only choose one, please read the 
-above this CMAKE options.
+9 - Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_AFOSSA_LIBS=ON`. Only choose one, please read the 
+above this CMAKE options (build section) for further information.
 
 10 - Set 'Build directory' to `build/getting2knowDace-build-debug` (TODO: to match with `build_all.sh`, this
 script is still to be done).
