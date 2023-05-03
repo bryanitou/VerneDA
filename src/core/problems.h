@@ -3,6 +3,9 @@
  */
 #pragma once
 
+// System libraries
+#include <cstdlib>
+
 // DACE libraries
 #include "dace/dace.h"
 
@@ -27,6 +30,7 @@ public:
 private:
     // Problems
     static DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t);
+    static DACE::AlgebraicVector<DACE::DA> FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t);
     DACE::AlgebraicVector<DACE::DA> FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t);
 
 public:

@@ -6,19 +6,16 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <algorithm>
 #include <fstream>
 
 // DACE library
 #include "dace/dace.h"
 
 // ADS (Automatic Domain Splitting) libraries
-#include "ads/SplittingHistory.h"
 #include "ads/Patch.h"
 #include "ads/Manifold.h"
 
 // Project libraries
-#include "base/constants.h"
 #include "tools/vo.h"
 
 template<typename T, typename U> DACE::AlgebraicVector<T> KeplerProp(DACE::AlgebraicVector<T> rv, U t, double mu)
@@ -110,7 +107,8 @@ template<typename T, typename U> DACE::AlgebraicVector<T> KeplerProp(DACE::Algeb
         T MmM0 = t * sqrt(mu/a/a/a);
         T EmE0 = cons(MmM0);
         //cout << "EmE0 " << cons(EmE0) << endl;
-        
+
+        // Iterative method to solve the implicit equation
         while ( tol > 1e-13 || iter < ord + 1)
         {
             //cout << iter << " " << ord << endl;
@@ -235,7 +233,7 @@ int main()
     // Do we want to see the warnings? True (1) or False (0)
     DACE::DACEException::setWarning(true);
 
-    // Set the precision of the doubles
+    // Set the precision of the doubles to printed
     std::cout.precision(10);
 
     // This block reads info from the txt file that contains observations-----------------------------------------------
@@ -244,23 +242,28 @@ int main()
     DACE::AlgebraicVector<DACE::DA> rv(6);
 
     // Set state vector
-    rv[0] = 39.9424547;
-    rv[1] = 42059.1319877;
-    rv[2] = 3065.4925715;
-    rv[3] = -3.0595482 + 0.01*DACE::DA(1);
-    rv[4] = -0.0189669 + 0.01*DACE::DA(2);
-    rv[5] = 0.2987034 + 0.01*DACE::DA(3);
+    // INFO:    The initial state of the vector really depends on the statement of the problem, for this one:
+    //
+    //          Position (x, y, z) is a well known variable, hence no DA associated variable is added to it.
+    //          Velocity (x, y, z) is not well known, then its stddev is associated to it!
+    rv[0] = 39.9424547;         // Position x
+    rv[1] = 42059.1319877;      // Position y
+    rv[2] = 3065.4925715;       // Position z
+    rv[3] = -3.0595482 + 0.01 * DACE::DA(1); // Speed x + variation
+    rv[4] = -0.0189669 + 0.01 * DACE::DA(2); // Speed y + variation
+    rv[5] =  0.2987034 + 0.01 * DACE::DA(3); // Speed z + variation
 
     // This is the mu in km^3 / s^
     double mu = 398600;
 
-    // 3.3 days ?, 24 hours and 3600.0 seconds TODO: Clarify this DT >> DeltaTime?
+    // 3.3 days ?, 24 hours and 3600.0 seconds
     double DT = 3.3*24.0*3600.0;
 
-    // Error tolerances and standard deviations
+    // Error tolerances and standard deviations Tolerances
     std::vector<double> errToll = {1e-3, 1e-3, 1e-3, 1e-6, 1e-6, 1e-6};
 
-    // Num. split max -> Stands for exactly what? TODO: Clarify this
+    // Num. split max -> Stands for exactly what?
+    // INFO: This value is set as a maximum of splits per step
     int nSplitMax = 6 ;
 
     // Initialize patch

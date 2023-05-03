@@ -17,6 +17,7 @@
 
 // Project libraries
 #include "Patch.h"
+#include "problems.h"
 
 struct Observable;
 
@@ -45,6 +46,18 @@ public: // Constructors
      */
     explicit Manifold( const DACE::AlgebraicVector<DACE::DA>& p);
 
+private:
+    // Attributes
+    problems* probl_ = nullptr;
+
+public:
+    // Setters
+    void set_problem_object(problems* probl);
+
+public:
+    // Getters
+    problems* get_problem_object();
+
 public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA> ), const double errToll, const int nSplitMax, int posOverride = 0);
 
@@ -56,7 +69,7 @@ public: // Methods
 
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
     
-    Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, double, double), const std::vector<double> errToll, const int nSplitMax, const double Dt, const double mu, int posOverride = 0);
+    Manifold* getSplitDomain(const std::vector<double> errToll, const int nSplitMax, int posOverride = 0);
 
-    DACE::AlgebraicVector<double> pointEvaluationManifold( DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
+    DACE::AlgebraicVector<double> pointEvaluationManifold(DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
 };

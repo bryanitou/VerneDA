@@ -29,15 +29,20 @@ DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA
     // Iterate
     for( int i = 0; i < steps; i++ )
     {
-        x = x + h * (probl_->solve(x, t));
+        x = this->Euler_step(x, t, h);
         t += h;
     }
 
     return x;
 }
 
-DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x,
-                                                  double t0, double t1) {
+DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVector<DACE::DA>& x, double t, double h) const
+{
+    return x + h * (probl_->solve(x, t));
+}
+
+DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1)
+{
     // Auxiliary variable for debug
     std::string str2debug;
     std::string str4euler;
@@ -65,21 +70,26 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         // Print detailed info
         this->print_detailed_information(x, i, t);
 
-        // Compute points in between
-        k1 = probl_->solve(x, t);
-        k2 = probl_->solve(x + h * (k1/3), t + h/3);
-        k3 = probl_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
-        k4 = probl_->solve(x + h * (k1 - k2 + k3), t + h);
-
         // Compute the single step
-        x = x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
+        x = this->RK4_step(x, t, h);
 
         // Increase step time
         t += h;
     }
 
-
     return x;
+}
+
+DACE::AlgebraicVector<DACE::DA> integrator::RK4_step(const DACE::AlgebraicVector<DACE::DA>& x, double t, double h)
+{
+    // Compute points in between
+    auto k1 = probl_->solve(x, t);
+    auto k2 = probl_->solve(x + h * (k1/3), t + h/3);
+    auto k3 = probl_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
+    auto k4 = probl_->solve(x + h * (k1 - k2 + k3), t + h);
+
+    // Compute the single step
+    return x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
 }
 
 void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA>& x, int i, double t)
@@ -145,17 +155,18 @@ DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVecto
     return result;
 }
 
-void integrator::set_problem_object(problems *probl)
+void integrator::set_problem_object(SuperManifold* super_manifold)
 {
     // Set problem pointer
-    this->probl_ = probl;
+    this->super_manifold_ = super_manifold;
 
     // Get the type of problem inserted
-    auto problem_type = this->probl_->get_type();
+    auto problem_type = this->super_manifold_->get_problem_object()->get_type();
 
     // Set the amount of variables needed
     this->nvar_ = problem_type == PROBLEM::FREE_TORQUE_MOTION ? 7 :
-                  problem_type == PROBLEM::TWO_BODY ? 6 : 0;
+                  problem_type == PROBLEM::TWO_BODY ? 6 :
+                  problem_type == PROBLEM::FREE_FALL_OBJECT ? 6 : 0;
 
     // Safety check
     if (this->nvar_ == 0)

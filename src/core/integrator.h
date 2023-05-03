@@ -90,4 +90,8 @@ private:
     DACE::AlgebraicVector<T> RK78(int N, DACE::AlgebraicVector<T> Y0, double X0, double X1);
 
     void print_detailed_information(const DACE::AlgebraicVector<DACE::DA> &x, int i, double t);
+
+    DACE::AlgebraicVector<DACE::DA> RK4_step(const DACE::AlgebraicVector<DACE::DA>& x, double t, double h);
+
+    DACE::AlgebraicVector<DACE::DA> Euler_step(const DACE::AlgebraicVector<DACE::DA> &x, double t, double h) const;
 };

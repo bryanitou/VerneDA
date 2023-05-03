@@ -20,6 +20,9 @@ namespace constants
 
         // mu: G * mass
         const double mu = gravity::G * earth::mass; // m^3 / s^2
+
+        // local gravity at surface
+        const double g = constants::earth::mu / (constants::earth::radius * constants::earth::radius);
     }
 
     namespace sun

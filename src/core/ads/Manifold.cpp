@@ -184,7 +184,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 }
 
 
-Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, double, double), const std::vector<double> errToll, const int nSplitMax, const double Dt, const double mu, int posOverride) {
+Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int nSplitMax, int posOverride)
+{
     /* Member function elaborating the ADS of initial Manifold (initial Domain)
      !>> input: (*func) is the expansion function whose error is estimate
      std::vector<double> errToll is the threshold for the estimation error for each component of Patch
@@ -192,7 +193,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
      !<< return Manifold containing the generating Patch */
     
     /*Automatic Domain Splitting*/
-    Manifold results;
+    Manifold* results;
     
     /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
     // While runs until the vector gets emptied >> (std::deque< Patch >)
@@ -204,27 +205,50 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
         // Removes the one in front
         this->pop_front();
 
+        // Get the new state
+        auto scv = this->probl_->solve(p, t);
+
         // Builds patch "f" from
-        Patch f(func(p, Dt, mu), p.history);
-        if ( errToll.size() != f.size() ) throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tollerance vector must have the same size of Patchs ");
+        Patch f(scv, p.history);
+
+        // Check for tolerance
+        if ( errToll.size() != f.size() )
+        {
+            throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
+                                      "size of Patchs.");
+        }
         
         /*Estimate the error for each patch in the deque */
         std::vector<double> error = f.getTruncationErrors();
         std::vector<double> relativErr(error.size() );
         
-        for ( unsigned int k = 0; k < relativErr.size(); ++k ) {
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
             relativErr[k] = error[k] - errToll[k];
         }
-        for ( unsigned int k = 0; k < relativErr.size(); ++k ) {
-            if (error[k] > errToll[k]) relativErr[k] = DACE::abs(relativErr[k]);
-            else relativErr[k] = 0.0;
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            if (error[k] > errToll[k])
+            {
+                relativErr[k] = DACE::abs(relativErr[k]);
+            }
+            else
+            {
+                relativErr[k] = 0.0;
+            }
+        }
+
+        // Find maximum relative truncation error
+        std::vector<double>::iterator max_error = std::max_element(relativErr.begin(), relativErr.end());
+
+        // If
+        if ( posOverride != 0)
+        {
+            max_error = (relativErr.begin() + posOverride);
         }
         
-        std::vector<double>::iterator max_error = std::max_element(relativErr.begin(), relativErr.end() );   // find maximum relative truncation error
-        if ( posOverride != 0) max_error = (relativErr.begin() + posOverride);
-        
         if (  *max_error == 0.0 || p.history.count() == nSplitMax) { //check the maximum function error and the total number of split for the Patch
-            results.push_back(f);
+            results->push_back(f);
         }
         else {
             const unsigned int pos = std::distance(relativErr.begin(), max_error);  // function component of maximum error
@@ -339,16 +363,26 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::Algebraic
              VarDom: number of variable actually used as domain variable
    !<< return AlgebraicVector<DA> of the expansion of the Patch(the sub-domain after the ADS elaboration) which contain the point assigned  */
     //std::cout << pt << std::endl;
-    if ( pt.size() != DACE::DA::getMaxVariables()) throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The dimension of selected point is wrong, the dimension must be the same of Patch variables");
+    if ( pt.size() != DACE::DA::getMaxVariables())
+    {
+        throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The dimension of selected point is wrong, the dimension must be the same of Patch variables");
+    }
 
-    if ( flag == 0 ) {
+    if ( flag == 0 )
+    {
         SplittingHistory empty;
-        if (!empty.contain(pt) ) throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The selected point seems to be outside the initial Domain");
+
+        if (!empty.contain(pt) )
+        {
+            throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The selected point seems to be outside the initial Domain");
+        }
 
         const unsigned int size = this -> size();
-        for ( unsigned int i = 0; i < size; ++i ) {
+        for ( unsigned int i = 0; i < size; ++i )
+        {
 
-            if ( (*this).at(i).history.contain(pt) ) {
+            if ( (*this).at(i).history.contain(pt) )
+            {
 
                 DACE::AlgebraicVector<double> c((*this).at(i).history.center() );
                 DACE::AlgebraicVector<double> w((*this).at(i).history.width() );
@@ -358,7 +392,8 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::Algebraic
             /*In case that the manifold is been modified, i.e delate some Patch,
             and the point belongs to a delated Patch, the member function riturn
             a NaN vector ! ATTENTION*/
-            if ( i == size-1 ) {
+            if ( i == size-1 )
+            {
                 DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN );
                 return Null;
             }
@@ -405,4 +440,35 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::Algebraic
             }
         }
     }
+}
+
+void Manifold::set_problem_object(problems* probl)
+{
+    // Setting problem object
+    if (this->probl_ != nullptr)
+    {
+        // If problem is not nullptr
+        std::fprintf(stdout, "There already exist one problem class set in: '%p'. It will"
+                             " be replaced.", this->probl_);
+    }
+
+    // Replace problem pointer
+    this->probl_ = probl;
+
+    // Info
+    std::fprintf(stdout, "Problem object pointer ('%p') successfully set in Manifold ('%p').",
+                 this->probl_, this);
+
+}
+
+problems *Manifold::get_problem_object()
+{
+    // Safety check it is not empty
+    if (this->probl_ == nullptr)
+    {
+        // Info
+        std::fprintf(stdout, "Problem class to be returned is nullptr. Errors may happen later...");
+    }
+
+    return this->probl_;
 }

@@ -86,5 +86,6 @@ enum class PROBLEM
 {
     TWO_BODY,
     FREE_TORQUE_MOTION,
+    FREE_FALL_OBJECT,
     NA,
 };

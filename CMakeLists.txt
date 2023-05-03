@@ -249,8 +249,10 @@ set(LIBRARY_ADS "ads")
 
 add_library(${LIBRARY_ADS} SHARED
         src/core/ads/Manifold.cpp
+        src/core/ads/SuperManifold.cpp
         src/core/ads/Patch.cpp
-        src/core/ads/SplittingHistory.cpp)
+        src/core/ads/SplittingHistory.cpp
+        src/core/ads/ads.h)
 
 add_dependencies(ads
         dace)
@@ -436,6 +438,9 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
+########################################################################################################################
+##################################### EXECUTABLES: ADS Automatic Domain Splitting ######################################
+########################################################################################################################
 
 ############################################
 # EXECUTABLES: ADS Test (Author: Alberto Fossà)
@@ -444,6 +449,32 @@ set(EXECUTABLE_NAME "ads_test")
 
 add_executable(${EXECUTABLE_NAME}
         src/main/ads/testProp.cpp
+        )
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        ads
+        dacelib
+        core
+        )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: TUTORIAL: ADS Sinus (training)
+############################################
+set(EXECUTABLE_NAME "ads_sinus")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/ads/tutorials/free_fall.cpp
         )
 
 # add_dependencies(${EXECUTABLE_NAME}
