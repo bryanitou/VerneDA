@@ -35,24 +35,14 @@ private:
 
 private:
     // Attributes
-    problems* probl_ = nullptr;
-
-private:
-    // Attributes
     Manifold* previous_ = nullptr;
     Manifold* current_ = nullptr;
 
-private:
+public:
     // Manifold operations
     void split_domain();
 
 public:
-    // Setters
-    /**
-     * Set problem object
-     * @param probl
-     */
-    void set_problem_object(problems *probl);
 
     /**
      * Set initial manifold.
@@ -60,7 +50,9 @@ public:
      */
     void set_initial_manifold(Manifold* manifold);
 
+    void set_integrator_ptr(integrator *integrator);
+
 public:
     // Getters
-    problems *get_problem_object();
+    // std::vector<double> get_results();
 };

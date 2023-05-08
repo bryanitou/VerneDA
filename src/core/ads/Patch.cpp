@@ -43,8 +43,8 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v) : DACE::AlgebraicVector<D
     history = std::vector<int>();
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s) : DACE::AlgebraicVector<DACE::DA>(v){
-
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s) : DACE::AlgebraicVector<DACE::DA>(v)
+{
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
      */
@@ -81,34 +81,60 @@ DACE::AlgebraicVector<DACE::DA> Patch::replay(DACE::AlgebraicVector<DACE::DA> ob
 
 std::vector<double> Patch::getTruncationErrors()
 {
-    /*member function to exstimate the maximum error of an AlgebraicVector expanded over a domain
+    /* Member function to estimate the maximum error of an AlgebraicVector expanded over a domain
     this member function is allowed to call by means a Patch element
     \param[in] the hidden input is the Patch element of polynomial expansion
     output -> return a vector of double contain: the value of maximum order error for each component*/
 
-    unsigned const int size = this -> size();
+    // Auxiliary variables
+    unsigned const int size = this->size();
+    unsigned int n_max_ord = DACE::DA::getMaxOrder();
+
+    // Result to be obtained
     std::vector<double> Errors;
 
-    for ( unsigned int i = 0; i < size; ++i) {
-        auto err = (*this)[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
-        Errors.push_back(err[err.size()-1]);
+    // Iterate through the size of the patch
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        // Get the DA variable where we will extract the error
+        auto da2eval = (*this)[i];
+
+        // Get the errors vector associated with this variable
+        auto err = da2eval.estimNorm(0, 0, n_max_ord + 1);
+
+        // Push back last element of the err vector
+        Errors.push_back(err.back());
     }
 
+    // Return the errors
     return Errors;
-    }
+}
 
 
 unsigned int Patch::getSplittingDirection(const unsigned int comp)
 {
-    /*member function to calculate the splitting direction
-      this constructor is allowed to call by means a Patch element
-      \param[in] the hidden input is the Patch element
-      int comp: is the component of function DAvector with maximum error
-      output -> return a 'int' of splitting direction*/
+    /** Member function to calculate the splitting direction this constructor is allowed to call by means a Patch element
+      * \param[in]: the hidden input is the Patch element.
+      * int comp: is the component of function DA vector with maximum error
+      * output -> return a 'int' of splitting direction
+      **/
+
     unsigned int dir = 0;
     double exd = 0;
-    for ( unsigned int i = 0; i < DACE::DA::getMaxVariables(); ++i ) {
-        auto err = (*this)[comp].estimNorm(i+1, 0, DACE::DA::getMaxOrder() + 1);
+
+    // Auxiliary variables
+    unsigned int n_var = DACE::DA::getMaxVariables();
+    unsigned int n_max_ord = DACE::DA::getMaxOrder();
+
+    // Get the patch which is supposed to have the maximum error
+    auto da2eval_max_err = (*this)[comp];
+
+    // Iterate 'n_var' times
+    for (unsigned int i = 0; i < n_var; ++i )
+    {
+        // Get the errors vector associated with this variable
+        auto err = da2eval_max_err.estimNorm(i + 1, 0, n_max_ord + 1);
+
         double errM = err[err.size()-1];
         dir = errM > exd ? i+1 : dir;
         exd = errM > exd ? errM : exd;
@@ -120,14 +146,21 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
 
 std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> obj )
 {
-    /* member function to split the Patch
-       \param[in] the hidden input is the 'Patch'
-       int comp: is the component of function DAvector with maximum error
-       int dir: is the splitting direction
-       return a std::pair containing the two Patch obtained by splitting*/
-    if ( dir == 0) {
-        /*it is possible to use the automatic splitting direction computation if only if the Truncation error is evaluated on the domain itself
-        and not if exist a function expanded on the domain, in this last case the direction MUST be compute outside the Patch class and gives as input */
+    /*
+     * Member function to split the Patch \param[in] the hidden input is the 'Patch'
+     * int comp: is the component of function DA vector with maximum error
+     * int dir: is the splitting direction
+     * return a std::pair containing the two Patch obtained by splitting
+     */
+
+    if ( dir == 0)
+    {
+        /*
+         * It is possible to use the automatic splitting direction computation if only if the Truncation error is
+         * evaluated on the domain itself and not if exist a function expanded on the domain, in this last case the
+         * direction MUST be compute outside the Patch class and gives as input
+         */
+
         auto errors = this -> Patch::getTruncationErrors();
         int pos = std::distance(errors.begin(), std::max_element(errors.begin(), errors.end()) );
         dir = Patch::getSplittingDirection(pos);

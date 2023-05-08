@@ -10,27 +10,36 @@ integrator::integrator(INTEGRATOR integrator, double stepmax)
     this->type = integrator;
 
     // Set step max
-    this->hmax = stepmax;
+    this->hmax_ = stepmax;
 }
 
 
-DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA> x,
-                                                  double t0, double t1) const
+DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA> x)
 {
-    // Num of steps
-    int steps = std::ceil((t1-t0)/this->hmax);
-
-    // Delta time? TODO: Investigate what was this
-    double h = (t1 - t0) / steps;
+    // Auxiliary bool
+    bool flag_interruption_errToll = false;
 
     // Current time
-    double t = t0;
+    double t = this->t0_;
 
     // Iterate
-    for( int i = 0; i < steps; i++ )
+    for(int i = 0; i < this->steps_; i++ )
     {
-        x = this->Euler_step(x, t, h);
-        t += h;
+        x = this->Euler_step(x, t, this->h_);
+        t += this->h_;
+
+        // Check ADS conditions to continue integration
+        if (this->interrupt_)
+        {
+            // Check returned flag
+            flag_interruption_errToll = !this->check_ads_conditions(x);
+
+            // Break integration if needed
+            if (flag_interruption_errToll)
+            {
+                break;
+            }
+        }
     }
 
     return x;
@@ -38,11 +47,14 @@ DACE::AlgebraicVector<DACE::DA> integrator::euler(DACE::AlgebraicVector<DACE::DA
 
 DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVector<DACE::DA>& x, double t, double h) const
 {
-    return x + h * (probl_->solve(x, t));
+    return x + h * (this->problem_->solve(x, t));
 }
 
-DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x, double t0, double t1)
+DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Auxiliary bool
+    bool flag_interruption_errToll = false;
+
     // Auxiliary variable for debug
     std::string str2debug;
     std::string str4euler;
@@ -55,26 +67,33 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     DACE::AlgebraicVector<DACE::DA> k3;
     DACE::AlgebraicVector<DACE::DA> k4;
 
-    // Num of steps
-    int steps = std::ceil((t1-t0)/this->hmax);
-
-    // Delta time? TODO: Investigate what was this
-    double h = (t1 - t0) / steps;
-
     // Current time
-    double t = t0;
+    double t = this->t0_;
 
     // Iterate
-    for( int i = 0; i < steps; i++ )
+    for(int i = 0; i < this->steps_; i++ )
     {
         // Print detailed info
         this->print_detailed_information(x, i, t);
 
         // Compute the single step
-        x = this->RK4_step(x, t, h);
+        x = this->RK4_step(x, t, this->h_);
 
         // Increase step time
-        t += h;
+        t += this->h_;
+
+        // Check ADS conditions to continue integration
+        if (this->interrupt_)
+        {
+            // Check returned flag
+            flag_interruption_errToll = this->check_ads_conditions(x);
+
+            // Break integration if needed
+            if (flag_interruption_errToll)
+            {
+                break;
+            }
+        }
     }
 
     return x;
@@ -83,10 +102,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
 DACE::AlgebraicVector<DACE::DA> integrator::RK4_step(const DACE::AlgebraicVector<DACE::DA>& x, double t, double h)
 {
     // Compute points in between
-    auto k1 = probl_->solve(x, t);
-    auto k2 = probl_->solve(x + h * (k1/3), t + h/3);
-    auto k3 = probl_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
-    auto k4 = probl_->solve(x + h * (k1 - k2 + k3), t + h);
+    auto k1 = this->problem_->solve(x, t);
+    auto k2 = this->problem_->solve(x + h * (k1/3), t + h/3);
+    auto k3 = this->problem_->solve(x + h * (-k1/3 + k2), t + 2*h/3);
+    auto k4 = this->problem_->solve(x + h * (k1 - k2 + k3), t + h);
 
     // Compute the single step
     return x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
@@ -102,7 +121,7 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
                                                  str2debug.c_str());
 
     // If it is attitude, go this way...
-    if (this->probl_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+    if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
     {
         // Extract the quaternion from here if attitude
         auto q_cons = x.cons().extract(0, 3);
@@ -113,7 +132,7 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         // Euler to string
         auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
 
-        str2print += tools::string::print2string(" | euler: %s", str4euler.c_str());
+        str2print += tools::string::print2string(" | Euler: %s", str4euler.c_str());
     }
 
     // Debug information
@@ -121,27 +140,61 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
 
 }
 
-DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x, double t0,
-                                                      double t1)
-
+void integrator::set_integration_parameters(const DACE::AlgebraicVector<DACE::DA>& scv0, double t0, double t1,
+                                            bool interrupt)
 {
+    // We only set this parameters once
+    if (!this->params_set_)
+    {
+        // Setting initial scv
+        this->scv_ = scv0;
+
+        // Set some values previous to the integration
+        this->steps_ = std::ceil((t1 - t0) / this->hmax_);
+
+        // Delta time? TODO: Investigate what was this
+        this->h_ = (t1 - t0) / this->steps_;
+
+        // Set times: initial and final
+        this->t0_ = t0;
+        this->t1_ = t1;
+
+        // Set interruption boolean
+        this->interrupt_ = interrupt;
+
+        // Parameters already set
+        this->params_set_ = true;
+    }
+}
+
+void integrator::integrate()
+{
+    // Call subroutine
+    this->scv_ = this->integrate(this->scv_);
+}
+
+
+DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x)
+{
+    // Auxiliary variables
     DACE::AlgebraicVector<DACE::DA> result;
 
+    // Switch case
     switch (this->type)
     {
         case INTEGRATOR::EULER:
         {
-            result = this->euler(x,  t0, t1);
+            result = this->Euler(x);
             break;
         }
         case INTEGRATOR::RK4:
         {
-            result = this->RK4(x, t0, t1);
+            result = this->RK4(x);
             break;
         }
         case INTEGRATOR::RK78:
         {
-            result = this->RK78(6, x, t0, t1);
+            result = this->RK78(6, x);
             break;
         }
         default:
@@ -149,19 +202,31 @@ DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVecto
             // TODO: Add any fallback here.
             break;
         }
-
     }
 
+    // Return result
     return result;
 }
 
-void integrator::set_problem_object(SuperManifold* super_manifold)
+problems *integrator::get_problem_ptr()
+{
+    // Safety check it is not empty
+    if (this->problem_ == nullptr)
+    {
+        // Info
+        std::fprintf(stdout, "Problem class to be returned is nullptr. Errors may occur later...\n");
+    }
+
+    return this->problem_;
+}
+
+void integrator::set_problem_ptr(problems *problem)
 {
     // Set problem pointer
-    this->super_manifold_ = super_manifold;
+    this->problem_ = problem;
 
     // Get the type of problem inserted
-    auto problem_type = this->super_manifold_->get_problem_object()->get_type();
+    auto problem_type = this->problem_->get_type();
 
     // Set the amount of variables needed
     this->nvar_ = problem_type == PROBLEM::FREE_TORQUE_MOTION ? 7 :
@@ -176,6 +241,67 @@ void integrator::set_problem_object(SuperManifold* super_manifold)
     }
 }
 
+void integrator::set_interrupt_flag(bool* flag)
+{
+    this->interrupt_flags_.push_back(flag);
+}
+
+bool integrator::check_interruption_flags()
+{
+    // Result flag
+    bool result = false;
+
+    // Iterate through all the flags
+    for (auto flag : this->interrupt_flags_)
+    {
+        // Check the bool
+        if (*flag)
+        {
+            result = false;
+            break;
+        }
+    }
+
+    return result;
+}
+
+bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
+{
+    // Result of the comparison
+    bool result{false};
+
+    // Auxiliary variables
+    std::vector<double> Errors{};
+
+    for (unsigned int i = 0; i < scv.size(); ++i)
+    {
+        // Get error
+        auto err = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
+
+        // TODO: What exactly is this
+        auto err2compare = err[err.size()-1];
+
+        // Compare error
+        if (err2compare > this->errToll_[i])
+        {
+            result = true;
+            break;
+        }
+    }
+
+    // Return the errors
+    return result;
+}
+
+void integrator::set_errToll(const std::vector<double> &errToll)
+{
+    // Info
+    auto vect2str = tools::vector::num2string(errToll, ", ");
+    std::fprintf(stdout, "Setting the Error Tolerances vector: '%s'\n", vect2str.c_str());
+
+    // Setting it...
+    this->errToll_ = errToll;
+}
 
 // Some auxiliary functions for the RK78, TODO: Can we get rid of min/max?
 double min( double a, double b)
@@ -210,7 +336,7 @@ double normtmp( int N, std::vector<double> X)
     return res;
 }
 
-template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0, double X0, double X1)
+template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0)
 {
     // TODO: Investigate what is this
     double ERREST;
@@ -342,14 +468,14 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     H = std::abs(HS);
     HH0 = std::abs(H0);
     HH1 = std::abs(H1);
-    X = X0;
+    X = this->t0_;
     RFNORM = 0.0;
     ERREST = 0.0;
 
     // Iteration
     int idx = 0;
 
-    while(X != X1)
+    while(X != this->t1_)
     {
         // Print detailed info
         this->print_detailed_information(Y0, idx, X);
@@ -370,9 +496,9 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             std::cout << "--- WARNING, MINIMUM STEPSIZE REACHED IN RK" << std::endl;
         }
 
-        if ((X+H-X1)*H>0)
+        if ((X+H-this->t1_)*H>0)
         {
-            H = X1-X;
+            H = this->t1_-X;
         }
 
         for (J = 0; J<13; J++)
@@ -388,7 +514,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
                 Y0[I] = H*Y0[I] + Z[I][0];
             }
 
-            Y1 = probl_->solve(Y0, X+H*A[J]);
+            // TODO: Fix this
+            Y1 = this->problem_->solve(Y0, X+H*A[J]);
 
             for (I = 0; I<N; I++)
             {

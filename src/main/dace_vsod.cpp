@@ -13,6 +13,9 @@
 #include "delta.h"
 #include "tools/io.h"
 
+// ADS library
+#include "ads/ads.h"
+
 /**
  * Main entry point
  */
@@ -42,6 +45,7 @@ int main(int argc, char* argv[])
 
     // Generate vector of uncertainties
     std::vector<double> stddevs = {stddev_x, stddev_y, stddev_z, stddev_vx, stddev_vy, stddev_vz};
+    std::vector<double> errToll = {1e-3, 1e-3, 1e-3, 1e-6, 1e-6, 1e-6};
 
     // Set initial state
     std::vector<DACE::DA> scv0 = {
@@ -69,16 +73,35 @@ int main(int argc, char* argv[])
     double const tf = rev*10;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK78, 1);
+    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
 
     // Define problem to solve
     auto prob = problems(PROBLEM::TWO_BODY);
 
-    // Set problem into integrator
-    objIntegrator->set_problem_object(&prob);
+    // Build super manifold
+    auto super_manifold = SuperManifold(errToll, 6);
 
-    // Apply integrator
-    auto xf_DA = objIntegrator->integrate(scv0_DA, t0, tf);
+    // Set problem ptr in the integrator
+    objIntegrator->set_problem_ptr(&prob);
+
+    // Setting integrator parameters
+    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
+
+    // Set integrator in the super manifold
+    super_manifold.set_integrator_ptr(objIntegrator.get());
+
+    // Docu: Set new truncation error and get the previous one
+    double new_eps = 1e-40;
+    double previous_eps = DACE::DA::setEps(new_eps);
+
+    // Show to the used the new epsilon value
+    std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
+
+    // ADS and integration algorithm
+    super_manifold.split_domain();
+
+    // TODO: Fix this ONWARDS
+    auto xf_DA = scv0_DA;
 
     // Now we have to evaluate the deltas (little displacements in the initial position)
     auto scvf_DA = std::make_shared<scv>(xf_DA);

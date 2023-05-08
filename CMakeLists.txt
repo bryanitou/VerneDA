@@ -212,6 +212,44 @@ set_target_properties(${LIBRARY_DACE} PROPERTIES
         IMPORTED_LOCATION ${dacelib_path})
 
 #===========================================
+# LIBRARY: getting2knowDace BASE
+#===========================================
+# set(LIBRARY_BASE "base")
+#
+# add_library(${LIBRARY_BASE} SHARED
+#         src/core/base/enums.h
+#         src/core/base/constants.h)
+#
+# add_dependencies(base
+#         base)
+# #
+#
+# target_link_libraries(${LIBRARY_BASE})
+#
+# set_target_properties(base ${LIBRARY_BASE} PROPERTIES
+#         COMPILE_FLAGS "-fPIC"
+#         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+#
+#===========================================
+# LIBRARY: getting2knowDace TOOLS
+#===========================================
+set(LIBRARY_TOOLS "tools")
+
+add_library(${LIBRARY_TOOLS} SHARED
+        src/core/tools/vo.cpp
+        src/core/tools/str.cpp)
+
+add_dependencies(tools
+        dace)
+
+target_link_libraries(${LIBRARY_TOOLS}
+        ${LIBRARY_DACE})
+
+set_target_properties(${LIBRARY_TOOLS} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
 # LIBRARY: getting2knowDace CORE
 #===========================================
 set(LIBRARY_CORE "core")
@@ -236,6 +274,7 @@ add_dependencies(core
         dace)
 
 target_link_libraries(${LIBRARY_CORE}
+        ${LIBRARY_BASE}
         ${LIBRARY_DACE})
 
 set_target_properties(${LIBRARY_CORE} PROPERTIES
@@ -255,10 +294,12 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/ads.h)
 
 add_dependencies(ads
+        base
         dace)
 
 target_link_libraries(${LIBRARY_ADS}
-        ${LIBRARY_DACE})
+        ${LIBRARY_DACE}
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -367,7 +408,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
-# EXECUTABLES: DACE_VSO (DACE VERY SIMPLE ORBIT DETERMINATION)
+# EXECUTABLES: DACE_VSA (DACE VERY SIMPLE ATTITUDE DETERMINATION)
 ############################################
 set(EXECUTABLE_NAME "dace_vsad")
 
@@ -383,6 +424,8 @@ add_executable(${EXECUTABLE_NAME}
 
 target_link_libraries(${EXECUTABLE_NAME}
         core
+        ads
+
         dacelib
         )
 
@@ -391,7 +434,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
-# EXECUTABLES: DACE_VSO (DACE VERY SIMPLE ORBIT DETERMINATION)
+# EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
 ############################################
 set(EXECUTABLE_NAME "dace_vsod")
 
@@ -406,7 +449,9 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
+
         core
+        ads
         dacelib
         )
 

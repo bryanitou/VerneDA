@@ -17,7 +17,7 @@
 
 // Project libraries
 #include "Patch.h"
-#include "problems.h"
+#include "integrator.h"
 
 struct Observable;
 
@@ -30,7 +30,7 @@ class Manifold : public std::deque<Patch>
 public: // Constructors
     Manifold();
 
-    Manifold( unsigned int n );
+    explicit Manifold( unsigned int n );
 
     Manifold( const Manifold& m);
 
@@ -48,15 +48,19 @@ public: // Constructors
 
 private:
     // Attributes
-    problems* probl_ = nullptr;
+    integrator* integrator_ = nullptr;
 
 public:
     // Setters
-    void set_problem_object(problems* probl);
+    void set_integrator_ptr(integrator* integrator);
 
 public:
     // Getters
-    problems* get_problem_object();
+    integrator* get_integrator_ptr();
+
+public:
+    // Integrate until signal
+    DACE::AlgebraicVector<DACE::DA> integrate_until_signal();
 
 public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA> ), const double errToll, const int nSplitMax, int posOverride = 0);
@@ -69,7 +73,7 @@ public: // Methods
 
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
     
-    Manifold* getSplitDomain(const std::vector<double> errToll, const int nSplitMax, int posOverride = 0);
+    Manifold* getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride = 0);
 
     DACE::AlgebraicVector<double> pointEvaluationManifold(DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
 };

@@ -25,6 +25,7 @@ public:
     ~problems();
 
 public:
+    // Solve problems
     DACE::AlgebraicVector<DACE::DA> solve(const DACE::AlgebraicVector<DACE::DA>& scv, double t);
 
 private:

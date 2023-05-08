@@ -184,7 +184,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 }
 
 
-Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int nSplitMax, int posOverride)
+Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
 {
     /* Member function elaborating the ADS of initial Manifold (initial Domain)
      !>> input: (*func) is the expansion function whose error is estimate
@@ -193,7 +193,7 @@ Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int 
      !<< return Manifold containing the generating Patch */
     
     /*Automatic Domain Splitting*/
-    Manifold* results;
+    auto results = new Manifold();
     
     /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
     // While runs until the vector gets emptied >> (std::deque< Patch >)
@@ -206,13 +206,14 @@ Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int 
         this->pop_front();
 
         // Get the new state
-        auto scv = this->probl_->solve(p, t);
+        this->integrator_->integrate();
 
-        // Builds patch "f" from
-        Patch f(scv, p.history);
+        // Builds patch from the resulting scv
+        Patch f(this->integrator_->get_scv(), p.history);
 
         // Check for tolerance
-        if ( errToll.size() != f.size() )
+        // TODO: This check needs to be done only once
+        if (errToll.size() != f.size())
         {
             throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
                                       "size of Patchs.");
@@ -239,7 +240,7 @@ Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int 
         }
 
         // Find maximum relative truncation error
-        std::vector<double>::iterator max_error = std::max_element(relativErr.begin(), relativErr.end());
+        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
 
         // If
         if ( posOverride != 0)
@@ -247,17 +248,27 @@ Manifold* Manifold::getSplitDomain(const std::vector<double> errToll, const int 
             max_error = (relativErr.begin() + posOverride);
         }
         
-        if (  *max_error == 0.0 || p.history.count() == nSplitMax) { //check the maximum function error and the total number of split for the Patch
+        if (*max_error == 0.0 || p.history.count() == nSplitMax)
+        {
+            // Check the maximum function error and the total number of split for the Patch
             results->push_back(f);
         }
-        else {
-            const unsigned int pos = std::distance(relativErr.begin(), max_error);  // function component of maximum error
+        else
+        {
+            // Function component of maximum error
+            const unsigned int pos = std::distance(relativErr.begin(), max_error);
+
+            // Get the splitting direction
             const unsigned int dir = f.getSplittingDirection(pos);
+
+            // Split the patch
+            // TODO: Debug why it SIGSEVs here
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+
+            // Add new manifolds
+            this->push_back(s.first);
+            this->push_back(s.second);
         }
-        
     }
     
     return results;
@@ -442,33 +453,33 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::Algebraic
     }
 }
 
-void Manifold::set_problem_object(problems* probl)
+void Manifold::set_integrator_ptr(integrator* integrator)
 {
     // Setting problem object
-    if (this->probl_ != nullptr)
+    if (this->integrator_ != nullptr)
     {
         // If problem is not nullptr
         std::fprintf(stdout, "There already exist one problem class set in: '%p'. It will"
-                             " be replaced.", this->probl_);
+                             " be replaced.", this->integrator_);
     }
 
     // Replace problem pointer
-    this->probl_ = probl;
+    this->integrator_ = integrator;
 
     // Info
-    std::fprintf(stdout, "Problem object pointer ('%p') successfully set in Manifold ('%p').",
-                 this->probl_, this);
+    std::fprintf(stdout, "Integrator object pointer ('%p') successfully set in Manifold ('%p').\n",
+                 this->integrator_, this);
 
 }
 
-problems *Manifold::get_problem_object()
+integrator *Manifold::get_integrator_ptr()
 {
     // Safety check it is not empty
-    if (this->probl_ == nullptr)
+    if (this->integrator_ == nullptr)
     {
         // Info
         std::fprintf(stdout, "Problem class to be returned is nullptr. Errors may happen later...");
     }
 
-    return this->probl_;
+    return this->integrator_;
 }

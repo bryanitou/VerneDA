@@ -5,6 +5,6 @@
 #ifndef GETTING2KNOWDACE_ADS_H
 #define GETTING2KNOWDACE_ADS_H
 
-#include "Manifold.h"
+#include "SuperManifold.h"
 
 #endif //GETTING2KNOWDACE_ADS_H
