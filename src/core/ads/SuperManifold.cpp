@@ -33,13 +33,6 @@ void SuperManifold::set_integrator_ptr(integrator* integrator)
 
 }
 
-void SuperManifold::set_initial_manifold(Manifold *manifold)
-{
-    // Set initial manifold
-    this->current_ = manifold;
-}
-
-
 void SuperManifold::split_domain()
 {
     // Safety check that current manifold is available
@@ -57,4 +50,9 @@ void SuperManifold::split_domain()
 
     // Split domain: get current domain
     this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);
+}
+
+void SuperManifold::map_solution()
+{
+
 }

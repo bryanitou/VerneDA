@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     // Number of variables and order
     int n_var = 6;
-    int n_ord = 2;
+    int n_ord = 3;
 
     // Initialize DACE with 6 variables
     DACE::DA::init(n_ord, n_var);

@@ -44,12 +44,6 @@ public:
 
 public:
 
-    /**
-     * Set initial manifold.
-     * @param manifold
-     */
-    void set_initial_manifold(Manifold* manifold);
-
     void set_integrator_ptr(integrator *integrator);
 
 public:

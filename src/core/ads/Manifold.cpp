@@ -184,6 +184,15 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 }
 
 
+void Manifold::print_status()
+{
+    std::string msg2write = tools::string::print2string("TRACE: Manifold size: %10d", this->size());
+
+    // Print msg
+    std::fprintf(stdout, "%s\n", msg2write.c_str());
+}
+
+
 Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
 {
     /* Member function elaborating the ADS of initial Manifold (initial Domain)
@@ -199,17 +208,23 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
     // While runs until the vector gets emptied >> (std::deque< Patch >)
     while (!this->empty())
     {
+        // Print status
+        this->print_status();
+
         // Creates new patch from the first position in this Manifold
         Patch p = this->front();
 
         // Removes the one in front
         this->pop_front();
 
+        // Set time for the integrator
+        this->integrator_->t_ = p.t_;
+
         // Get the new state
-        this->integrator_->integrate();
+        auto scv = this->integrator_->integrate(p, (int)this->size());
 
         // Builds patch from the resulting scv
-        Patch f(this->integrator_->get_scv(), p.history);
+        Patch f(scv, p.history, this->integrator_->t_);
 
         // Check for tolerance
         // TODO: This check needs to be done only once
@@ -366,7 +381,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
     return results;
 }
 
-DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag) {
+DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag)
+{
   /* Member function elaborating the Manifold after split
   !>> input: AlgebraicVector<DA> InitSet: is the initial Manifold (initial Domain)
              AlgebraicVector<double> pt: is a point (absolutly) belonging to Initial Domain taken into account

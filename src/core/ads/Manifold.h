@@ -76,4 +76,6 @@ public: // Methods
     Manifold* getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride = 0);
 
     DACE::AlgebraicVector<double> pointEvaluationManifold(DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
+
+    void print_status();
 };

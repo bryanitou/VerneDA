@@ -32,6 +32,7 @@ public:
      */
     ~integrator() = default;
 
+    double t_{};
 private:
     std::vector<int> vector;
 
@@ -41,13 +42,7 @@ public:
      * @param x             [in] [DACE::AlgebraicVector]
      * @return DACE::AlgebraicVector<DACE::DA>
      */
-    DACE::AlgebraicVector<DACE::DA> integrate(const DACE::AlgebraicVector<DACE::DA>& x);
-
-    /**
-    * This function will use some of the available integrators (i.e., Euler, RK4)
-    * @return DACE::AlgebraicVector<DACE::DA>
-    */
-    void integrate();
+    DACE::AlgebraicVector<DACE::DA> integrate(const DACE::AlgebraicVector<DACE::DA>& x, int patch_id = - 1);
 
 public:
     // Setters
@@ -106,8 +101,9 @@ private:
     double h_{};
 
     // Times: initial time and final time
-    double t0_{};
-    double t1_{};
+    double t0_{};   // Initial time
+    double t1_{};   // Final time
+    // Current time
 
     // Interrupt key
     bool interrupt_{false};
@@ -121,6 +117,10 @@ private:
     // ADS constants
     std::vector<double> errToll_;
     int nSplitMax_;
+
+private:
+    // Some auxilary class variables
+    int patch_id_ = -1;
 
 private:
     /**

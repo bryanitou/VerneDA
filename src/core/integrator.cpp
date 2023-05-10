@@ -19,14 +19,14 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
     // Auxiliary bool
     bool flag_interruption_errToll = false;
 
-    // Current time
-    double t = this->t0_;
-
     // Iterate
     for(int i = 0; i < this->steps_; i++ )
     {
-        x = this->Euler_step(x, t, this->h_);
-        t += this->h_;
+        // Print detailed info
+        this->print_detailed_information(x, i, this->t_);
+
+        x = this->Euler_step(x, this->t_, this->h_);
+        this->t_ += this->h_;
 
         // Check ADS conditions to continue integration
         if (this->interrupt_)
@@ -67,20 +67,17 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     DACE::AlgebraicVector<DACE::DA> k3;
     DACE::AlgebraicVector<DACE::DA> k4;
 
-    // Current time
-    double t = this->t0_;
-
     // Iterate
     for(int i = 0; i < this->steps_; i++ )
     {
         // Print detailed info
-        this->print_detailed_information(x, i, t);
+        this->print_detailed_information(x, i, this->t_);
 
         // Compute the single step
-        x = this->RK4_step(x, t, this->h_);
+        x = this->RK4_step(x, this->t_, this->h_);
 
         // Increase step time
-        t += this->h_;
+        this->t_ += this->h_;
 
         // Check ADS conditions to continue integration
         if (this->interrupt_)
@@ -116,9 +113,14 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
     // Get the information of x
     auto str2debug = tools::vector::da_cons2string(x, ", ", "%3.8f");
 
+    // Patch or not?
+    auto str2print = this->patch_id_ > -1 ? tools::string::print2string("p: %6d | ", this->patch_id_) : "";
+
     // Common info shared on bot attitude and orbit determination
-    auto str2print = tools::string::print2string("TRACE: i: %6d | t: %10.2f | v: %s", i, t,
-                                                 str2debug.c_str());
+    str2print += tools::string::print2string("i: %6d | t: %10.2f | v: %s", i, t, str2debug.c_str());
+
+    // Add 'TRACE' in front
+    str2print = "TRACE: " + str2print;
 
     // If it is attitude, go this way...
     if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
@@ -157,6 +159,7 @@ void integrator::set_integration_parameters(const DACE::AlgebraicVector<DACE::DA
 
         // Set times: initial and final
         this->t0_ = t0;
+        this->t_ = t0;
         this->t1_ = t1;
 
         // Set interruption boolean
@@ -167,17 +170,14 @@ void integrator::set_integration_parameters(const DACE::AlgebraicVector<DACE::DA
     }
 }
 
-void integrator::integrate()
-{
-    // Call subroutine
-    this->scv_ = this->integrate(this->scv_);
-}
 
-
-DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x)
+DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVector<DACE::DA>& x, int patch_id)
 {
     // Auxiliary variables
     DACE::AlgebraicVector<DACE::DA> result;
+
+    // Set patch ID variable
+    this->patch_id_ = patch_id;
 
     // Switch case
     switch (this->type)
