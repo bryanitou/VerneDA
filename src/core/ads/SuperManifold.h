@@ -24,6 +24,8 @@ public:
      */
     ~ SuperManifold() = default;
 
+// Attributes
+Manifold* previous_ = nullptr;
 private:
     // Constant values
 
@@ -34,8 +36,6 @@ private:
     int nSplitMax_;
 
 private:
-    // Attributes
-    Manifold* previous_ = nullptr;
     Manifold* current_ = nullptr;
 
 public:
@@ -48,5 +48,5 @@ public:
 
 public:
     // Getters
-    // std::vector<double> get_results();
+    Manifold* get_results() {return this->current_; };
 };

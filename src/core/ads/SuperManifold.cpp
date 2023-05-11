@@ -51,8 +51,3 @@ void SuperManifold::split_domain()
     // Split domain: get current domain
     this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);
 }
-
-void SuperManifold::map_solution()
-{
-
-}

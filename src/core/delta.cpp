@@ -180,7 +180,7 @@ void delta::generate_gaussian_deltas(int n)
     // TODO: Info message
 }
 
-void delta::evaluate_deltas()
+void delta::evaluate_deltas(SuperManifold* sm)
 {
     // Safety check
     if (!this->nominal_inserted_)
@@ -189,8 +189,8 @@ void delta::evaluate_deltas()
         std::exit(-1);
     }
     // Local auxiliary variables
-    std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
-    DACE::AlgebraicVector<DACE::DA> single_sol;
+    std::vector<DACE::AlgebraicVector<double>> taylor_list;
+    //DACE::AlgebraicVector<DACE::DA> single_sol;
 
     // Reserve space for optimal memory management
     taylor_list.reserve(this->scv_deltas_->size());
@@ -199,7 +199,10 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *scv_deltas_)
     {
         // Evaluate and save
-        single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
+        // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
+        auto single_sol = sm->get_results()->pointEvaluationManifold(sm->previous_->front(),
+                                                              scv_delta->get_state_vector_copy().cons(),
+                                                              1);
 
         // Check the norm for DEBUG PURPOSES
         if (this->attitude_)
@@ -258,7 +261,7 @@ void delta::evaluate_deltas()
     }
 
     // Make it ptr
-    this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
+    this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(taylor_list);
 }
 
 void delta::set_constants(std::vector<double> stddevs)

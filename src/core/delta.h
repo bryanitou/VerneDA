@@ -15,6 +15,7 @@
 #include "tools/vo.h"
 #include "quaternion.h"
 #include "tools/str.h"
+#include "ads/SuperManifold.h"
 
 class delta {
 
@@ -76,14 +77,14 @@ public: // Set options
     /**
      * Evaluate prepared deltas
      */
-    void evaluate_deltas();
+    void evaluate_deltas(SuperManifold* sm);
 
 public: // Getters
     /**
      * Get evaluated deltas polynomial.
      * @return deltas_poly
      */
-    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> get_eval_deltas_poly()
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> get_eval_deltas_poly()
     {
         return eval_deltas_poly_;
     };
@@ -107,7 +108,7 @@ private:
     // List of deltas: not evaluated
     std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
     // List of results:
-    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> eval_deltas_poly_ = nullptr;
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> eval_deltas_poly_ = nullptr;
 
 private:
 

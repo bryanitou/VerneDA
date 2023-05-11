@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     // Number of variables and order
     int n_var = 6;
-    int n_ord = 3;
+    int n_ord = 4;
 
     // Initialize DACE with 6 variables
     DACE::DA::init(n_ord, n_var);
@@ -36,9 +36,9 @@ int main(int argc, char* argv[])
 
     // Set error
     double K = 10;// [0.1, 0.5, 1, 5, 10]
-    double stddev_x = 0.02;
+    double stddev_x = 20.0;
     double stddev_y = stddev_x;
-    double stddev_z = 0.03;
+    double stddev_z = 30.0;
     double stddev_vx = K*0.1;
     double stddev_vy = K*0.1;
     double stddev_vz = K*0.1;
@@ -70,10 +70,11 @@ int main(int argc, char* argv[])
     double const rev = 2*M_PI*std::sqrt(a*a*a/constants::earth::mu);
 
     // How many periods do we want to integrate?
-    double const tf = rev*10;
+    double tf = rev*10;
+    tf = 23042.522715742532; // Fossa validation
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 1);
+    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 10.0);
 
     // Define problem to solve
     auto prob = problems(PROBLEM::TWO_BODY);
@@ -119,7 +120,7 @@ int main(int argc, char* argv[])
     deltas_engine->insert_nominal(n_var);
 
     // Evaluate deltas
-    deltas_engine->evaluate_deltas();
+    deltas_engine->evaluate_deltas(&super_manifold);
 
     // Set output path for results
     std::filesystem::path output_dir = "./out/tbp_paper";

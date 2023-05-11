@@ -381,7 +381,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
     return results;
 }
 
-DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold( DACE::AlgebraicVector<DACE::DA> InitSet, DACE::AlgebraicVector<double> pt, const int flag)
+DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::AlgebraicVector<DACE::DA>& InitSet, DACE::AlgebraicVector<double> pt, const int flag)
 {
   /* Member function elaborating the Manifold after split
   !>> input: AlgebraicVector<DA> InitSet: is the initial Manifold (initial Domain)

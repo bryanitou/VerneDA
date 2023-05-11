@@ -6,3 +6,6 @@ build
 
 # Ignore all the results
 out
+
+# Configuration files
+cfg
