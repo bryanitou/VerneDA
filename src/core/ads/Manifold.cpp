@@ -416,6 +416,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
                 DACE::AlgebraicVector<double> ptPatch = 2.0*(pt - c)/w;
                 return this -> at(i).eval(ptPatch);
             }
+
             /*In case that the manifold is been modified, i.e delate some Patch,
             and the point belongs to a delated Patch, the member function riturn
             a NaN vector ! ATTENTION*/
@@ -427,42 +428,106 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         }
     }
 
-    if ( flag == 1 ) {
-
+    if ( flag == 1 )
+    {
+        // Get amount of variables
         const unsigned int comp = DACE::DA::getMaxVariables();
 
+        // Create vectors:
+        // ptUnit: dimension ['comp']
+        // cnt: dimension ['comp']
         DACE::AlgebraicVector<double> ptUnit(comp), cnt(comp);
-        DACE::AlgebraicVector<double> w(comp, 2.0 );
 
+        // Create vector w: width
+        // dimension ['comp'] and value 2, from -1 to 1
+        DACE::AlgebraicVector<double> w(comp, 2.0);
+
+        // Create from initial set constants
         cnt = InitSet.cons();
-        DACE::AlgebraicVector<double> wdt = 2.0*( InitSet - InitSet.cons()).eval(0.5*w);
-        for ( int i=0; i < wdt.size(); ++i) {
-            wdt[i] = std::fabs(wdt[i]);
+
+        // Normalize?
+        DACE::AlgebraicVector<double> wdt = 2.0*(InitSet - InitSet.cons()).eval(0.5*w);
+        // DACE::AlgebraicVector<double> wdt = 2.0*(InitSet).eval(0.5*w);
+
+        // Make it absolute values
+        for (double & i : wdt)
+        {
+            i = std::fabs(i);
         }
 
-        for ( int k=0; k < wdt.size(); ++k) {
-            if (wdt[k] != 0.0) ptUnit[k] = 2.0*(pt[k] - cnt[k])/wdt[k];
-            else ptUnit[k] = 0.0;
-        }
-        std::cout<<ptUnit;
-        SplittingHistory empty;
-        if (!empty.contain(ptUnit) ) throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The selected point seems to be outside the initial Domain");
-
-        const unsigned int size = this -> size();
-        for ( unsigned int i = 0; i < size; ++i ) {
-
-            if ( (*this).at(i).history.contain(ptUnit) ) {
-
-                DACE::AlgebraicVector<double> cP((*this).at(i).history.center() );
-                DACE::AlgebraicVector<double> wP((*this).at(i).history.width() );
-                DACE::AlgebraicVector<double> ptPatch = 2.0*(ptUnit - cP)/wP;
-                return this -> at(i).eval(ptPatch);
+        // Iterate through all the variables
+        for ( int k=0; k < wdt.size(); ++k)
+        {
+            // If the width is different than zero...
+            if (wdt[k] != 0.0)
+            {
+                //
+                // ptUnit[k] = 2.0 * (pt[k] - cnt[k]) / wdt[k];
+                ptUnit[k] = 2.0 * (pt[k]) / wdt[k];
             }
-            /*In case that the manifold is been modified, i.e delate some Patch,
-            and the point belongs to a delated Patch, the member function riturn
-            a NaN vector ! ATTENTION*/
-            if ( i == size-1 ) {
-                DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN );
+            else
+            {
+                ptUnit[k] = 0.0;
+            }
+        }
+
+        // Print normalized point
+        std::cout << ptUnit;
+
+        // Create splitting history object: 'empty'
+        SplittingHistory empty;
+
+        // Check if the normalized point is within the limit box
+        if (!empty.contain(ptUnit))
+        {
+            // Get the string of the vector
+            auto vector2write1 = tools::vector::num2string(ptUnit, ", ");
+
+            // Accommodate vector to be in the limit box
+            for (auto & val : ptUnit)
+            {
+                if (std::fabs(val) > 1)
+                {
+                    val = val > 0 ? 1 : -1;
+                }
+            }
+
+            // Get new string
+            auto vector2write2 = tools::vector::num2string(ptUnit, ", ");
+
+            // Info
+            std::fprintf(stdout, "Sample vector violated limit box: '%s'. "
+                                 "Forced to be within the limit -> '%s'\n", vector2write1.c_str(), vector2write2.c_str());
+            //throw std::runtime_error ("Error in 'Manifold::pointEvaluationManifold': The selected point seems to be outside the initial Domain");
+        }
+
+        // Get the size of this manifold (amount of patches stored)
+        const unsigned int size = this->size();
+
+        //
+        for ( unsigned int i = 0; i < size; ++i )
+        {
+            if ( (*this).at(i).history.contain(ptUnit) )
+            {
+                DACE::AlgebraicVector<double> cP((*this).at(i).history.center());
+                DACE::AlgebraicVector<double> wP((*this).at(i).history.width());
+                DACE::AlgebraicVector<double> ptPatch = 2.0*(ptUnit - cP)/wP;
+                return this->at(i).eval(ptPatch);
+            }
+
+
+            /*
+             * In case that the manifold is been modified, i.e delete some Patch,
+             * and the point belongs to a delated Patch, the member function return
+             * a NaN vector !
+             * ATTENTION
+             */
+            if ( i == size-1 )
+            {
+                // Create Null vector
+                DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN);
+
+                // Return Null vector
                 return Null;
             }
         }

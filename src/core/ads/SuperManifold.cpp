@@ -46,7 +46,7 @@ void SuperManifold::split_domain()
     }
 
     // Current passes to be previous
-    this->previous_ = this->current_;
+    this->previous_ =  new Manifold(*this->current_);
 
     // Split domain: get current domain
     this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);

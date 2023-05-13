@@ -89,3 +89,13 @@ enum class PROBLEM
     FREE_FALL_OBJECT,
     NA,
 };
+
+/**
+* Units
+*/
+enum class LENGTH_UNITS
+{
+    METERS,
+    KILOMETERS,
+    NA
+};

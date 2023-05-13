@@ -24,19 +24,17 @@ public:
      */
     ~ SuperManifold() = default;
 
-// Attributes
-Manifold* previous_ = nullptr;
-private:
-    // Constant values
 
+public:// Attributes
+    Manifold* previous_ = nullptr;
+    Manifold* current_ = nullptr;
+
+private:
     // Tolerance error vector
     std::vector<double> errToll_;
 
     // Number of maximum splits, should be set to some integer
     int nSplitMax_;
-
-private:
-    Manifold* current_ = nullptr;
 
 public:
     // Manifold operations
@@ -48,5 +46,5 @@ public:
 
 public:
     // Getters
-    Manifold* get_results() {return this->current_; };
+    [[nodiscard]] Manifold* get_final_manifold() const {return this->current_; };
 };

@@ -113,14 +113,25 @@ std::vector<double> SplittingHistory::center()
           AlgebraicVector<DA> obj: DAvector of initial Domain
     OUTPUT return a vector conteins the resulting box center with respect of the splitting history vector considered
     */
-    const unsigned int var = DACE::DA::getMaxVariables();
-    const unsigned int size =  this -> size();
-    std::vector <double> c(var, 0.0), w(var, 2.0); //auxiliary variable for the initial center and width
 
-    for ( unsigned int i = 0; i < size; ++i) {
+    // Get number of variables
+    const unsigned int var = DACE::DA::getMaxVariables();
+
+    // Check this size
+    const unsigned int size =  this->size();
+
+    // Auxiliary variable for the initial center and width
+    std::vector <double> c(var, 0.0), w(var, 2.0);
+
+    for ( unsigned int i = 0; i < size; ++i)
+    {
         unsigned int n = abs((*this)[i]) - 1;
-        w[n] = 0.5*w[n];                                                    // before it was been evaluete the half of displacement
-        c[n] = c[n] + 0.5*((double)((*this)[i]/abs((*this)[i])))*std::fabs(w[n]); // then the previous computation is added to the constant part
+
+        // Before it has been evaluated the half of displacement
+        w[n] = 0.5*w[n];
+
+        // Then the previous computation is added to the constant part
+        c[n] = c[n] + 0.5*((double)((*this)[i]/abs((*this)[i])))*std::fabs(w[n]);
     }
 
       return c;
@@ -157,19 +168,38 @@ bool SplittingHistory::contain (std::vector<double> pt)
            to the set box assigning -> 1: the point is contained; 0: the point is not contained
      */
 
+    // Get the amount of variables used...
     const unsigned int var = DACE::DA::getMaxVariables();
 
-    if (var != pt.size() )
+    // Safety check size
+    if (var != pt.size())
+    {
         throw std::runtime_error ("error in 'splitting_history::contain': The dimension of selected point is wrong, select a new point with rigth dimension");
-
-    else {
+    }
+    else
+    {
+        // Get the center and direction
         auto c = SplittingHistory::center();
         auto w = SplittingHistory::width();
 
-        for(unsigned int i = 0; i < pt.size(); ++i) {
-            if (std::fabs(pt[i] - c[i]) > 0.5*w[i]) { return false;}
-      }
+        // Check the point is lying within the expected domain
+        for(unsigned int i = 0; i < pt.size(); ++i)
+        {
+            // Get the distance to the center
+            auto dist = std::fabs(pt[i] - c[i]);
 
-      return true;
+            // Get half of the width
+            auto half_w =  0.5 * w[i];
+
+            // Check the distance is within the box
+            if (dist > half_w)
+            {
+                // If violated, exit function returning false
+                return false;
+            }
+      }
     }
+
+    // Everything is alright
+    return true;
 }

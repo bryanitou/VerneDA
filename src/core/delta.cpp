@@ -196,13 +196,15 @@ void delta::evaluate_deltas(SuperManifold* sm)
     taylor_list.reserve(this->scv_deltas_->size());
 
     // Evaluate each delta
-    for (const auto& scv_delta : *scv_deltas_)
+    for (const auto& scv_delta : *this->scv_deltas_)
     {
         // Evaluate and save
         // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
-        auto single_sol = sm->get_results()->pointEvaluationManifold(sm->previous_->front(),
-                                                              scv_delta->get_state_vector_copy().cons(),
-                                                              1);
+        auto sample = scv_delta->get_state_vector_copy().cons();
+        auto single_sol = sm->get_final_manifold()->pointEvaluationManifold(
+                sm->previous_->front(),
+                sample,
+                1);
 
         // Check the norm for DEBUG PURPOSES
         if (this->attitude_)
