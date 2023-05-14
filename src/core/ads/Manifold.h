@@ -77,5 +77,9 @@ public: // Methods
 
     DACE::AlgebraicVector<double> pointEvaluationManifold(const DACE::AlgebraicVector<DACE::DA>& InitSet, DACE::AlgebraicVector<double> pt, const int flag = 0);
 
+    std::vector<DACE::AlgebraicVector<double>> centerPointEvaluationManifold();
+
     void print_status();
+
+    std::vector<std::vector<DACE::AlgebraicVector<double>>> wallsPointEvaluationManifold();
 };

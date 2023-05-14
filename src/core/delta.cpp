@@ -180,7 +180,7 @@ void delta::generate_gaussian_deltas(int n)
     // TODO: Info message
 }
 
-void delta::evaluate_deltas(SuperManifold* sm)
+void delta::evaluate_deltas()
 {
     // Safety check
     if (!this->nominal_inserted_)
@@ -201,8 +201,8 @@ void delta::evaluate_deltas(SuperManifold* sm)
         // Evaluate and save
         // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
         auto sample = scv_delta->get_state_vector_copy().cons();
-        auto single_sol = sm->get_final_manifold()->pointEvaluationManifold(
-                sm->previous_->front(),
+        auto single_sol = this->sm_->get_final_manifold()->pointEvaluationManifold(
+                this->sm_->previous_->front(),
                 sample,
                 1);
 

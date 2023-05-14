@@ -504,15 +504,30 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         // Get the size of this manifold (amount of patches stored)
         const unsigned int size = this->size();
 
-        //
+        // Iterate through the size of this manifold
         for ( unsigned int i = 0; i < size; ++i )
         {
-            if ( (*this).at(i).history.contain(ptUnit) )
+            // Is this polynomial within the limit box?
+            auto inside_limits = (*this).at(i).history.contain(ptUnit);
+
+            // Is within limits?
+            if (inside_limits)
             {
+                // If so, get the center
                 DACE::AlgebraicVector<double> cP((*this).at(i).history.center());
+
+                // Get the width
                 DACE::AlgebraicVector<double> wP((*this).at(i).history.width());
-                DACE::AlgebraicVector<double> ptPatch = 2.0*(ptUnit - cP)/wP;
-                return this->at(i).eval(ptPatch);
+
+                // Center the normalized 'ptUnit' vector to the center of the patch, to be evaluated
+                // later
+                DACE::AlgebraicVector<double> ptPatch = 2.0 * (ptUnit - cP) / wP;
+
+                // Evaluate expression in the
+                auto result = this->at(i).eval(ptPatch);
+
+                // Exit function returning result
+                return result;
             }
 
 
@@ -532,6 +547,9 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
             }
         }
     }
+
+    // TODO: Add fallback
+    return {};
 }
 
 void Manifold::set_integrator_ptr(integrator* integrator)
@@ -564,3 +582,135 @@ integrator *Manifold::get_integrator_ptr()
 
     return this->integrator_;
 }
+
+std::vector<DACE::AlgebraicVector<double>> Manifold::centerPointEvaluationManifold()
+{
+    // Result vector to be returned
+    std::vector<DACE::AlgebraicVector<double>> result{};
+
+    // Get the size of this manifold (amount of patches stored)
+    const unsigned int size_manifold = this->size();
+
+    // Reserve memory for optimal memory management
+    result.reserve(size_manifold);
+
+    // Get number of variables
+    DACE::AlgebraicVector<double> zeroed(DACE::DA::getMaxVariables(), 0);
+
+    // Iterate through the size of this manifold
+    for ( unsigned int i = 0; i < size_manifold; ++i )
+    {
+        // Get the translated result fo this patch
+        auto center_i_transposed = this->at(i).eval(zeroed);
+
+        // Push back result
+        result.push_back(center_i_transposed);
+    }
+
+    // Exit function
+    return result;
+}
+
+std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEvaluationManifold()
+{
+    // Result vector to be returned
+    std::vector<std::vector<DACE::AlgebraicVector<double>>> result{};
+
+    // Get the size of this manifold (amount of patches stored)
+    const unsigned int size_manifold = this->size();
+
+    // Reserve memory for optimal memory management
+    result.reserve(size_manifold);
+
+    // Get number of variables
+    const unsigned int n_var = DACE::DA::getMaxVariables();
+
+    // Auxiliary variables fot the internal loop
+    DACE::AlgebraicVector<double> point_wall(n_var, 0);
+
+    // Fix resolution
+    int res = 10;
+
+    // Fix dimension
+    int dim = 2;
+
+    // Fix number of walls per dimension
+    int n_wall = static_cast<int>(std::pow(dim, 2));
+
+    // Compuote number of points
+    int n_points = n_wall*res;
+
+    // Iterate through the size of this manifold
+    for ( unsigned int i = 0; i < size_manifold; ++i )
+    {
+        // In 2D, we will have 4 walls, in 3D 6 walls... and so forth
+        // It will only be done in 2D, for validation purposes for the while
+        // Parameters for this wall
+        // Get the upper and lower wall
+
+        // Get the width
+        double width_x = 2;
+        double width_y = 2;
+        double half_width_x = width_x / 2;
+        double half_width_y = width_y / 2;
+
+        // Compute the step
+        double step_x = width_x / res;
+        double step_y = width_y / res;
+
+        // Now, we will have to bring them to: x: bottom and top, y: left and right
+        // Start at the bottom left
+        point_wall[0] = half_width_x;
+        point_wall[1] = half_width_y;
+
+        // Patch walls
+        std::vector<DACE::AlgebraicVector<double>> image_patch_walls;
+
+        // Reserve memory: 4 walls and res
+        image_patch_walls.reserve(n_points);
+
+        for (int k = 0; k < n_points; k++)
+        {
+            // Get the translated result fo this patch
+            auto image_wall_point = this->at(i).eval(point_wall);
+
+            // Push back the first point: corner
+            image_patch_walls.push_back(image_wall_point);
+
+            // Check positions
+            bool d = std::fabs(point_wall[1] - (-half_width_y)) < 0.001;
+            bool u = std::fabs(point_wall[1] - half_width_y) < 0.001;
+            bool l = std::fabs(point_wall[0] - (-half_width_x)) < 0.001;
+            bool r = std::fabs(point_wall[0] - half_width_x) < 0.001;
+
+            // Build next point to be evaluated
+            if (u && !r)
+            {
+                // Go right
+                point_wall[0] += step_x;
+            }
+            else if (r && !d)
+            {
+                // Go down
+                point_wall[1] -= step_y;
+            }
+            else if (d && !l)
+            {
+                // Go left
+                point_wall[0] -= step_x;
+            }
+            else
+            {
+                // Go up
+                point_wall[1] += step_y;
+            }
+        }
+
+        // Push back this patch wall points
+        result.push_back(image_patch_walls);
+    }
+
+    // Exit function
+    return result;
+}
+

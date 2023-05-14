@@ -74,10 +74,15 @@ public: // Set options
      */
     void generate_deltas(DISTRIBUTION type, int n);
 
+    void set_superManifold(SuperManifold* sm)
+    {
+        this->sm_ = sm;
+    };
+
     /**
      * Evaluate prepared deltas
      */
-    void evaluate_deltas(SuperManifold* sm);
+    void evaluate_deltas();
 
 public: // Getters
     /**
@@ -96,6 +101,15 @@ public: // Getters
     std::shared_ptr<std::vector<std::shared_ptr<scv>>> get_non_eval_deltas_poly()
     {
         return scv_deltas_;
+    };
+
+    /**
+     * Return saved manifold in this class
+     * @return SuperManifold
+     */
+    SuperManifold* get_SuperManifold()
+    {
+        return this->sm_;
     };
 
 private:
@@ -126,6 +140,10 @@ private:
     bool quat2euler_{false};
     QUATERNION_SAMPLING q_sampling_{QUATERNION_SAMPLING::NA};
     std::vector<double> mean_quaternion_{};
+
+private:
+    // Other important objects
+    SuperManifold* sm_ = nullptr;
 
 private: // Allocators
     /**

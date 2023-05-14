@@ -106,14 +106,21 @@ int main(int argc, char* argv[])
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
 
+    // Set super manifold in deltas engine
+    deltas_engine->set_superManifold(&super_manifold);
+
     // Evaluate deltas
-    deltas_engine->evaluate_deltas(&super_manifold);
+    deltas_engine->evaluate_deltas();
 
     // Set output path for results
     std::filesystem::path output_dir = "./out/validation";
     std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
     std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
+
+    // Some other useful optional outputs: validation
+    std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
+    std::filesystem::path output_centers = output_dir / "eval_centers.dd";
 
     // Dump final info
     tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
@@ -124,11 +131,19 @@ int main(int argc, char* argv[])
     // Dump evaluated deltas
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
+    // Dump eval points at the walls
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
+
+    // Dump eval points at the center
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
+
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
             {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
+            {"centers", output_centers},
+            {"walls", output_walls}
     };
 
     // Draw plots

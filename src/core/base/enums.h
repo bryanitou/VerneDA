@@ -99,3 +99,22 @@ enum class LENGTH_UNITS
     KILOMETERS,
     NA
 };
+
+
+/**
+* Sides
+*/
+enum class EVAL_TYPE
+{
+    DELTA,
+    WALLS,
+    CENTER
+};
+
+enum class WALL_SIDE
+{
+    UP,
+    DOWN,
+    RIGHT,
+    LEFT
+};
