@@ -153,7 +153,7 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
             patch_y = y["walls"][p]
             for i in range(1, len(patch_x)):
                 # Plot line
-                plt.plot(patch_x, patch_y, color="black")
+                plt.plot(patch_x, patch_y, linewidth=0.2, color="black")
 
     plt.xlabel(f"x [{unit_str}]")
     plt.ylabel(f"y [{unit_str}]")

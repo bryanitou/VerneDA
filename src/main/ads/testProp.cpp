@@ -278,7 +278,7 @@ int main()
     clock_t split_time = clock();
 
     // Call to main running function
-    Manifold RVsplit = stack.getSplitDomain(KeplerProp, errToll, nSplitMax, DT,  mu );
+    // Manifold RVsplit = stack.getSplitDomain(KeplerProp, errToll, nSplitMax, DT,  mu );
 
     // Info to the user
     std::fprintf(stdout," It creates '%zu' domains.", RVsplit.size());

@@ -629,29 +629,3 @@ target_link_libraries(${EXECUTABLE_NAME}
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
-
-
-############################################
-# EXECUTABLES: TUTORIAL: ADS Sinus (training)
-############################################
-set(EXECUTABLE_NAME "ads_sinus")
-
-add_executable(${EXECUTABLE_NAME}
-        src/main/ads/tutorials/free_fall.cpp
-        )
-
-# add_dependencies(${EXECUTABLE_NAME}
-#                   dependency1
-#                   dependency2
-#                   ....
-#                   )
-
-target_link_libraries(${EXECUTABLE_NAME}
-        ads
-        dacelib
-        core
-        )
-
-set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
-        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs

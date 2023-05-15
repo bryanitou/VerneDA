@@ -16,11 +16,6 @@ Manifold::Manifold() : std::deque< Patch >()
 
 }
 
-Manifold::Manifold( unsigned int n ) : std::deque< Patch >(n)
-{
-
-}
-
 Manifold::Manifold( const Manifold& m) : std::deque< Patch >(m)
 {
 
@@ -49,6 +44,102 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
 
     // TODO: WTF: Set aux to "this" class instance from a temporal Patch
     *this = aux;
+}
+
+Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
+{
+    /* Member function elaborating the ADS of initial Manifold (initial Domain)
+     !>> input: (*func) is the expansion function whose error is estimate
+     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
+     double nSplitMax is the threshold for the maximum number of split for each box
+     !<< return Manifold containing the generating Patch */
+
+    /*Automatic Domain Splitting*/
+    auto results = new Manifold();
+
+    /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
+    // While runs until the vector gets emptied >> (std::deque< Patch >)
+    while (!this->empty())
+    {
+        // Print status
+        this->print_status();
+
+        // Creates new patch from the first position in this Manifold
+        Patch p = this->front();
+
+        // Removes the one in front
+        this->pop_front();
+
+        // Set time for the integrator
+        this->integrator_->t_ = p.t_;
+
+        // Get the new state
+        auto scv = this->integrator_->integrate(p, (int)this->size());
+
+        // Builds patch from the resulting scv
+        Patch f(scv, p.history, this->integrator_->t_);
+
+        // Check for tolerance
+        // TODO: This check needs to be done only once
+        if (errToll.size() != f.size())
+        {
+            throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
+                                      "size of Patchs.");
+        }
+
+        /*Estimate the error for each patch in the deque */
+        std::vector<double> error = f.getTruncationErrors();
+        std::vector<double> relativErr(error.size() );
+
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            relativErr[k] = error[k] - errToll[k];
+        }
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            if (error[k] > errToll[k])
+            {
+                relativErr[k] = DACE::abs(relativErr[k]);
+            }
+            else
+            {
+                relativErr[k] = 0.0;
+            }
+        }
+
+        // Find maximum relative truncation error
+        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
+
+        // If
+        if ( posOverride != 0)
+        {
+            max_error = (relativErr.begin() + posOverride);
+        }
+
+        if (*max_error == 0.0 || p.history.count() == nSplitMax)
+        {
+            // Check the maximum function error and the total number of split for the Patch
+            results->push_back(f);
+        }
+        else
+        {
+            // Function component of maximum error
+            const unsigned int pos = std::distance(relativErr.begin(), max_error);
+
+            // Get the splitting direction
+            const unsigned int dir = f.getSplittingDirection(pos);
+
+            // Split the patch
+            // TODO: Debug why it SIGSEVs here
+            auto s = p.split(dir);
+
+            // Add new manifolds
+            this->push_back(s.first);
+            this->push_back(s.second);
+        }
+    }
+
+    return results;
 }
 
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA> ), const double errToll, const int nSplitMax, int posOverride) {
@@ -190,103 +281,6 @@ void Manifold::print_status()
 
     // Print msg
     std::fprintf(stdout, "%s\n", msg2write.c_str());
-}
-
-
-Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
-{
-    /* Member function elaborating the ADS of initial Manifold (initial Domain)
-     !>> input: (*func) is the expansion function whose error is estimate
-     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
-     double nSplitMax is the threshold for the maximum number of split for each box
-     !<< return Manifold containing the generating Patch */
-    
-    /*Automatic Domain Splitting*/
-    auto results = new Manifold();
-    
-    /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
-    // While runs until the vector gets emptied >> (std::deque< Patch >)
-    while (!this->empty())
-    {
-        // Print status
-        this->print_status();
-
-        // Creates new patch from the first position in this Manifold
-        Patch p = this->front();
-
-        // Removes the one in front
-        this->pop_front();
-
-        // Set time for the integrator
-        this->integrator_->t_ = p.t_;
-
-        // Get the new state
-        auto scv = this->integrator_->integrate(p, (int)this->size());
-
-        // Builds patch from the resulting scv
-        Patch f(scv, p.history, this->integrator_->t_);
-
-        // Check for tolerance
-        // TODO: This check needs to be done only once
-        if (errToll.size() != f.size())
-        {
-            throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
-                                      "size of Patchs.");
-        }
-        
-        /*Estimate the error for each patch in the deque */
-        std::vector<double> error = f.getTruncationErrors();
-        std::vector<double> relativErr(error.size() );
-        
-        for ( unsigned int k = 0; k < relativErr.size(); ++k )
-        {
-            relativErr[k] = error[k] - errToll[k];
-        }
-        for ( unsigned int k = 0; k < relativErr.size(); ++k )
-        {
-            if (error[k] > errToll[k])
-            {
-                relativErr[k] = DACE::abs(relativErr[k]);
-            }
-            else
-            {
-                relativErr[k] = 0.0;
-            }
-        }
-
-        // Find maximum relative truncation error
-        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
-
-        // If
-        if ( posOverride != 0)
-        {
-            max_error = (relativErr.begin() + posOverride);
-        }
-        
-        if (*max_error == 0.0 || p.history.count() == nSplitMax)
-        {
-            // Check the maximum function error and the total number of split for the Patch
-            results->push_back(f);
-        }
-        else
-        {
-            // Function component of maximum error
-            const unsigned int pos = std::distance(relativErr.begin(), max_error);
-
-            // Get the splitting direction
-            const unsigned int dir = f.getSplittingDirection(pos);
-
-            // Split the patch
-            // TODO: Debug why it SIGSEVs here
-            auto s = p.split(dir);
-
-            // Add new manifolds
-            this->push_back(s.first);
-            this->push_back(s.second);
-        }
-    }
-    
-    return results;
 }
 
 
@@ -436,14 +430,11 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         // Create vectors:
         // ptUnit: dimension ['comp']
         // cnt: dimension ['comp']
-        DACE::AlgebraicVector<double> ptUnit(comp), cnt(comp);
+        DACE::AlgebraicVector<double> ptUnit(comp);
 
         // Create vector w: width
         // dimension ['comp'] and value 2, from -1 to 1
         DACE::AlgebraicVector<double> w(comp, 2.0);
-
-        // Create from initial set constants
-        cnt = InitSet.cons();
 
         // Normalize?
         DACE::AlgebraicVector<double> wdt = 2.0*(InitSet - InitSet.cons()).eval(0.5*w);
@@ -471,8 +462,11 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
             }
         }
 
+        // Get the size of this manifold (amount of patches stored)
+        const unsigned int size = this->size();
+
         // Print normalized point
-        std::cout << ptUnit;
+        // std::cout << ptUnit;
 
         // Create splitting history object: 'empty'
         SplittingHistory empty;
@@ -480,29 +474,54 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         // Check if the normalized point is within the limit box
         if (!empty.contain(ptUnit))
         {
-            // Get the string of the vector
-            auto vector2write1 = tools::vector::num2string(ptUnit, ", ");
+            // If here, it means that point lies outside the initial domain, should check for the nearest patch
+            double distance = INFINITY;
+            unsigned int patch_idx = INFINITY;
 
-            // Accommodate vector to be in the limit box
-            for (auto & val : ptUnit)
+            // Iterate through the size of this manifold
+            for ( unsigned int i = 0; i < size; ++i )
             {
-                if (std::fabs(val) > 1)
+                // If so, get the center
+                DACE::AlgebraicVector<double> cP((*this).at(i).history.center());
+
+                // Get the width
+                DACE::AlgebraicVector<double> wP((*this).at(i).history.width());
+
+                // Get the distance
+                double dist_patch_i = (cP - ptUnit).vnorm();
+
+                // If that distance is inferior that the minimum...
+                if (dist_patch_i < distance)
                 {
-                    val = val > 0 ? 1 : -1;
+                    distance = dist_patch_i;
+                    patch_idx = i;
                 }
             }
 
+            // If so, get the center
+            DACE::AlgebraicVector<double> cP((*this).at(patch_idx).history.center());
+
+            // Get the width
+            DACE::AlgebraicVector<double> wP((*this).at(patch_idx).history.width());
+
+            // Evaluate point in the nearest patch
+            DACE::AlgebraicVector<double> ptPatch = 2.0 * (ptUnit - cP) / wP;
+
+            // Evaluate expression in the
+            auto result = this->at(patch_idx).eval(ptPatch);
+
             // Get new string
-            auto vector2write2 = tools::vector::num2string(ptUnit, ", ");
+            auto vector2write = tools::vector::num2string(ptUnit, ", ");
+            auto vector2write_patch = tools::vector::num2string(cP, ", ");
 
             // Info
             std::fprintf(stdout, "Sample vector violated limit box: '%s'. "
-                                 "Forced to be within the limit -> '%s'\n", vector2write1.c_str(), vector2write2.c_str());
-            //throw std::runtime_error ("Error in 'Manifold::pointEvaluationManifold': The selected point seems to be outside the initial Domain");
-        }
+                                 "Evaluated to nearest patch (id: '%d') with centers: '%s'\n",
+                                 vector2write.c_str(), patch_idx, vector2write_patch.c_str());
 
-        // Get the size of this manifold (amount of patches stored)
-        const unsigned int size = this->size();
+            // Exit function returning result
+            return result;
+        }
 
         // Iterate through the size of this manifold
         for ( unsigned int i = 0; i < size; ++i )
@@ -569,18 +588,6 @@ void Manifold::set_integrator_ptr(integrator* integrator)
     std::fprintf(stdout, "Integrator object pointer ('%p') successfully set in Manifold ('%p').\n",
                  this->integrator_, this);
 
-}
-
-integrator *Manifold::get_integrator_ptr()
-{
-    // Safety check it is not empty
-    if (this->integrator_ == nullptr)
-    {
-        // Info
-        std::fprintf(stdout, "Problem class to be returned is nullptr. Errors may happen later...");
-    }
-
-    return this->integrator_;
 }
 
 std::vector<DACE::AlgebraicVector<double>> Manifold::centerPointEvaluationManifold()
@@ -667,9 +674,9 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
         std::vector<DACE::AlgebraicVector<double>> image_patch_walls;
 
         // Reserve memory: 4 walls and res
-        image_patch_walls.reserve(n_points);
+        image_patch_walls.reserve(n_points + 1);
 
-        for (int k = 0; k < n_points; k++)
+        for (int k = 0; k < n_points + 1; k++)
         {
             // Get the translated result fo this patch
             auto image_wall_point = this->at(i).eval(point_wall);

@@ -23,6 +23,9 @@
  */
 int main(int argc, char* argv[])
 {
+    // Remove warnings
+    DACE::DACEException::setWarning(false);
+
     // Create my_specs object
     auto my_specs = json_parser::parse_input_file("./cfg/fossa_validation/ads_rk4_io.json");
 
@@ -43,16 +46,6 @@ int main(int argc, char* argv[])
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
-
-    // Dump for comparison
-    std::ofstream f2w;
-
-    // Open file
-    f2w.open("./out/validation/ads_rk4_initial_domain.dat");
-
-    f2w << scv0_DA << std::endl;
-
-    f2w.close();
 
     // Initial and final time and time step
     double const t0 = my_specs.propagation.initial_time;
@@ -101,7 +94,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_constants(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
@@ -113,7 +106,7 @@ int main(int argc, char* argv[])
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_dir = "./out/validation";
+    std::filesystem::path output_dir = "./out/ads_test";
     std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
     std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
@@ -143,10 +136,11 @@ int main(int argc, char* argv[])
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
             {"centers", output_centers},
-            {"walls", output_walls}
+            {"walls", output_walls},
+            {"silent", "false"}
     };
 
     // Draw plots
-    tools::io::plot_variables(PYPLOT_BANANA, py_args, true);
+    tools::io::plot_variables(PYPLOT_BANANA, py_args, false);
 
 }
