@@ -17,7 +17,7 @@ namespace tools::string
     // Auxiliary general values
     namespace keys
     {
-        const static std::string bars = "\\/";
+        const static std::string bars = "\\";
         const static std::string comma = "\"";
     }
 

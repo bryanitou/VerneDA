@@ -120,7 +120,7 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     std::string output_str = tools::string::clean_bars(my_resource_obj["output"].as_str());
 
     // Parse as input object
-    auto output_rsj_obj = RSJresource(input_str);
+    auto output_rsj_obj = RSJresource(output_str);
 
     // Read the output directory where the results will be dumped
     my_specs.output_dir = tools::string::clean_bars(output_rsj_obj["directory"].as_str());
