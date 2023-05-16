@@ -13,7 +13,7 @@
 // Include project libraries
 #include "tools/str.h"
 #include "conversions/angles.h"
-#include "specs/specifications.h"
+#include "specs/json_input.h"
 
 namespace json_parser
 {
@@ -21,6 +21,6 @@ namespace json_parser
      * Parses the input file
      * @param filepath std::string
      */
-    specifications parse_input_file(const std::string& filepath);
+    json_input parse_input_file(const std::string& filepath);
 };
 

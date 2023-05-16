@@ -4,14 +4,14 @@
 
 #include "json/json_parser.h"
 
-specifications json_parser::parse_input_file(const std::string& filepath)
+json_input json_parser::parse_input_file(const std::string& filepath)
 {
     // Auxiliary variables
     std::string json_text{};
     std::string json_line{};
 
     // Create an empty struct to be returned
-    specifications my_specs{};
+    json_input my_specs{};
 
     // Create handler
     std::ifstream f;
@@ -60,6 +60,14 @@ specifications json_parser::parse_input_file(const std::string& filepath)
     my_specs.propagation.initial_time = prop_rsj_obj["initial_time"].as<double>();
     my_specs.propagation.final_time = prop_rsj_obj["final_time"].as<double>();
     my_specs.propagation.time_step = prop_rsj_obj["time_step"].as<double>();
+
+    auto integrator_str = tools::string::clean_bars(prop_rsj_obj["interator"].as_str());
+    std::transform(integrator_str.begin(), integrator_str.end(), integrator_str.begin(), ::tolower);
+    my_specs.propagation.integrator =
+            integrator_str == "rk4"     ? INTEGRATOR::RK4   :
+            integrator_str == "euler"   ? INTEGRATOR::EULER :
+            integrator_str == "rk78"    ? INTEGRATOR::RK78  : INTEGRATOR::NA;
+
     my_specs.propagation.set = true;
 
     // Read initial conditions ---------------
@@ -107,6 +115,15 @@ specifications json_parser::parse_input_file(const std::string& filepath)
             val = val * 1000;
         }
     }
+
+    // Read output -----------
+    std::string output_str = tools::string::clean_bars(my_resource_obj["output"].as_str());
+
+    // Parse as input object
+    auto output_rsj_obj = RSJresource(input_str);
+
+    // Read the output directory where the results will be dumped
+    my_specs.output_dir = tools::string::clean_bars(output_rsj_obj["directory"].as_str());
 
     // Return the object
     return my_specs;

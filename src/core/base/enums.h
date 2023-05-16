@@ -46,7 +46,8 @@ enum class INTEGRATOR
 {
     EULER,
     RK4,
-    RK78
+    RK78,
+    NA
 };
 
 enum class DISTRIBUTION

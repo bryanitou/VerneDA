@@ -25,7 +25,7 @@ public:
      * Class constructor
      * @param scv
      */
-    explicit delta(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& poly);
+    explicit delta() = default;
 
     /**
      * Default destructor
@@ -35,10 +35,10 @@ public:
 public: // Set constants
 
     /**
-     * Set constants for the deltas generation
+     * Set standard deviations for the deltas generation
      * @param stddevs [in] [std::vector<double>]
      */
-    void set_constants(std::vector<double> stddevs);
+    void set_stddevs(const std::vector<double>& stddevs);
 
 public: // Set options
     /**
@@ -113,12 +113,6 @@ public: // Getters
     };
 
 private:
-    // Attributes
-    // Initial SCV (StateControlVector)
-    std::shared_ptr<scv> scv_base_ = nullptr;
-    // Polynomial to evaluate: TRANSFORMATION TAYLOR POLYNOMIAL
-    std::shared_ptr<DACE::AlgebraicVector<DACE::DA>> base_poly_ = nullptr;
-
     // List of deltas: not evaluated
     std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
     // List of results:
@@ -130,7 +124,7 @@ private:
     std::vector<double> stddevs_{};
 
     // Constants set?
-    bool constants_set_{false};
+    bool stddevs_set_{false};
 
     // Nominal inserted?
     bool nominal_inserted_{false};
@@ -161,6 +155,10 @@ private: // Class functions
     void generate_gaussian_deltas(int n);
 
 private: // Safety checks
+
+    /**
+     * Safety checks for attitude engine
+     */
     void attitude_safety_checks();
 
 };

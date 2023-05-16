@@ -131,7 +131,7 @@ set(PYPLOT_TYPE_ATTITUDE "attitude")
 # Application version information
 # This is automatic; do not touch anything
 # TODO: No version for the while
-# string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
+string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
 string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_HASH=\"\\\"$(shell git log -1 --pretty=format:\"%H\")\\\"\"")
@@ -297,21 +297,15 @@ set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
 #===========================================
 # LIBRARY: getting2knowDace BASE
 #===========================================
-# set(LIBRARY_BASE "base")
-#
-# add_library(${LIBRARY_BASE} SHARED
-#         src/core/base/enums.h
-#         src/core/base/constants.h)
-#
-# add_dependencies(base
-#         base)
-# #
-#
-# target_link_libraries(${LIBRARY_BASE})
-#
-# set_target_properties(base ${LIBRARY_BASE} PROPERTIES
-#         COMPILE_FLAGS "-fPIC"
-#         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+add_library(base SHARED
+        src/core/base/enums.h
+        src/core/base/constants.h
+        src/core/base/Header_Info.cpp
+        )
+
+set_target_properties(base
+        PROPERTIES COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 #
 #===========================================
 # LIBRARY: getting2knowDace TOOLS
@@ -335,12 +329,15 @@ set_target_properties(${LIBRARY_TOOLS} PROPERTIES
 #===========================================
 # LIBRARY: getting2knowDace SPECIFICATIONS
 #===========================================
-set(LIBRARY_SPECIFICATIONS "specs")
+set(LIBRARY_SPECIFICATIONS "specs_input")
 
 add_library(${LIBRARY_SPECIFICATIONS} SHARED
-        src/core/specs/specifications.cpp)
+        src/core/specs/specs.cpp
+        src/core/specs/args_input.cpp
+        )
 
-add_dependencies(specs
+add_dependencies(specs_input
+        base
         core)
 
 target_link_libraries(${LIBRARY_SPECIFICATIONS}
@@ -360,11 +357,11 @@ add_library(${LIBRARY_JSON_PARSER} SHARED
 
 add_dependencies(json
         rsjp
-        specs)
+        specs_input)
 
 target_link_libraries(json
         rsjp
-        specs)
+        specs_input)
 
 set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -376,8 +373,6 @@ set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
-        src/core/base/enums.h
-        src/core/base/constants.h
         src/core/tools/ep.cpp
         src/core/tools/io.cpp
         src/core/tools/vo.cpp
@@ -571,6 +566,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         core
         ads
         dacelib
+        base
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

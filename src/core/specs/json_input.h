@@ -1,27 +1,28 @@
 /**
- * Class storing all the specifications for the run.
+ * Class storing all the json_input for the run.
  */
 #pragma once
 
 // System libraries
 #include <vector>
+#include <string>
 
 // Project libraries
 #include "base/enums.h"
 
-class specifications
+class json_input
 {
 public: // Constructors
 
     /**
      * Default constructor
      */
-    specifications() = default;
+    json_input() = default;
 
     /**
      * Default destructor
      */
-     ~specifications() = default;
+     ~json_input() = default;
 
 public:// Attributes
 
@@ -41,6 +42,7 @@ public:// Attributes
          double initial_time{};
          double final_time{};
          double time_step{};
+         INTEGRATOR integrator{INTEGRATOR::NA};
 
          // Propagation set?
          bool set{false};
@@ -73,4 +75,7 @@ public:// Attributes
      propagation propagation;
      initial_conditions initial_conditions;
      ads ads;
+
+     // Single attributes
+     std::string output_dir{};
 };

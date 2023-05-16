@@ -14,6 +14,7 @@
 #include "tools/io.h"
 #include "solids/solid.h"
 #include "quaternion.h"
+#include "base/Header_Info.h"
 
 /**
  * Main entry point
@@ -159,7 +160,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_mean_quaternion_option(q_control);
 
     // Set distribution
-    deltas_engine->set_constants(stddevs);
+    deltas_engine->set_stddevs(stddevs);
 
     // Set options for the generator
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);

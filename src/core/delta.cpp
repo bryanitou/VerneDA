@@ -4,33 +4,19 @@
 
 #include "delta.h"
 
-delta::delta(scv &scv_base, DACE::AlgebraicVector<DACE::DA> &poly)
-{
-    // Call main allocator
-    this->allocate_scv_base(scv_base, poly);
-}
-
-void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& taylor_polinomial)
-{
-    // Allocate scv
-    this->scv_base_ = std::make_shared<scv>(scv_base);
-
-    // Allocate polynomial to evaluate
-    this->base_poly_ = std::make_shared<DACE::AlgebraicVector<DACE::DA>>(taylor_polinomial);
-
-}
-
 void delta::generate_deltas(DISTRIBUTION type, int n)
 {
     // Place for the all safety checks before computing HERE BELOW:
     // Safety check that the deltas are still not generated
-    if (this->scv_deltas_ != nullptr) {
-        // WARNING: deltas are gonna be replaced
+    if (this->scv_deltas_ != nullptr)
+    {
+        // WARNING: deltas are going to be replaced
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
     }
 
     // Safety check that the constants are already set
-    if (!this->constants_set_) {
+    if (!this->stddevs_set_)
+    {
         // WARNING! Must set constants for the distribution competition before
         std::printf("WARNING: Deltas are not going to be computed. Need to provide pos/vel: stddev. "
                     "It has not been set yet. Exiting program.");
@@ -80,8 +66,8 @@ void delta::generate_gaussian_deltas(int n)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-
     std::vector< std::normal_distribution<double>> stddevs_distr;
+    stddevs_distr.reserve(this->stddevs_.size());
 
     // Generate all distribution objects
     for (const auto & std : this->stddevs_)
@@ -266,13 +252,13 @@ void delta::evaluate_deltas()
     this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(taylor_list);
 }
 
-void delta::set_constants(std::vector<double> stddevs)
+void delta::set_stddevs(const std::vector<double>& stddevs)
 {
     // Set constants
     this->stddevs_ = stddevs;
 
     // Notice
-    this->constants_set_ = true;
+    this->stddevs_set_ = true;
 
 }
 

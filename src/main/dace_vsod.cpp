@@ -8,11 +8,11 @@
 // Project libraries
 #include "scv.h"
 #include "integrator.h"
-#include "base/constants.h"
 #include "problems.h"
 #include "delta.h"
 #include "tools/io.h"
 #include "json/json_parser.h"
+#include "specs/args_input.h"
 
 // ADS library
 #include "ads/ads.h"
@@ -23,11 +23,24 @@
  */
 int main(int argc, char* argv[])
 {
+    // Build compilation info header
+    auto header_info = HeaderInfo(PROGRAM_NAME, CODE_VERSION, GIT_BRANCH, GIT_HASH,
+                                  USER_NAME, OS_VERSION, __DATE__, __TIME__);
+
+    // Parse arguments
+    auto args_in = args_input(argc, argv);
+
+    // Process arguments
+    args_in.run_arguments(header_info);
+
+    // Print ASCII BANNER
+    header_info.print_header_info();
+
     // Remove warnings
     DACE::DACEException::setWarning(false);
 
     // Create my_specs object
-    auto my_specs = json_parser::parse_input_file("./cfg/fossa_validation/ads_rk4_io.json");
+    auto my_specs = json_parser::parse_input_file(args_in.json_filepath);
 
     // Initialize DACE with 6 variables
     DACE::DA::init(my_specs.algebra.order, my_specs.algebra.variables);
@@ -81,17 +94,11 @@ int main(int argc, char* argv[])
     // ADS and integration algorithm
     super_manifold.split_domain();
 
-    // TODO: Fix this ONWARDS
-    auto xf_DA = scv0_DA;
-
-    // Now we have to evaluate the deltas (little displacements in the initial position)
-    auto scvf_DA = std::make_shared<scv>(xf_DA);
-
     // Build deltas class
-    auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
+    auto deltas_engine = std::make_shared<delta>();
 
     // Set distribution
-    deltas_engine->set_constants(my_specs.initial_conditions.standard_deviation);
+    deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
@@ -107,16 +114,12 @@ int main(int argc, char* argv[])
 
     // Set output path for results
     std::filesystem::path output_dir = "./out/ads_test";
-    std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
     std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
 
     // Some other useful optional outputs: validation
     std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
     std::filesystem::path output_centers = output_dir / "eval_centers.dd";
-
-    // Dump final info
-    tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
 
     // Dump non evaluated deltas
     tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
