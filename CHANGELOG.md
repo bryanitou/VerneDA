@@ -13,6 +13,11 @@ Historical detailed commit information of this repository **getting2knowDace**.
 - TBD
 
 ### Commit detail (chronological)
+- d0b40903 (2023-05-18):
+  - ADS (Automatic Domain Splitting) workflow added to the project. This is a major upgrade. There is some work still to
+    do with the VSAD (Attitude) main since the results are a bit strange.
+  - VERSION file added.
+  - RK78 not working with ADS. Pending to be fixed.
 - a9b8a0c0 (2023-04-17):
   - Alberto Fossa fork added as a git submodule into this git repository. Added CMake Lists options, updated
   readme.md accordingly.
