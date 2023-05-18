@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     std::unordered_map<std::string, std::string> py_args = {
             {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_ATTITUDE},
-            {"metrics", "m"},
+            {"metrics", "rad"},
             {"centers", output_centers},
             {"walls", output_walls},
             {"silent", "false"}

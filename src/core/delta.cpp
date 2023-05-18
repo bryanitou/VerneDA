@@ -237,9 +237,9 @@ void delta::evaluate_deltas()
 
             // Replace the constant valuesç
             // TODO: MAKE THIS MODULAR FROM THE MAIN
-            single_sol = {euler_angles[0]  * (180.0 / M_PI),
-                          euler_angles[1]  * (180.0 / M_PI),
-                          euler_angles[2]  * (180.0 / M_PI), single_sol[4], single_sol[5], single_sol[6]};
+            single_sol = {euler_angles[0],
+                          euler_angles[1],
+                          euler_angles[2], single_sol[4], single_sol[5], single_sol[6]};
 
             // std::cout << single_sol << std::endl; DEBUG LINE
         }

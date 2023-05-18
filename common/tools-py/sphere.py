@@ -8,8 +8,8 @@ import quaternion_histogram
 
 def main():
     # File to assess
-    filepath = "/home/bryan/CLionProjects/ISAE/research_project/getting2knowDace/out/attp/non_eval_deltas_expression.dd"
-    output = filepath.replace(".dd", "-Sphere.png")
+    filepath = "./out/example/attitude2/non_eval_deltas_expression.dd"
+    output = filepath.replace(".dd", "-Sphere.pdf")
 
     # Read and get results
     dd_dict = reader.read_dd_file(filepath, verbose=True)

@@ -57,6 +57,9 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
     /*Automatic Domain Splitting*/
     auto results = new Manifold();
 
+    // Re-set integrator
+    results->integrator_ = this->integrator_;
+
     /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
     // While runs until the vector gets emptied >> (std::deque< Patch >)
     while (!this->empty())
@@ -610,8 +613,26 @@ std::vector<DACE::AlgebraicVector<double>> Manifold::centerPointEvaluationManifo
         // Get the translated result fo this patch
         auto center_i_transposed = this->at(i).eval(zeroed);
 
-        // Push back result
-        result.push_back(center_i_transposed);
+        if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            // Get the constants
+            auto quaternion = center_i_transposed.cons().extract(0, 3);
+
+            // Convert to Euler
+            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+                                                             quaternion[1],
+                                                             quaternion[2],
+                                                             quaternion[3]);
+
+            // Replace
+            result.push_back({euler_angles[0], euler_angles[1], euler_angles[2],
+                              center_i_transposed[4], center_i_transposed[5], center_i_transposed[6]});
+        }
+        else
+        {
+            // Push back result
+            result.push_back(center_i_transposed);
+        }
     }
 
     // Exit function
@@ -680,6 +701,23 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
         {
             // Get the translated result fo this patch
             auto image_wall_point = this->at(i).eval(point_wall);
+
+            // Convert to euler angles if required
+            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+            {
+                // Get the constants
+                auto quaternion = image_wall_point.cons().extract(0, 3);
+
+                // Convert to Euler
+                auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+                                                                 quaternion[1],
+                                                                 quaternion[2],
+                                                                 quaternion[3]);
+
+                // Replace
+                image_wall_point = {euler_angles[0], euler_angles[1], euler_angles[2],
+                                  image_wall_point[4], image_wall_point[5], image_wall_point[6]};
+            }
 
             // Push back the first point: corner
             image_patch_walls.push_back(image_wall_point);
