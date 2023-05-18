@@ -1,5 +1,5 @@
 #!/bin/bash
-# getting2knowDace maintenance script
+# VerneDA maintenance script
 # Uncompress all 3rd party packages
 # Useful to set everything up if the repository has just been cloned, or a new 3rd party is added later on
 # Usage: bash ./scripts/install_3rdparties.sh
@@ -12,7 +12,7 @@ function print_usage()
 
   echo "Default does not clean directories, call it with the flag in order to wipe out previous extraction."
   echo "Default source directory is current working directory (cwd = '.')."
-  echo "Default build directory is <source_dir>/build/getting2knowDace-3rdparty."
+  echo "Default build directory is <source_dir>/build/VerneDA-3rdparty."
   echo " "
 
   echo "--> Example, called from project directory: bash ./scripts/$(basename "$0")"
@@ -25,18 +25,18 @@ function print_usage()
 # Function to display ASCII art logo: https://patorjk.com/software/taag/#p=display&f=Letters&t=GETTING2KNOW-DACE
 function display_logo()
 {
-  echo "  GGGG  EEEEEEE TTTTTTT TTTTTTT IIIII NN   NN   GGGG   2222   KK  KK NN   NN  OOOOO  WW      WW        DDDDD     AAA    CCCCC  EEEEEEE "
-  echo " GG  GG EE        TTT     TTT    III  NNN  NN  GG  GG 222222  KK KK  NNN  NN OO   OO WW      WW        DD  DD   AAAAA  CC    C EE      "
-  echo "GG      EEEEE     TTT     TTT    III  NN N NN GG          222 KKKK   NN N NN OO   OO WW   W  WW _____  DD   DD AA   AA CC      EEEEE   "
-  echo "GG   GG EE        TTT     TTT    III  NN  NNN GG   GG  2222   KK KK  NN  NNN OO   OO  WW WWW WW        DD   DD AAAAAAA CC    C EE      "
-  echo " GGGGGG EEEEEEE   TTT     TTT   IIIII NN   NN  GGGGGG 2222222 KK  KK NN   NN  OOOO0    WW   WW         DDDDDD  AA   AA  CCCCC  EEEEEEE "
+  echo "VV     VV                              DDDDD     AAA        ++         ++    "
+  echo "VV     VV   eee  rr rr  nn nnn    eee  DD  DD   AAAAA       ++         ++    "
+  echo " VV   VV  ee   e rrr  r nnn  nn ee   e DD   DD AA   AA  ++++++++++ ++++++++++"
+  echo "  VV VV   eeeee  rr     nn   nn eeeee  DD   DD AAAAAAA      ++         ++    "
+  echo "   VVV     eeeee rr     nn   nn  eeeee DDDDDD  AA   AA      ++         ++    "
 }
 
 # Get parameters
 clean_dirs=false
 current_dir=$(realpath .)
 source_dir="${current_dir}"
-dir_3rdparty="${source_dir}/build/getting2knowDace-3rdparty"
+dir_3rdparty="${source_dir}/build/VerneDA-3rdparty"
 
 # Get other parameters
 # TODO: Modularize this in the future... For the while hard set
@@ -47,7 +47,7 @@ while test $# != 0; do
   -c | --clean-dirs) clean_dirs=true ;;
   --source-dir)
               source_dir=$(realpath -m "${2%/}/")
-              dir_3rdparty="${source_dir}/build/getting2knowDace-3rdparty"
+              dir_3rdparty="${source_dir}/build/VerneDA-3rdparty"
               shift
               ;;
   --build-dir)
