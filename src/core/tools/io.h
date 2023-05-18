@@ -47,7 +47,7 @@ namespace tools::io
          * @param delta [in] [delta]
          * @param file_path [in] [std::filesystem::path]
          */
-        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path);
+        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
 
         /**
          * Dump non evaluated deltas.
@@ -65,8 +65,8 @@ namespace tools::io
          * @param d [in] [int]
          * @param v [in] [int]
          */
-        void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked, int d,
-                                 int v);
+        void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked,
+                                 std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
     }
 
     /**

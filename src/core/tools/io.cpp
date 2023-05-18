@@ -118,7 +118,7 @@ void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA
 
 }
 
-void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path)
+void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type)
 {
     // Auxiliary variable
     bool monomial_masked;
@@ -137,37 +137,75 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     std::ofstream file2write;
     file2write.open(file_path);
 
-    // Get the pointer where all the evaluations are
-    auto deltas_poly = delta->get_eval_deltas_poly();
-
-    // Safety check in case of nullptr
-    if (!deltas_poly)
-    {
-        std::fprintf(stderr, "Evalutated deltas polynomial has not been allocated!. Aborting...");
-        std::exit(-1);
-    }
+    // Header to write
+    std::string header2write = eval_type == EVAL_TYPE::WALLS ?
+            "PATCH_ID, POINT_ID, VARIABLE, INDEX, COEFFICIENT, ORDER, EXPONENTS" :
+            "DELTA_ID, VARIABLE, INDEX, COEFFICIENT, ORDER, EXPONENTS";
 
     // Write the header
-    file2write << "DELTA_ID, VARIABLE, INDEX, COEFFICIENT, ORDER, EXPONENTS" << std::endl;
+    file2write << header2write << std::endl;
 
     // Iterate through the deltas
-    for (int d = 0; d < deltas_poly->size(); d++)
+    if (eval_type == EVAL_TYPE::WALLS)
     {
-        // Iterate through every DA variable in this delta variation
-        for (int v = 0; v < (*deltas_poly)[d].size(); v++)
+        // Compute wall points
+        auto patches = delta->get_SuperManifold()->get_final_manifold()->wallsPointEvaluationManifold();
+
+        // Print them all
+        for (int p = 0; p < patches.size(); p++)
         {
-            // Retrieve values to print
-            DACE::DA da_var = (*deltas_poly)[d][v];
-            int n_da_var = static_cast<int>(da_var.size());
+            for (int wp = 0; wp < patches[p].size(); wp++)
+            {
+                // Iterate through every DA variable in this delta variation
+                for (int v = 0; v < patches[p][wp].size(); v++)
+                {
+                    // Retrieve values to print
+                    DACE::DA da_var = patches[p][wp][v];
+                    int n_da_var = static_cast<int>(da_var.size());
 
-            // Should we mask?
-            // TODO: revise this masking... not very clear why this masking is needed
-            monomial_masked = n_da_var == 0;
+                    // Should we mask?
+                    // TODO: revise this masking... not very clear why this masking is needed
+                    monomial_masked = n_da_var == 0;
 
-            // Print each monomial
-            tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, d, v);
+                    // Print each monomial
+                    tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, {p, wp, v}, eval_type);
+                }
+            }
         }
     }
+    else
+    {
+        // Get the pointer where all the evaluations are
+        auto deltas_poly = eval_type == EVAL_TYPE::CENTER ?
+                delta->get_SuperManifold()->get_final_manifold()->centerPointEvaluationManifold() :
+                *delta->get_eval_deltas_poly();
+
+        // Safety check in case of nullptr
+        // if (!deltas_poly)
+        // {
+        //     std::fprintf(stderr, "Evalutated deltas polynomial has not been allocated!. Aborting...");
+        //     std::exit(-1);
+        // }
+
+        for (int d = 0; d < deltas_poly.size(); d++)
+        {
+            // Iterate through every DA variable in this delta variation
+            for (int v = 0; v < deltas_poly[d].size(); v++)
+            {
+                // Retrieve values to print
+                DACE::DA da_var = deltas_poly[d][v];
+                int n_da_var = static_cast<int>(da_var.size());
+
+                // Should we mask?
+                // TODO: revise this masking... not very clear why this masking is needed
+                monomial_masked = n_da_var == 0;
+
+                // Print each monomial
+                tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, {d, v}, eval_type);
+            }
+        }
+    }
+
 
     // Close the stream
     file2write.close();
@@ -218,7 +256,7 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
             monomial_masked = n_da_var == 0;
 
             // Print each monomial
-            tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, d, v);
+            tools::io::dace::print_each_monomial(file2write, da_var, n_da_var, monomial_masked, {d, v});
         }
     }
 
@@ -227,7 +265,7 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
 
 }
 
-void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE::DA& da_var, bool n_da_var, bool monomial_masked, int d, int v)
+void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE::DA& da_var, bool n_da_var, bool monomial_masked, std::vector<int> idx, EVAL_TYPE eval_type)
 {
     for (int i = monomial_masked ? 0 : 1; i <= n_da_var; i++)
     {
@@ -244,20 +282,32 @@ void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE:
         auto exponents = mono.m_jj;
         auto exponents_str = tools::vector::num2string<unsigned int>(exponents, " ");
 
+        // Prepare indexes
+        auto indexes2write = tools::string::print2string("%i, %i", idx[0], idx[1]);
+
+        // Add one more indexes if walls are to be dumped
+        indexes2write += EVAL_TYPE::WALLS == eval_type ? tools::string::print2string(" ,%i", idx[2]) : "";
+
         // Prepare line to write
-        auto line2write = tools::string::print2string("%i, %i, %i, %0.8f, %i, %s",
-                                                      d, v, monomial_masked ? i + 1 : i,
+        auto line2write = tools::string::print2string(" ,%i, %0.8f, %i, %s",
+                                                      monomial_masked ? i + 1 : i,
                                                       coef, order, exponents_str.c_str());
 
+        // Final line to write
+        auto final2write = indexes2write + line2write;
+
         // Write line
-        file2write << line2write << std::endl;
+        file2write << final2write << std::endl;
     }
 
     // Check if skipped
     if (monomial_masked)
     {
+        // Convert to string
+        auto str2print = tools::vector::num2string(idx, ", ");
+
         // Info
-        std::printf("INFO: Delta num: %d, variable: %d: was masked due to zeros.\n", d, v);
+        std::printf("INFO: Delta/Wall: '%s', was masked due to zeros.\n", str2print.c_str());
     }
 }
 

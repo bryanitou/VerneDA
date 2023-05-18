@@ -4,33 +4,19 @@
 
 #include "delta.h"
 
-delta::delta(scv &scv_base, DACE::AlgebraicVector<DACE::DA> &poly)
-{
-    // Call main allocator
-    this->allocate_scv_base(scv_base, poly);
-}
-
-void delta::allocate_scv_base(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& taylor_polinomial)
-{
-    // Allocate scv
-    this->scv_base_ = std::make_shared<scv>(scv_base);
-
-    // Allocate polynomial to evaluate
-    this->base_poly_ = std::make_shared<DACE::AlgebraicVector<DACE::DA>>(taylor_polinomial);
-
-}
-
 void delta::generate_deltas(DISTRIBUTION type, int n)
 {
     // Place for the all safety checks before computing HERE BELOW:
     // Safety check that the deltas are still not generated
-    if (this->scv_deltas_ != nullptr) {
-        // WARNING: deltas are gonna be replaced
+    if (this->scv_deltas_ != nullptr)
+    {
+        // WARNING: deltas are going to be replaced
         std::printf("WARNING: Deltas are going to be replaced! I cannot save values");
     }
 
     // Safety check that the constants are already set
-    if (!this->constants_set_) {
+    if (!this->stddevs_set_)
+    {
         // WARNING! Must set constants for the distribution competition before
         std::printf("WARNING: Deltas are not going to be computed. Need to provide pos/vel: stddev. "
                     "It has not been set yet. Exiting program.");
@@ -80,8 +66,8 @@ void delta::generate_gaussian_deltas(int n)
     // Call to random engine generator
     std::default_random_engine generator;
     // todo: the mean is the initial condition, see photo
-
     std::vector< std::normal_distribution<double>> stddevs_distr;
+    stddevs_distr.reserve(this->stddevs_.size());
 
     // Generate all distribution objects
     for (const auto & std : this->stddevs_)
@@ -189,17 +175,22 @@ void delta::evaluate_deltas()
         std::exit(-1);
     }
     // Local auxiliary variables
-    std::vector<DACE::AlgebraicVector<DACE::DA>> taylor_list;
-    DACE::AlgebraicVector<DACE::DA> single_sol;
+    std::vector<DACE::AlgebraicVector<double>> taylor_list;
+    //DACE::AlgebraicVector<DACE::DA> single_sol;
 
     // Reserve space for optimal memory management
     taylor_list.reserve(this->scv_deltas_->size());
 
     // Evaluate each delta
-    for (const auto& scv_delta : *scv_deltas_)
+    for (const auto& scv_delta : *this->scv_deltas_)
     {
         // Evaluate and save
-        single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
+        // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
+        auto sample = scv_delta->get_state_vector_copy().cons();
+        auto single_sol = this->sm_->get_final_manifold()->pointEvaluationManifold(
+                this->sm_->previous_->front(),
+                sample,
+                1);
 
         // Check the norm for DEBUG PURPOSES
         if (this->attitude_)
@@ -246,9 +237,9 @@ void delta::evaluate_deltas()
 
             // Replace the constant valuesç
             // TODO: MAKE THIS MODULAR FROM THE MAIN
-            single_sol = {euler_angles[0]  * (180.0 / M_PI),
-                          euler_angles[1]  * (180.0 / M_PI),
-                          euler_angles[2]  * (180.0 / M_PI), single_sol[4], single_sol[5], single_sol[6]};
+            single_sol = {euler_angles[0],
+                          euler_angles[1],
+                          euler_angles[2], single_sol[4], single_sol[5], single_sol[6]};
 
             // std::cout << single_sol << std::endl; DEBUG LINE
         }
@@ -258,16 +249,16 @@ void delta::evaluate_deltas()
     }
 
     // Make it ptr
-    this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<DACE::DA>>>(taylor_list);
+    this->eval_deltas_poly_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(taylor_list);
 }
 
-void delta::set_constants(std::vector<double> stddevs)
+void delta::set_stddevs(const std::vector<double>& stddevs)
 {
     // Set constants
     this->stddevs_ = stddevs;
 
     // Notice
-    this->constants_set_ = true;
+    this->stddevs_set_ = true;
 
 }
 

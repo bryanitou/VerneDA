@@ -31,30 +31,63 @@ class PlotType(enum.Enum):
     attitude = 1
 
 
-def plot_banana(taylor: dict, output_prefix: [os.PathLike or str], plot_type: PlotType, metrics: str,
+def plot_banana(deltas_dict: dict,
+                output_prefix: [os.PathLike or str],
+                plot_type: PlotType,
+                metrics: str,
+                centers_dict: dict = None,
+                walls_dict: dict = None,
                 verbose: bool = False) -> None:
     """
     Plots the taylor
-    :param taylor: dictionary containing the coefficients and the order
+    :param deltas_dict: dictionary containing the coefficients and the order
     :param span: Span that the plot will cover
     :param output_prefix: where the plot should be saved.
     :param metrics: units to use: radians, degrees, meters, kilometers...
     :param plot_type: what should we plot? Attitude, translation...
+    :param centers_dict: centers dictionary
+    :param walls_dict: walls dictionary
     :param verbose: verbosity indicator
     :return: None
     """
 
+    # Build x, y dictionary
+    x = {}
+    y = {}
+
     # Get vectors
-    v = get_vector(taylor, idx=2, verbose=verbose)
+    v_deltas = get_vector(deltas_dict, idx=2, verbose=verbose)
+
+    x["deltas"] = v_deltas[0]
+    y["deltas"] = v_deltas[1]
+
+    if centers_dict is not None:
+        v_centers = get_vector(centers_dict, idx=2, verbose=verbose)
+
+        # Add centers
+        x["centers"] = v_centers[0]
+        y["centers"] = v_centers[1]
+
+    if walls_dict is not None:
+        v_patches = [[], []]
+
+        for p in walls_dict:
+            v_walls = get_vector(walls_dict[p], idx=2, verbose=verbose)
+            v_patches[0].append(v_walls[0])
+            v_patches[1].append(v_walls[1])
+
+        # Add walls
+        x["walls"] = v_patches[0]
+        y["walls"] = v_patches[1]
 
     # Units
     unit_str = "-" if metrics == "" else metrics
 
     # Call to plots relying on PlotType class
     if plot_type == PlotType.attitude:
-        plot_attitude(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+        plot_attitude(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix)
     elif plot_type == PlotType.translation:
-        plot_translation(v[0], v[1], v[2], unit_str=unit_str, prefix=output_prefix)
+        plot_translation(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix)
     else:
         print("I can only do Translation and Attitude plots!")
         exit(-1)
@@ -85,31 +118,43 @@ def get_vector(taylor: dict, idx: int, verbose: bool = False) -> [[float]]:
     return v
 
 
-def plot_attitude(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
+def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
 
     # Plot projections in three planes: XY, YZ, XZ
-    plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
+    plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
 
     # Plot 3D vectors
-    plot_3d_vectors(x, y, z, unit_str, output=f"{prefix}-3D_rotations.png")
+    plot_3d_vectors(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_rotations.pdf")
 
 
-def plot_translation(x: [float], y: [float], z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
+def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
 
     # Plot projections in three planes: XY, YZ, XZ
-    plot_projections(x, y, z, unit_str, output=f"{prefix}-3D_projections.png")
+    plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
 
 
-def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLike or str):
+def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or str):
     # Set the size
     fig = plt.figure(figsize=(16, 9))
 
     # Finally, we can plot everything
-    plt.scatter(x, y, s=0.4)
+    plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
+
+    if "centers" in x and "centers" in y:
+        plt.scatter(x["centers"], y["centers"], s=20, marker="o", color="orange")
+    if "walls" in x and "walls" in y:
+        # Iterate through every wall
+        for p in range(0, len(x["walls"])):
+            patch_x = x["walls"][p]
+            patch_y = y["walls"][p]
+            for i in range(1, len(patch_x)):
+                # Plot line
+                plt.plot(patch_x, patch_y, linewidth=0.2, color="black")
+
     plt.xlabel(f"x [{unit_str}]")
     plt.ylabel(f"y [{unit_str}]")
 
@@ -120,7 +165,7 @@ def plot_xy_projection(x: [float], y: [float], unit_str: str, output: os.PathLik
     plt.grid(True)
 
     # Save fig
-    plt.savefig(output)
+    plt.savefig(output, format="pdf", bbox_inches="tight")
 
     # Clear
     plt.clf()
@@ -188,7 +233,7 @@ def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: 
     plt.suptitle("Final position distribution")
 
     # Save fig
-    plt.savefig(output)
+    plt.savefig(output, format="pdf", bbox_inches="tight")
 
     # Clear
     plt.clf()
@@ -244,7 +289,7 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
     ax.set_zlim([-1, 1])
 
     # Save fig
-    plt.savefig(output)
+    plt.savefig(output, format="pdf", bbox_inches="tight")
 
     # Close stuff
     plt.clf()
@@ -286,7 +331,7 @@ def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: o
     ax.view_init(10, -10)
 
     # Save plot
-    plt.savefig(output.replace(".png", "-scatter.png"))
+    plt.savefig(output.replace(".pdf", "-scatter.pdf"), format="pdf", bbox_inches="tight")
 
     # Close stuff
     plt.clf()
@@ -331,14 +376,22 @@ def main(args: list = None, verbose: bool = False) -> None:
             exit(-1)
 
         # Now, we should get the information from the file
-        taylor_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose)
+        eval_deltas_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose)
+        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"], verbose=verbose)
+        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose, walls=True)
 
         # From the file, get the parent folder and save it
         parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
         output_prefix = os.path.join(parent_folder, "attitude" if plot_type == PlotType.attitude else "translation")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
-        plot_banana(taylor_dict, output_prefix=output_prefix, plot_type=plot_type, metrics=metrics, verbose=verbose)
+        plot_banana(eval_deltas_dict,
+                    output_prefix=output_prefix,
+                    plot_type=plot_type,
+                    metrics=metrics,
+                    centers_dict=eval_centers_dict,
+                    walls_dict=eval_walls_dict,
+                    verbose=verbose)
 
 
 if __name__ == '__main__':
