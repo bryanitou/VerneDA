@@ -16,6 +16,13 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     // Set name of the file
     my_specs.filepath = filepath;
 
+    if (filepath.empty())
+    {
+        std::fprintf(stderr, "FATAL: File parameter has not been passed... Cannot load any configuration "
+                             "to simulate.\n");
+        std::exit(12);
+    }
+
     // Create handler
     std::ifstream f;
 
@@ -32,6 +39,11 @@ json_input json_parser::parse_input_file(const std::string& filepath)
             f  >> json_line;
             json_text += json_line;
         }
+    }
+    else
+    {
+        std::fprintf(stderr, "FATAL: Couldn't open file, ensure it exists: '%s'\n", filepath.c_str());
+        std::exit(11);
     }
     // TODO: Add fallbacks
 
