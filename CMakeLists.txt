@@ -536,10 +536,11 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
+        json
         core
         ads
-
         dacelib
+        base
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

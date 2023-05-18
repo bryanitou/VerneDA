@@ -55,6 +55,9 @@ public:// Attributes
          std::vector<double> mean{};
          std::vector<double> standard_deviation{};
 
+         // If we have attitude...
+         double inertia[3][3]{};
+
          // Initial conditions set?
          bool set{false};
      };
@@ -76,6 +79,10 @@ public:// Attributes
      initial_conditions initial_conditions;
      ads ads;
 
+     // Auxiliary for this class attributes
+     std::string filepath;
+
      // Single attributes
      std::string output_dir{};
+     PROBLEM problem{PROBLEM::NA};
 };

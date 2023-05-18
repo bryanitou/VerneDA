@@ -8,182 +8,139 @@
 // Project libraries
 #include "scv.h"
 #include "integrator.h"
-#include "base/constants.h"
 #include "problems.h"
 #include "delta.h"
 #include "tools/io.h"
+#include "json/json_parser.h"
+#include "specs/args_input.h"
 #include "solids/solid.h"
-#include "quaternion.h"
-#include "base/Header_Info.h"
 
 /**
  * Main entry point
  */
 int main(int argc, char* argv[])
 {
-    // Number of variables and order
-    int n_var = 7;
-    int n_ord = 2;
+    // Build compilation info header
+    auto header_info = HeaderInfo(PROGRAM_NAME, CODE_VERSION, GIT_BRANCH, GIT_HASH,
+                                  USER_NAME, OS_VERSION, __DATE__, __TIME__);
+
+    // Parse arguments
+    auto args_in = args_input(argc, argv);
+
+    // Process arguments
+    args_in.run_arguments(header_info);
+
+    // Print ASCII BANNER
+    header_info.print_header_info();
+
+    // Remove warnings
+    DACE::DACEException::setWarning(false);
+
+    // Create my_specs object
+    auto my_specs = json_parser::parse_input_file(args_in.json_filepath);
 
     // Initialize DACE with 6 variables
-    DACE::DA::init(n_ord, n_var);
-
-    // Declare a geometric figure: cylinder
-    auto upper_base_center = point(0.0, 0.0, 2.0);
-    auto lower_base_center = point(0.0, 0.0, -2.0);
-    std::vector<point> point_list = {upper_base_center, lower_base_center};
-    auto cylinder = std::make_unique<solid>();
-    cylinder->addpoints(point_list);
-    double radius = 2.0;
-
-    // Stuff to compute the inertia: EXAMPLE: CYLINDER
-    double r = 2;
-    double h = 6;
-    double mass = 1000;
-    double Jx = (mass * h * h) / 12 + (mass * r * r) / 4;
-    double Jy = (mass * h * h) / 12 + (mass * r * r) / 4;
-    double Jz = (mass * r * r) / 4;
-
-    // Inertia matrix found in paper: On-board spacecraft relative pose estimation with high-order extended Kalman filter
-    double inertia_chaser[3][3] = {
-            {2040.0, 130.0, 25.0},
-            {130.0, 1670.0, -55.0},
-            {25.0, -55.0, 2570.0}
-    };
-
-    double inertia_target[3][3] = {
-            {17023.3, 397.1, -2171.4},
-            {397.1, 124825.7, 344.2},
-            {-2171.4, 344.2, 129112.2}
-    };
-
-    // Inertia matrix of the object
-    double inertia_cylinder[3][3] = {
-            {Jx, 0.0, 0.0},
-            {0.0, Jy, 0.0},
-            {0.0, 0.0, Jz}
-    };
-
-    // Select the testing inertia matrix
-    auto inertia = inertia_chaser;
+    DACE::DA::init(my_specs.algebra.order, my_specs.algebra.variables);
 
     // Initial conditions of attitude
-    double roll = 0.00;
-    double pitch = 0.00;
-    double yaw = 0.00;
-
-    // Sensitivity to initial rotational dynamics
-    double K = 0.1; // Possible values: [0.1, 0.5, 1, 5, 10]
-    double stddev_roll  = 0.003;
-    double stddev_pitch = stddev_roll;
-    double stddev_yaw   = 0.006;
-    double stddev_vel_x = K*0.01;
-    double stddev_vel_y = K*0.01;
-    double stddev_vel_z = K*0.01;
-
-    // Generate vector of uncertainties
-    std::vector<double> stddevs = {stddev_roll, stddev_pitch, stddev_yaw, stddev_vel_x, stddev_vel_y, stddev_vel_z};
+    double roll = my_specs.initial_conditions.mean[0];
+    double pitch = my_specs.initial_conditions.mean[1];
+    double yaw = my_specs.initial_conditions.mean[2];
+    double stddev_roll = my_specs.initial_conditions.standard_deviation[0];
+    double stddev_pitch = my_specs.initial_conditions.standard_deviation[1];
+    double stddev_yaw = my_specs.initial_conditions.standard_deviation[2];
 
     // Get initial quaternion
     // TODO: Error should be computed here
-    auto q_control = quaternion::euler2quaternion(roll, pitch,  yaw);
-    auto q_with_error = quaternion::euler2quaternion(
-            roll + stddev_roll,
-            pitch + stddev_pitch,
-            yaw + stddev_yaw);
-    auto q_error = quaternion::q8_multiply(q_with_error, q_control);
-
-    // Declare state control vector without DA
-    std::vector<DACE::DA> scv_no_DA = {
-            q_control[0],   // q0
-            q_control[1],   // q1
-            q_control[2],   // q2
-            q_control[3],   // q3
-            0.01,           // w1 -> rotation around 1 axis
-            0.0 ,           // w2 -> rotation around 2 axis
-            0.0 };          // w3 -> rotation around 3 axis
+    auto q_init = quaternion::euler2quaternion(roll, pitch, yaw);
+    auto q_with_error = quaternion::euler2quaternion( roll + stddev_roll,pitch + stddev_pitch,yaw + stddev_yaw);
+    auto q_error = quaternion::q8_multiply(q_with_error, q_init);
 
     // Declare the state control vector with DA
     std::vector<DACE::DA> scv0 = {
-            scv_no_DA[0] +  DACE::DA(1) * q_error[0],       // q0
-            scv_no_DA[1] +  DACE::DA(2) * q_error[1],       // q1
-            scv_no_DA[2] +  DACE::DA(3) * q_error[2],       // q2
-            scv_no_DA[3] +  DACE::DA(4) * q_error[3],       // q3
-            scv_no_DA[4] +  DACE::DA(5) * stddev_vel_x,     // w1 -> rotation around 1 axis
-            scv_no_DA[5] +  DACE::DA(6) * stddev_vel_y,     // w2 -> rotation around 2 axis
-            scv_no_DA[6] +  DACE::DA(7) * stddev_vel_z };   // w3 -> rotation around 3 axis
+            q_init[0] +  DACE::DA(1) * q_error[0],       // q0
+            q_init[1] +  DACE::DA(2) * q_error[1],       // q1
+            q_init[2] +  DACE::DA(3) * q_error[2],       // q2
+            q_init[3] +  DACE::DA(4) * q_error[3],       // q3
+            my_specs.initial_conditions.mean[3] +  DACE::DA(5) * my_specs.initial_conditions.standard_deviation[3],     // w1 -> rotation around 1 axis
+            my_specs.initial_conditions.mean[4] +  DACE::DA(6) * my_specs.initial_conditions.standard_deviation[4],     // w2 -> rotation around 2 axis
+            my_specs.initial_conditions.mean[5] +  DACE::DA(7) * my_specs.initial_conditions.standard_deviation[5] };   // w3 -> rotation around 3 axis
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
-    auto s0_no_da = std::make_unique<scv>(scv_no_DA);
 
     // Now, should initialize all the dace variables from the initial conditions
     auto scv0_DA = s0->get_state_vector_copy();
 
-    // Initial and final time
-    // Initial time is zero
-    double const t0 = 0.0;
-
-    // How many periods do we want to integrate?
-    double const tf = 1000;
+    // Initial and final time and time step
+    double const t0 = my_specs.propagation.initial_time;
+    double const tf = my_specs.propagation.final_time;
+    double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, 0.1);
+    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
 
     // Declare the problem object
     auto prob = problems(PROBLEM::FREE_TORQUE_MOTION);
 
-    // Insert the inertia matrix to the problem
-    prob.set_inertia_matrix(inertia);
+    // Set the inertia matrix in problem object
+    prob.set_inertia_matrix(my_specs.initial_conditions.inertia);
 
-    // Set the problem in the integrator
-    objIntegrator->set_problem_object(&prob);
+    // Build super manifold
+    auto super_manifold = SuperManifold(my_specs.ads.tolerance,
+                                        my_specs.ads.max_split[0]);
 
-    // Apply integrator
-    auto xf_DA =
-            objIntegrator->integrate(scv0_DA, t0, tf);
+    // Set problem ptr in the integrator
+    objIntegrator->set_problem_ptr(&prob);
 
-    // Now we have to evaluate the deltas (little displacements in the initial position)
-    auto scvf_DA = std::make_shared<scv>(xf_DA);
+    // Setting integrator parameters
+    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
 
-    // Debug line
-    std::cout << scvf_DA->get_state_vector_copy().cons()<< std::endl;
-    std::cout << scvf_DA->get_state_vector_copy().cons().extract(0, 3).vnorm() << std::endl;
-    std::cout << xf_DA.cons() << std::endl;
-    std::cout << xf_DA.cons().extract(0, 3).vnorm() << std::endl;
+    // Set integrator in the super manifold
+    super_manifold.set_integrator_ptr(objIntegrator.get());
 
-    // -----------------------------------------DELTAS ENGINE STUFF ----------------------------------------------------
+    // Docu: Set new truncation error and get the previous one
+    double new_eps = 1e-40;
+    double previous_eps = DACE::DA::setEps(new_eps);
+
+    // Show to the used the new epsilon value
+    std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
+
+    // ADS and integration algorithm
+    super_manifold.split_domain();
+
     // Build deltas class
-    auto deltas_engine = std::make_shared<delta>(*scvf_DA, xf_DA);
+    auto deltas_engine = std::make_shared<delta>();
 
-    // Set mean state
-    deltas_engine->set_mean_quaternion_option(q_control);
-
-    // Set distribution
-    deltas_engine->set_stddevs(stddevs);
-
-    // Set options for the generator
+    // Set some options
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
     deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
+    deltas_engine->set_mean_quaternion_option(q_init);
 
-    // Generate deltas
+    // Set distribution
+    deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
+
+    // Compute deltas
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
-    deltas_engine->insert_nominal(n_var);
+    deltas_engine->insert_nominal(my_specs.algebra.variables);
+
+    // Set super manifold in deltas engine
+    deltas_engine->set_superManifold(&super_manifold);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
 
     // Set output path for results
-    std::filesystem::path output_dir = "./out/attp_paper";
-    std::filesystem::path output_path_avd = output_dir / "taylor_expression_RK4.avd";
+    std::filesystem::path output_dir = my_specs.output_dir;
     std::filesystem::path output_eval_deltas_path_dd = output_dir / "eval_deltas_expression_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd = output_dir /  "non_eval_deltas_expression.dd";
 
-    // Dump final info
-    tools::io::dace::dump_algebraic_vector(xf_DA, output_path_avd);
+    // Some other useful optional outputs: validation
+    std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
+    std::filesystem::path output_centers = output_dir / "eval_centers.dd";
 
     // Dump non evaluated deltas
     tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
@@ -191,11 +148,20 @@ int main(int argc, char* argv[])
     // Dump evaluated deltas
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
+    // Dump eval points at the walls
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
+
+    // Dump eval points at the center
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
+
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file",    output_eval_deltas_path_dd},
+            {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_ATTITUDE},
-            {"metrics", "deg"},
+            {"metrics", "m"},
+            {"centers", output_centers},
+            {"walls", output_walls},
+            {"silent", "false"}
     };
 
 
