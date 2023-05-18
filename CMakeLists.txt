@@ -1,10 +1,10 @@
 ############################################
-# getting2knowDace COMPILATION CMAKE SCRIPT
+# VerneDA COMPILATION CMAKE SCRIPT
 ############################################
 
-# PROJECT: getting2knowDace
+# PROJECT: VerneDA
 # Create project, load parameters (flags & default values)
-project(getting2knowDace)
+project(VerneDA)
 
 # CMAKE MINIMUM REQUIRED VERSION
 cmake_minimum_required(VERSION 3.21)
@@ -92,7 +92,7 @@ message(STATUS "CMAKE_3RDPARTY_REPS: ${CMAKE_3RDPARTY_REPS}")
 string(APPEND UCFLAGS " -D CMAKE_3RDPARTY_REPS=\"\\\"${CMAKE_3RDPARTY_REPS}\\\"\"")
 
 # 3rd parties directory
-set(CMAKE_3RDPARTY_DIR "${CMAKE_SOURCE_DIR}/build/getting2knowDace-3rdparty"
+set(CMAKE_3RDPARTY_DIR "${CMAKE_SOURCE_DIR}/build/VerneDA-3rdparty"
         CACHE STRING "Default directory to extracted 3rd parties")
 message(STATUS "CMAKE_3RDPARTY_DIR: ${CMAKE_3RDPARTY_DIR}")
 string(APPEND UCFLAGS " -D CMAKE_3RDPARTY_DIR=\"\\\"${CMAKE_3RDPARTY_DIR}\\\"\"")
@@ -146,7 +146,7 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # add_custom_target(RECOMPILE_STATIC_FLAGS touch ${CMAKE_SOURCE_DIR}/src/core/STATIC_FLAGS.h)
 
 # Note for cmake developers: add this phony dependency to all main programs and subroutines that use static flags.
-# Ex: add_dependencies(getting2knowDace_some_executable RECOMPILE_STATIC_FLAGS)
+# Ex: add_dependencies(VerneDA_some_executable RECOMPILE_STATIC_FLAGS)
 
 ############################################
 # BUILD EXTERNAL PROJECTS
@@ -295,7 +295,7 @@ set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
 #         PUBLIC_HEADER DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
 #
 #===========================================
-# LIBRARY: getting2knowDace BASE
+# LIBRARY: VerneDA BASE
 #===========================================
 add_library(base SHARED
         src/core/base/enums.h
@@ -308,7 +308,7 @@ set_target_properties(base
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 #
 #===========================================
-# LIBRARY: getting2knowDace TOOLS
+# LIBRARY: VerneDA TOOLS
 #===========================================
 set(LIBRARY_TOOLS "tools")
 
@@ -327,7 +327,7 @@ set_target_properties(${LIBRARY_TOOLS} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 #===========================================
-# LIBRARY: getting2knowDace SPECIFICATIONS
+# LIBRARY: VerneDA SPECIFICATIONS
 #===========================================
 set(LIBRARY_SPECIFICATIONS "specs_input")
 
@@ -348,7 +348,7 @@ set_target_properties(${LIBRARY_SPECIFICATIONS} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 #===========================================
-# LIBRARY: getting2knowDace JSON parser
+# LIBRARY: VerneDA JSON parser
 #===========================================
 set(LIBRARY_JSON_PARSER "json")
 
@@ -368,7 +368,7 @@ set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 #===========================================
-# LIBRARY: getting2knowDace CORE
+# LIBRARY: VerneDA CORE
 #===========================================
 set(LIBRARY_CORE "core")
 
@@ -397,7 +397,7 @@ set_target_properties(${LIBRARY_CORE} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 #===========================================
-# LIBRARY: getting2knowDace ADOS (Automatic DOmain Splitting)
+# LIBRARY: VerneDA ADOS (Automatic DOmain Splitting)
 #===========================================
 set(LIBRARY_ADS "ads")
 
