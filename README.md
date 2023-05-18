@@ -1,4 +1,4 @@
-# getting2knowDace
+# VerneDA
 Basic repository where DACE library will be treated as a thirdparty, where some mains will be used to use its functions and features.
 
 ## Installation
@@ -11,10 +11,10 @@ who have just downloaded the repository, set-ups and installations are detailed 
 Install git submodules
 ```bash
 # Download the repository from github, ensure github is installed before
-git clone git@github.com:bryanitou/getting2knowDace.git
+git clone git@github.com:bryanitou/VerneDA.git
 
 # Move into the project folder
-cd getting2knowDace
+cd VerneDA
 
 # Initialize the submodules
 git submodule init
@@ -27,7 +27,7 @@ done to economize space in the repository.
 ```shell
 bash scripts/install_3rdparties.sh
 ```
-##  Build
+##  Build (CLion Developers follow the instructions in the last section)
 
 Set the installation prefix of the application in the recommended folder using the CMake options 
 (change it if needed).
@@ -40,7 +40,7 @@ Consider the following two CMAKE OPTIONS:
 | BUILD_DACE_AFOSSA_LIBS | BOOL |   OFF   | Builds DACE library from Alberto Fossa Fork.           |
 
 ```shell
-cmake -DCMAKE_INSTALL_PREFIX=build/getting2knowDace-install-debug -DBUILD_DACE_<choice>_LIBS=ON
+cmake -DCMAKE_INSTALL_PREFIX=build/VerneDA-install-debug -DBUILD_DACE_<choice>_LIBS=ON
 ```
 
 Build the project (8 is the number of threads to be used by the build):
@@ -50,7 +50,7 @@ make -j8
 
 Test project with the 'dace_vsod' (DACE Very Simple Orbit Determination) executable:
 ```shell
-build/getting2knowDace-install-debug/bin/dace_vsod
+./build/VerneDA-install-debug/bin/dace_vsod
 ```
 Results will be generated in the following location:
 ```tree
@@ -135,7 +135,7 @@ TODO
 ## Developers in CLion Environment
 
 1 - Clone the repository from CLion's Version control using the same URL:
-`git@github.com:bryanitou/getting2knowDace.git`.
+`git@github.com:bryanitou/VerneDA.git`.
 
 2 - Enter to the project folder if you are not in already.
 
@@ -156,12 +156,12 @@ versions do not have it)
 
 7 - Change the 'Generator' to 'Unix Makefiles', now in 'CMake options' should appear `-G "Unix Makefiles"`.
 
-8 - Add to options `-DCMAKE_INSTALL_PREFIX=../getting2knowDace-install-debug` (TODO: to match with `build_all.sh`).
+8 - Add to options `-DCMAKE_INSTALL_PREFIX=../VerneDA-install-debug` (TODO: to match with `build_all.sh`).
 
 9 - Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_AFOSSA_LIBS=ON`. Only choose one, please read the 
 above this CMAKE options (build section) for further information.
 
-10 - Set 'Build directory' to `build/getting2knowDace-build-debug` (TODO: to match with `build_all.sh`, this
+10 - Set 'Build directory' to `build/VerneDA-build-debug` (TODO: to match with `build_all.sh`, this
 script is still to be done).
 
 11 - 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
