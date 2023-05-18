@@ -69,6 +69,43 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     return res;
 }
 
+DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t )
+{
+    // Create position and resultant vector
+    DACE::AlgebraicVector<DACE::DA> pos(3), vel(3), res(6);
+
+    // Set positions: equal to the first three positions of the SCV (State Control Vector)
+    pos[0] = scv[0]; // Px_dot
+    pos[1] = scv[1]; // Py_dot
+    pos[2] = scv[2]; // Pz_dot
+
+    // Take speeds
+    vel[0] = scv[3];
+    vel[1] = scv[4];
+    vel[2] = scv[5];
+    auto vel_norm = vel.vnorm();
+
+    res[0] = scv[3]; // Px_dot = Vx
+    res[1] = scv[4]; // Py_dot = Vy
+    res[2] = scv[5]; // Pz_dot = Vz
+
+    // Compute some constants TODO: Remove this hard set stuff and let user decide
+    double area = 10; // m^2
+    double mass = 10; // kg
+    double weight = mass * constants::earth::g;
+
+    // Compute friction
+    auto friction = vel_norm*vel_norm * area / mass - weight / mass;
+
+    // Compute next Vx, Vy, Vz state from the current position
+    res[3] = - area*vel[0]*vel[0] / mass * (vel[0] / DACE::abs(vel[0])); // Vx_dot
+    res[4] = - area*vel[1]*vel[1] / mass * (vel[1] / DACE::abs(vel[1])); // Vy_dot
+    res[5] = - area*vel[2]*vel[2] / mass * (vel[2] / DACE::abs(vel[2])) - constants::earth::g; // Vz_dot
+
+    // Return result
+    return res;
+}
+
 DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t )
 {
     // Create attitude and resultant vector
@@ -235,6 +272,11 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
             // Call Free Torque Motion problem
             res = this->FreeTorqueMotion(scv, t);
             break;
+        }
+        case PROBLEM::FREE_FALL_OBJECT:
+        {
+            // Call to Free Fall Object problem
+            res = this->FreeFallObject(scv, t);
         }
         default:
         {

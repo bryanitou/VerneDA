@@ -46,7 +46,8 @@ enum class INTEGRATOR
 {
     EULER,
     RK4,
-    RK78
+    RK78,
+    NA
 };
 
 enum class DISTRIBUTION
@@ -86,5 +87,35 @@ enum class PROBLEM
 {
     TWO_BODY,
     FREE_TORQUE_MOTION,
+    FREE_FALL_OBJECT,
     NA,
+};
+
+/**
+* Units
+*/
+enum class LENGTH_UNITS
+{
+    METERS,
+    KILOMETERS,
+    NA
+};
+
+
+/**
+* Sides
+*/
+enum class EVAL_TYPE
+{
+    DELTA,
+    WALLS,
+    CENTER
+};
+
+enum class WALL_SIDE
+{
+    UP,
+    DOWN,
+    RIGHT,
+    LEFT
 };

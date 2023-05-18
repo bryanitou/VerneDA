@@ -15,6 +15,7 @@
 #include "tools/vo.h"
 #include "quaternion.h"
 #include "tools/str.h"
+#include "ads/SuperManifold.h"
 
 class delta {
 
@@ -24,7 +25,7 @@ public:
      * Class constructor
      * @param scv
      */
-    explicit delta(scv& scv_base, DACE::AlgebraicVector<DACE::DA>& poly);
+    explicit delta() = default;
 
     /**
      * Default destructor
@@ -34,10 +35,10 @@ public:
 public: // Set constants
 
     /**
-     * Set constants for the deltas generation
+     * Set standard deviations for the deltas generation
      * @param stddevs [in] [std::vector<double>]
      */
-    void set_constants(std::vector<double> stddevs);
+    void set_stddevs(const std::vector<double>& stddevs);
 
 public: // Set options
     /**
@@ -73,6 +74,11 @@ public: // Set options
      */
     void generate_deltas(DISTRIBUTION type, int n);
 
+    void set_superManifold(SuperManifold* sm)
+    {
+        this->sm_ = sm;
+    };
+
     /**
      * Evaluate prepared deltas
      */
@@ -83,7 +89,7 @@ public: // Getters
      * Get evaluated deltas polynomial.
      * @return deltas_poly
      */
-    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> get_eval_deltas_poly()
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> get_eval_deltas_poly()
     {
         return eval_deltas_poly_;
     };
@@ -97,17 +103,20 @@ public: // Getters
         return scv_deltas_;
     };
 
-private:
-    // Attributes
-    // Initial SCV (StateControlVector)
-    std::shared_ptr<scv> scv_base_ = nullptr;
-    // Polynomial to evaluate: TRANSFORMATION TAYLOR POLYNOMIAL
-    std::shared_ptr<DACE::AlgebraicVector<DACE::DA>> base_poly_ = nullptr;
+    /**
+     * Return saved manifold in this class
+     * @return SuperManifold
+     */
+    SuperManifold* get_SuperManifold()
+    {
+        return this->sm_;
+    };
 
+private:
     // List of deltas: not evaluated
     std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
     // List of results:
-    std::shared_ptr<std::vector<DACE::AlgebraicVector<DACE::DA>>> eval_deltas_poly_ = nullptr;
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> eval_deltas_poly_ = nullptr;
 
 private:
 
@@ -115,7 +124,7 @@ private:
     std::vector<double> stddevs_{};
 
     // Constants set?
-    bool constants_set_{false};
+    bool stddevs_set_{false};
 
     // Nominal inserted?
     bool nominal_inserted_{false};
@@ -125,6 +134,10 @@ private:
     bool quat2euler_{false};
     QUATERNION_SAMPLING q_sampling_{QUATERNION_SAMPLING::NA};
     std::vector<double> mean_quaternion_{};
+
+private:
+    // Other important objects
+    SuperManifold* sm_ = nullptr;
 
 private: // Allocators
     /**
@@ -142,6 +155,10 @@ private: // Class functions
     void generate_gaussian_deltas(int n);
 
 private: // Safety checks
+
+    /**
+     * Safety checks for attitude engine
+     */
     void attitude_safety_checks();
 
 };
