@@ -1,6 +1,6 @@
 # CHANGELOG
 
-Historical detailed commit information of this repository **getting2knowDace**.
+Historical detailed commit information of this repository **VerneDA**.
 
 ### Abbreviations
 
