@@ -128,13 +128,16 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         // Extract the quaternion from here if attitude
         auto q_cons = x.cons().extract(0, 3);
 
+        // Measure the norm
+        auto q_norm = q_cons.vnorm();
+
         // Extract the Euler angles if attitude
         auto euler2debug = quaternion::quaternion2euler(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
 
         // Euler to string
         auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
 
-        str2print += tools::string::print2string(" | Euler: %s", str4euler.c_str());
+        str2print += tools::string::print2string(" | q_norm: %.2f | Euler: %s", q_norm, str4euler.c_str());
     }
 
     // Debug information
