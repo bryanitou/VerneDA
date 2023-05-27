@@ -131,10 +131,9 @@ void delta::generate_gaussian_deltas(int n)
             }
 
             new_delta = {
-                    nq[0] - this->mean_quaternion_[0],
-                    nq[1] - this->mean_quaternion_[1],
-                    nq[2] - this->mean_quaternion_[2],
-                    nq[3] - this->mean_quaternion_[3],
+                    stddevs_distr[0](generator),
+                    stddevs_distr[1](generator),
+                    stddevs_distr[2](generator),
                     stddevs_distr[3](generator),
                     stddevs_distr[4](generator),
                     stddevs_distr[5](generator)};
