@@ -140,7 +140,8 @@ def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.Pat
 def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or str):
     # Set the size
     fig = plt.figure(figsize=(16, 9))
-
+    # plt.show()
+    # plt.ion()
     # Finally, we can plot everything
     plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
 
@@ -148,6 +149,8 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
         plt.scatter(x["centers"], y["centers"], s=20, marker="o", color="orange")
     if "walls" in x and "walls" in y:
         # Iterate through every wall
+        # patches_x = np.array(x["walls"]).ravel()
+        # patches_y = np.array(y["walls"]).ravel()
         for p in range(0, len(x["walls"])):
             patch_x = x["walls"][p]
             patch_y = y["walls"][p]
@@ -163,7 +166,7 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
 
     # Plt show grid
     plt.grid(True)
-
+    # plt.show()
     # Save fig
     plt.savefig(output, format="pdf", bbox_inches="tight")
 

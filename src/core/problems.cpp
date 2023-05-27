@@ -164,11 +164,17 @@ void problems::set_inertia_matrix(double inertia[3][3])
     // Show info to the user
     for (int i = 0; i < 3; i++)
     {
+        // Info
+        std::fprintf(stdout, "DEBUG: Inertia matrix I[%d][j]: ", i);
+
         for (int j = 0; j < 3; j++)
         {
             this->inertia_[i][j] = inertia[i][j];
-            std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'\n", i, j, this->inertia_[i][j]);
+            std::fprintf(stdout, " %10.2f", this->inertia_[i][j]);
         }
+
+        // Go next row
+        std::fprintf(stdout, "\n");
     }
 
     // Now, compute the inverse and set it
@@ -179,10 +185,16 @@ void problems::set_inertia_matrix(double inertia[3][3])
     // Once done, print result as info
     for (int i = 0; i < 3; i++)
     {
+        // Info
+        std::fprintf(stdout, "DEBUG: Inverse inertia matrix I^-1[%d][j]: ", i);
+
         for (int j = 0; j < 3; j++)
         {
-            std::fprintf(stdout, "DEBUG: Inertia inverse matrix I^-1['%d']['%d'] = '%.5f'\n", i, j, this->inverse_[i][j]);
+            std::fprintf(stdout, " %12.8f", this->inverse_[i][j]);
         }
+
+        // Go next row
+        std::fprintf(stdout, "\n");
     }
 }
 
