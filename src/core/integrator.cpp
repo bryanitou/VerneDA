@@ -138,6 +138,11 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
 
         str2print += tools::string::print2string(" | q_norm: %.2f | Euler: %s", q_norm, str4euler.c_str());
+
+        // if (q_cons.vnorm() < 0.9)
+        // {
+        //     bool stop = 21;
+        // }
     }
 
     // Debug information
@@ -273,13 +278,12 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     // Result of the comparison
     bool result{false};
 
-    // Auxiliary variables
-    std::vector<double> Errors{};
-
     for (unsigned int i = 0; i < scv.size(); ++i)
     {
         // Get error
         auto err = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
+
+       //std::cout << tools::vector::num2string(err) << std::endl;
 
         // TODO: What exactly is this
         auto err2compare = err[err.size()-1];
