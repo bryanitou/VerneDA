@@ -22,12 +22,14 @@ namespace quaternion {
 
     /**
      * Set quaternion from Euler angles.
-     * @param roll [in] [double]
-     * @param pitch [in] [double]
-     * @param yaw [in] [double]
+     * @param roll [in] [T]
+     * @param pitch [in] [T]
+     * @param yaw [in] [T]
      * @return quaternion
      */
+    template <typename T> std::vector<T> euler2quaternion_temp(T roll, T pitch, T yaw);
     std::vector<double> euler2quaternion(double roll, double pitch, double yaw);
+    std::vector<DACE::DA> euler2quaternion(const DACE::DA& roll, const DACE::DA& pitch, const DACE::DA& yaw);
 
     /**
      * Set quaternion form xyz Gaussian sampled

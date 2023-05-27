@@ -4,18 +4,20 @@
 
 #include "quaternion.h"
 
-std::vector<double> quaternion::euler2quaternion(double roll, double pitch, double yaw)
+#include <utility>
+
+template<typename T> std::vector<T> quaternion::euler2quaternion_temp(T roll, T pitch, T yaw)
 {
     // Pre-compute values for efficiency
-    double sin_roll = sin(roll/2);
-    double cos_roll = cos(roll/2);
-    double sin_pitch = sin(pitch/2);
-    double cos_pitch = cos(pitch/2);
-    double sin_yaw = sin(yaw/2);
-    double cos_yaw = cos(yaw/2);
+    auto sin_roll = sin(roll/2);
+    auto cos_roll = cos(roll/2);
+    auto sin_pitch = sin(pitch/2);
+    auto cos_pitch = cos(pitch/2);
+    auto sin_yaw = sin(yaw/2);
+    auto cos_yaw = cos(yaw/2);
 
     // Declare and initialize quaternion
-    std::vector<double> q1(4);
+    std::vector<T> q1(4);
 
     // Save the quaternion
     q1[1] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
@@ -26,6 +28,17 @@ std::vector<double> quaternion::euler2quaternion(double roll, double pitch, doub
     // Return got quaternion
     return q1;
 }
+
+std::vector<double> quaternion::euler2quaternion(double roll, double pitch, double yaw)
+{
+    return quaternion::euler2quaternion_temp(roll, pitch, yaw);
+}
+
+std::vector<DACE::DA> quaternion::euler2quaternion(const DACE::DA& roll, const DACE::DA& pitch,const DACE::DA& yaw)
+{
+    return quaternion::euler2quaternion_temp(roll, pitch, yaw);
+}
+
 
 std::vector<double> quaternion::euler2quaternion_fromGaussian(double x, double y, double z)
 {
