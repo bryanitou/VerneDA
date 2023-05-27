@@ -150,6 +150,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
 
     json_input_obj->initial_conditions.mean = rsj_obj["mean"].as_vector<double>();
     json_input_obj->initial_conditions.standard_deviation = rsj_obj["standard_deviation"].as_vector<double>();
+    json_input_obj->initial_conditions.confidence_interval = rsj_obj["confidence_interval"].as_vector<double>();
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
