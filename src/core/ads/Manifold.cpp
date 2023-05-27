@@ -133,7 +133,6 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
             const unsigned int dir = f.getSplittingDirection(pos);
 
             // Split the patch
-            // TODO: Debug why it SIGSEVs here
             auto s = p.split(dir);
 
             // Add new manifolds
@@ -640,6 +639,74 @@ std::vector<DACE::AlgebraicVector<double>> Manifold::centerPointEvaluationManifo
 }
 
 std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEvaluationManifold()
+{
+    // Result vector to be returned
+    std::vector<std::vector<DACE::AlgebraicVector<double>>> result{};
+
+    // Get the size of this manifold (amount of patches stored)
+    const unsigned int size_manifold = this->size();
+
+    // Reserve memory for optimal memory management
+    result.reserve(size_manifold);
+
+    // Get number of variables
+    const unsigned int n_var = DACE::DA::getMaxVariables();
+
+    // We always will be only projecting the X-Y variable
+    std::vector<int> sweep (n_var, 0); sweep[0] = 1; sweep[1] = 1;
+
+    // We want to draw the path in a coherent order: X right, Y down, X left, Y up
+    std::vector<bool> path = {true, false, false, true};
+
+    // Get all the points to be evaluated
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 20, sweep, path);
+
+    // Get size of wall
+    unsigned int n_size_wall = wall_points2eval.size();
+
+    // Iterate through the size of this manifold
+    for ( unsigned int i = 0; i < size_manifold; ++i )
+    {
+        // Patch walls
+        std::vector<DACE::AlgebraicVector<double>> image_patch_walls;
+
+        // Reserve memory: 4 walls and res
+        image_patch_walls.reserve(n_size_wall);
+
+        for (int k = 0; k < n_size_wall; k++)
+        {
+            // Get the translated result fo this patch
+            auto image_wall_point = this->at(i).eval(wall_points2eval[k]);
+
+            // Convert to euler angles if required
+            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+            {
+                // Convert to Euler
+                auto euler_angles = quaternion::quaternion2euler(
+                        image_wall_point[0],
+                        image_wall_point[1],
+                        image_wall_point[2],
+                        image_wall_point[3]
+                        );
+
+                // Replace
+                image_wall_point = {euler_angles[0], euler_angles[1], euler_angles[2],
+                                  image_wall_point[4], image_wall_point[5], image_wall_point[6]};
+            }
+
+            // Push back the first point: corner
+            image_patch_walls.emplace_back(image_wall_point);
+        }
+
+        // Push back this patch wall points
+        result.push_back(image_patch_walls);
+    }
+
+    // Exit function
+    return result;
+}
+
+std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEvaluationManifold_useless()
 {
     // Result vector to be returned
     std::vector<std::vector<DACE::AlgebraicVector<double>>> result{};

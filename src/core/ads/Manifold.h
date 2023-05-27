@@ -18,6 +18,7 @@
 // Project libraries
 #include "Patch.h"
 #include "integrator.h"
+#include "tools/math.h"
 
 struct Observable;
 
