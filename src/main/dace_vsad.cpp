@@ -45,9 +45,13 @@ int main(int argc, char* argv[])
     // Get initial quaternion
     // TODO: Error should be computed here
     auto q_init = quaternion::euler2quaternion(
-            my_specs.initial_conditions.mean[0] + my_specs.initial_conditions.standard_deviation[0] * my_specs.initial_conditions.confidence_interval[0] * DACE::DA(1),
-            my_specs.initial_conditions.mean[1] + my_specs.initial_conditions.standard_deviation[1] * my_specs.initial_conditions.confidence_interval[1] * DACE::DA(2),
-            my_specs.initial_conditions.mean[2] + my_specs.initial_conditions.standard_deviation[2] * my_specs.initial_conditions.confidence_interval[2] * DACE::DA(3));
+            my_specs.initial_conditions.mean[0],
+            my_specs.initial_conditions.mean[1],
+            my_specs.initial_conditions.mean[2]);
+
+    auto q_err = quaternion::euler2quaternion(my_specs.initial_conditions.standard_deviation[0],
+                                              my_specs.initial_conditions.standard_deviation[1],
+                                              my_specs.initial_conditions.standard_deviation[2]);
 
     auto q_errToll = quaternion::euler2quaternion(
             my_specs.ads.tolerance[0],
@@ -61,13 +65,13 @@ int main(int argc, char* argv[])
 
     // Declare the state control vector with DA
    DACE::AlgebraicVector<DACE::DA> scv0 = {
-            q_init[0],       // q0
-            q_init[1],       // q1
-            q_init[2],       // q2
-            q_init[3],       // q3
-            my_specs.initial_conditions.mean[3] +  my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(4),     // w1 -> rotation around 1 axis
-            my_specs.initial_conditions.mean[4] +  my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval[4] * DACE::DA(5),     // w2 -> rotation around 2 axis
-            my_specs.initial_conditions.mean[5] +  my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval[5] * DACE::DA(6) };   // w3 -> rotation around 3 axis
+            q_init[0] + q_err[0] * my_specs.initial_conditions.confidence_interval[0] * DACE::DA(1),       // q0
+            q_init[1] + q_err[1] * my_specs.initial_conditions.confidence_interval[1] * DACE::DA(2),       // q1
+            q_init[2] + q_err[2] * my_specs.initial_conditions.confidence_interval[2] * DACE::DA(3),       // q2
+            q_init[3] + q_err[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(4),       // q3
+            my_specs.initial_conditions.mean[3] +  my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(5),     // w1 -> rotation around 1 axis
+            my_specs.initial_conditions.mean[4] +  my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval[4] * DACE::DA(6),     // w2 -> rotation around 2 axis
+            my_specs.initial_conditions.mean[5] +  my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval[5] * DACE::DA(7) };   // w3 -> rotation around 3 axis
 
     std::cout << scv0 << std::endl;
 
@@ -83,10 +87,10 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, dt);
 
     // Declare the problem object
-    auto prob = problems(PROBLEM::FREE_TORQUE_MOTION);
+    auto prob = problems(my_specs.problem);
 
     // Set the inertia matrix in problem object
     prob.set_inertia_matrix(my_specs.initial_conditions.inertia);
