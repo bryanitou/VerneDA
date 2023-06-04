@@ -80,6 +80,8 @@ namespace quaternion {
 
     std::vector<double> quaternion2euler(double w, double x, double y, double z);
 
+    std::vector<double> quaternion2euler(std::vector<double> q);
+
     std::vector<double> q8_normal_01(int seed);
 
     double *r8vec_uniform_01_new(int n, int &seed);

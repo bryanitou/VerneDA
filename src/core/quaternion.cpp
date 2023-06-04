@@ -55,7 +55,7 @@ std::vector<double> quaternion::euler2quaternion_fromGaussian(double x, double y
     std::vector<double> q(4);
 
     // Pre-compute values for efficiency
-    q[0] = cos(half_theta);
+    q[0] = std::cos(half_theta);
     q[1] = s * x;
     q[2] = s * y;
     q[3] = s * z;
@@ -118,13 +118,9 @@ std::vector<double> quaternion::quaternion2euler(double w, double x, double y, d
     // Declare quaternion
     std::vector<double> euler_angles(3);
 
-    // Auxiliary variables
-    double num{};
-    double den{};
-
     // Roll
-    num = +2.0 * (w * x + y * z);
-    den = +1.0 - 2.0 * (x * x + y * y);
+    double num = +2.0 * (w * x + y * z);
+    double den = +1.0 - 2.0 * (x * x + y * y);
     double roll = atan2(num, den);
 
     // Pitch
@@ -144,6 +140,11 @@ std::vector<double> quaternion::quaternion2euler(double w, double x, double y, d
 
     // Return Euler angles
     return std::vector<double> {roll, pitch, yaw};
+}
+
+std::vector<double> quaternion::quaternion2euler(std::vector<double> nq)
+{
+    return quaternion2euler(nq[0], nq[1], nq[2], nq[3]);
 }
 
 
