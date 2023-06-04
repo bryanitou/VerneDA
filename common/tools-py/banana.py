@@ -156,9 +156,8 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
             patch_y = y["walls"][p]
             plt.plot(patch_x, patch_y, linewidth=0.2, color="black")
 
-
-    plt.xlabel(f"x [{unit_str}]")
-    plt.ylabel(f"y [{unit_str}]")
+    plt.xlabel(f"{'roll' if unit_str in ['rad', 'deg'] else 'x'}  [{unit_str}]")
+    plt.ylabel(f"{'pitch' if unit_str in ['rad', 'deg'] else 'y'}  [{unit_str}]")
 
     # Write legend
     # plt.legend([f"{taylor['function']['name']}", "Taylor expansion"])
@@ -243,7 +242,7 @@ def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: 
     plt.close(fig)
 
 
-def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, output: str):
+def rotate(roll, pitch, yaw, unit_str):
     # The initial orientation was: [x: 0, y: 0, z: 1]
     initial_vector_x = np.array([1, 0, 0]).transpose()  # Initial attitude
     initial_vector_y = np.array([0, 1, 0]).transpose()  # Initial attitude
@@ -254,10 +253,7 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
     final_attitude_y = []
     final_attitude_z = []
 
-    # Get size
-    size = len(roll)
-
-    for i in range(0, size):
+    for i in range(0, len(roll)):
         # Get rotation matrix
         rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx", unit=unit_str)
 
@@ -271,10 +267,17 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
         final_attitude_y.append(final_vector_y)
         final_attitude_z.append(final_vector_z)
 
+    return final_attitude_x, final_attitude_y, final_attitude_z
+
+
+def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, output: str):
+    # Make rotation
+    [f_att_x, f_att_y, f_att_z] = rotate(roll, pitch, yaw, unit_str=unit_str)
+
     # Triplets of vectors
-    xx, yx, zx = zip(*final_attitude_x)
-    xy, yy, zy = zip(*final_attitude_y)
-    xz, yz, zz = zip(*final_attitude_z)
+    xx, yx, zx = zip(*f_att_x)
+    xy, yy, zy = zip(*f_att_y)
+    xz, yz, zz = zip(*f_att_z)
 
     # Figure and its size
     fig = plt.figure(figsize=(16, 9))
@@ -283,9 +286,9 @@ def plot_3d_vectors(roll: [float], pitch: [float], yaw: [float], unit_str: str, 
     ax = fig.add_subplot(111, projection='3d')
 
     # From the center, print vectors.
-    ax.quiver([0] * size, [0] * size, [0] * size, xx, yx, zx, color="r")
-    ax.quiver([0] * size, [0] * size, [0] * size, xy, yy, zy, color="b")
-    ax.quiver([0] * size, [0] * size, [0] * size, xz, yz, zz, color="y")
+    ax.quiver([0] * len(roll), [0] * len(roll), [0] * len(roll), xx, yx, zx, color="r")
+    ax.quiver([0] * len(roll), [0] * len(roll), [0] * len(roll), xy, yy, zy, color="b")
+    ax.quiver([0] * len(roll), [0] * len(roll), [0] * len(roll), xz, yz, zz, color="y")
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
