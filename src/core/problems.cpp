@@ -119,7 +119,8 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
 
     // Normalize vector
     // TODO: Do this will work? It seems so..! Otherwise think of using algorithm in function quaternion::check_norm
-    q = q.normalize();
+    // TODO: Remove this, causes non linearity
+    q = q / q.vnorm().cons(); // This way doesn't brake linearity
 
     omega[0] = scv[4];
     omega[1] = scv[5];
