@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, dt);
 
     // Define problem to solve
-    auto prob = problems(PROBLEM::TWO_BODY);
+    auto prob = problems(my_specs.problem);
 
     // Build super manifold
     auto super_manifold = SuperManifold(my_specs.ads.tolerance,
