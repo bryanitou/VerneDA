@@ -130,6 +130,9 @@ void delta::generate_gaussian_deltas(int n)
                 // TODO: Do something here
             }
 
+            // Reconvert to Euler angles
+            auto eu = quaternion::quaternion2euler(nq);
+
             new_delta = {
                     nq[0] - this->mean_quaternion_[0],
                     nq[1] - this->mean_quaternion_[1],

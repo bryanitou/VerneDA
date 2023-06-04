@@ -54,6 +54,7 @@ public:// Attributes
          LENGTH_UNITS length_units{LENGTH_UNITS::NA};
          std::vector<double> mean{};
          std::vector<double> standard_deviation{};
+         double confidence_interval{};
 
          // If we have attitude...
          double inertia[3][3]{};

@@ -47,12 +47,12 @@ int main(int argc, char* argv[])
 
     // Set initial state
     DACE::AlgebraicVector<DACE::DA> scv0 = {
-            my_specs.initial_conditions.mean[0] + 3*DACE::DA(1) * my_specs.initial_conditions.standard_deviation[0],
-            my_specs.initial_conditions.mean[1] + 3*DACE::DA(2) * my_specs.initial_conditions.standard_deviation[1],
-            my_specs.initial_conditions.mean[2] + DACE::DA(3) * my_specs.initial_conditions.standard_deviation[2],
-            my_specs.initial_conditions.mean[3] + DACE::DA(4) * my_specs.initial_conditions.standard_deviation[3],
-            my_specs.initial_conditions.mean[4] + DACE::DA(5) * my_specs.initial_conditions.standard_deviation[4],
-            my_specs.initial_conditions.mean[5] + DACE::DA(6) * my_specs.initial_conditions.standard_deviation[5] };
+            my_specs.initial_conditions.mean[0] + my_specs.initial_conditions.standard_deviation[0] * my_specs.initial_conditions.confidence_interval * DACE::DA(1),
+            my_specs.initial_conditions.mean[1] + my_specs.initial_conditions.standard_deviation[1] * my_specs.initial_conditions.confidence_interval * DACE::DA(2),
+            my_specs.initial_conditions.mean[2] + my_specs.initial_conditions.standard_deviation[2] * my_specs.initial_conditions.confidence_interval * DACE::DA(3),
+            my_specs.initial_conditions.mean[3] + my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(4),
+            my_specs.initial_conditions.mean[4] + my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval * DACE::DA(5),
+            my_specs.initial_conditions.mean[5] + my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval * DACE::DA(6) };
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, dt);
 
     // Define problem to solve
-    auto prob = problems(PROBLEM::TWO_BODY);
+    auto prob = problems(my_specs.problem);
 
     // Build super manifold
     auto super_manifold = SuperManifold(my_specs.ads.tolerance,
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 1000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);

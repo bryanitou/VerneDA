@@ -184,12 +184,23 @@ std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> o
     output.first = temp;
     temp.history.pop_back();
 
+    // std::cout << (*this) << std::endl;
+    // std::cout << "#################################################################" << std::endl;
+//
+//
+    // std::cout << obj << std::endl;
+    // std::cout << temp << std::endl;
+    // std::cout << "#################################################################" << std::endl;
+
 
     temp.history.push_back( dir );
     obj[dir-1] =  0.5 + 0.5*DACE::DA(dir);
     temp = this -> eval(obj);
     output.second = temp;
     temp.history.pop_back();
+
+    //std::cout << obj << std::endl;
+    //std::cout << temp << std::endl;
 
     return output;
 }

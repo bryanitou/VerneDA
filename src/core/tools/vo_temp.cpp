@@ -3,13 +3,14 @@
  */
 
 template<typename T>
-std::string tools::vector::num2string(std::vector<T> v, const std::string& separator, const std::string& precision)
+std::string tools::vector::num2string(std::vector<T> v, const std::string& separator, const std::string& precision,
+                                      bool close)
 {
     // Auxiliary local variables
     std::string result{};
 
     // Open vector at the beginning
-    result = "[";
+    result += close ? "[" : "";
 
     // Do precision?
     bool do_precision = !precision.empty();
@@ -26,7 +27,7 @@ std::string tools::vector::num2string(std::vector<T> v, const std::string& separ
     result += do_precision ? tools::string::print2string(precision, v.back()) : std::to_string(v.back());
 
     // Close vector
-    result += "]";
+    result += close ? "]" : "";
 
     // Return string
     return result;

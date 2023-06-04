@@ -42,29 +42,38 @@ int main(int argc, char* argv[])
     // Initialize DACE with 6 variables
     DACE::DA::init(my_specs.algebra.order, my_specs.algebra.variables);
 
-    // Initial conditions of attitude
-    double roll = my_specs.initial_conditions.mean[0];
-    double pitch = my_specs.initial_conditions.mean[1];
-    double yaw = my_specs.initial_conditions.mean[2];
-    double stddev_roll = my_specs.initial_conditions.standard_deviation[0];
-    double stddev_pitch = my_specs.initial_conditions.standard_deviation[1];
-    double stddev_yaw = my_specs.initial_conditions.standard_deviation[2];
-
     // Get initial quaternion
     // TODO: Error should be computed here
-    auto q_init = quaternion::euler2quaternion(roll, pitch, yaw);
-    auto q_with_error = quaternion::euler2quaternion( roll + stddev_roll,pitch + stddev_pitch,yaw + stddev_yaw);
-    auto q_error = quaternion::q8_multiply(q_with_error, q_init);
+    auto q_init = quaternion::euler2quaternion(
+            my_specs.initial_conditions.mean[0],
+            my_specs.initial_conditions.mean[1],
+            my_specs.initial_conditions.mean[2]);
+
+    auto q_err = quaternion::euler2quaternion(my_specs.initial_conditions.standard_deviation[0],
+                                              my_specs.initial_conditions.standard_deviation[1],
+                                              my_specs.initial_conditions.standard_deviation[2]);
+
+    auto q_errToll = quaternion::euler2quaternion(
+            my_specs.ads.tolerance[0],
+            my_specs.ads.tolerance[1],
+            my_specs.ads.tolerance[2]);
+    q_errToll[0] = INFINITY; //1 - q_errToll[0];
+
+    // Create a vector of all the tolerances
+    auto error_tolerance = std::vector<double>(q_errToll.begin(), q_errToll.end());
+    error_tolerance.insert(error_tolerance.end(), my_specs.ads.tolerance.begin() + 3, my_specs.ads.tolerance.end());
 
     // Declare the state control vector with DA
-    std::vector<DACE::DA> scv0 = {
-            q_init[0] +  DACE::DA(1) * q_error[0],       // q0
-            q_init[1] +  DACE::DA(2) * q_error[1],       // q1
-            q_init[2] +  DACE::DA(3) * q_error[2],       // q2
-            q_init[3] +  DACE::DA(4) * q_error[3],       // q3
-            my_specs.initial_conditions.mean[3] +  DACE::DA(5) * my_specs.initial_conditions.standard_deviation[3],     // w1 -> rotation around 1 axis
-            my_specs.initial_conditions.mean[4] +  DACE::DA(6) * my_specs.initial_conditions.standard_deviation[4],     // w2 -> rotation around 2 axis
-            my_specs.initial_conditions.mean[5] +  DACE::DA(7) * my_specs.initial_conditions.standard_deviation[5] };   // w3 -> rotation around 3 axis
+   DACE::AlgebraicVector<DACE::DA> scv0 = {
+            q_init[0] + q_err[0] * my_specs.initial_conditions.confidence_interval * DACE::DA(1),       // q0
+            q_init[1] + q_err[1] * my_specs.initial_conditions.confidence_interval * DACE::DA(2),       // q1
+            q_init[2] + q_err[2] * my_specs.initial_conditions.confidence_interval * DACE::DA(3),       // q2
+            q_init[3] + q_err[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(4),       // q3
+            my_specs.initial_conditions.mean[3] +  my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(5),     // w1 -> rotation around 1 axis
+            my_specs.initial_conditions.mean[4] +  my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval * DACE::DA(6),     // w2 -> rotation around 2 axis
+            my_specs.initial_conditions.mean[5] +  my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval * DACE::DA(7) };   // w3 -> rotation around 3 axis
+
+    std::cout << scv0 << std::endl;
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
@@ -78,16 +87,16 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, dt);
 
     // Declare the problem object
-    auto prob = problems(PROBLEM::FREE_TORQUE_MOTION);
+    auto prob = problems(my_specs.problem);
 
     // Set the inertia matrix in problem object
     prob.set_inertia_matrix(my_specs.initial_conditions.inertia);
 
     // Build super manifold
-    auto super_manifold = SuperManifold(my_specs.ads.tolerance,
+    auto super_manifold = SuperManifold(error_tolerance,
                                         my_specs.ads.max_split[0]);
 
     // Set problem ptr in the integrator
@@ -116,7 +125,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
     deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
-    deltas_engine->set_mean_quaternion_option(q_init);
+    deltas_engine->set_mean_quaternion_option(quaternion::euler2quaternion(0.0, 0.0, 0.0));
 
     // Set distribution
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);

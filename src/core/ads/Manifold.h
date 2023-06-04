@@ -18,6 +18,7 @@
 // Project libraries
 #include "Patch.h"
 #include "integrator.h"
+#include "tools/math.h"
 
 struct Observable;
 
@@ -116,4 +117,6 @@ public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const double errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
 
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
+
+    std::vector<std::vector<DACE::AlgebraicVector<double>>> wallsPointEvaluationManifold_useless();
 };

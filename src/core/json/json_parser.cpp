@@ -129,7 +129,7 @@ void json_parser::parse_propagation_section(RSJresource& rsj_obj, json_input * j
     json_input_obj->propagation.final_time = rsj_obj["final_time"].as<double>();
     json_input_obj->propagation.time_step = rsj_obj["time_step"].as<double>();
 
-    auto integrator_str = tools::string::clean_bars(rsj_obj["interator"].as_str());
+    auto integrator_str = tools::string::clean_bars(rsj_obj["integrator"].as_str());
     std::transform(integrator_str.begin(), integrator_str.end(), integrator_str.begin(), ::tolower);
     json_input_obj->propagation.integrator =
             integrator_str == "rk4"     ? INTEGRATOR::RK4   :
@@ -150,6 +150,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
 
     json_input_obj->initial_conditions.mean = rsj_obj["mean"].as_vector<double>();
     json_input_obj->initial_conditions.standard_deviation = rsj_obj["standard_deviation"].as_vector<double>();
+    json_input_obj->initial_conditions.confidence_interval = rsj_obj["confidence_interval"].as<double>();
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
@@ -195,6 +196,19 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
             // Print info
             std::fprintf(stdout, "]\n");
         }
+
+        // The standard deviation of the individual components of the tangent
+        // perturbation needs to be scaled so that the expected quaternion distance
+        // between the sampled state and the mean state is stdDev. The factor 2 is
+        // due to the way we define distance (see also Matt Mason's lecture notes
+        // on quaternions at
+        // http://www.cs.cmu.edu/afs/cs/academic/class/16741-s07/www/lectures/Lecture8.pdf).
+        // The 1/sqrt(3) factor is necessary because the distribution in the tangent
+        // space is a 3-dimensional Gaussian, so that the *length* of a tangent
+        // vector needs to be scaled by 1/sqrt(3).
+        json_input_obj->initial_conditions.standard_deviation[0] = (2. * json_input_obj->initial_conditions.standard_deviation[0]) / std::sqrt(3);
+        json_input_obj->initial_conditions.standard_deviation[1] = (2. * json_input_obj->initial_conditions.standard_deviation[1]) / std::sqrt(3);
+        json_input_obj->initial_conditions.standard_deviation[2] = (2. * json_input_obj->initial_conditions.standard_deviation[2]) / std::sqrt(3);
     }
 
     // TODO: Add safety checks here

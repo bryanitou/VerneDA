@@ -181,7 +181,7 @@ if (BUILD_DACE_MASTER_LIBS)
             INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
             INSTALL_COMMAND make install
             )
-elseif (BUILD_DACE_AFOSSA_LIBS)
+elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to downlooad this from the internet directly instead of having it as a submodule
     ExternalProject_Add(dace
             SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
             PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
@@ -314,7 +314,8 @@ set(LIBRARY_TOOLS "tools")
 
 add_library(${LIBRARY_TOOLS} SHARED
         src/core/tools/vo.cpp
-        src/core/tools/str.cpp)
+        src/core/tools/str.cpp
+        src/core/tools/math.cpp)
 
 add_dependencies(tools
         dace)
@@ -412,7 +413,8 @@ add_dependencies(ads
         dace)
 
 target_link_libraries(${LIBRARY_ADS}
-        ${LIBRARY_DACE})
+        ${LIBRARY_DACE}
+        ${LIBRARY_TOLS})
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -541,6 +543,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         ads
         dacelib
         base
+        tools
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -568,6 +571,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         ads
         dacelib
         base
+        tools
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
