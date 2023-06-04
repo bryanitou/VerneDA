@@ -26,7 +26,7 @@ namespace tools::vector
      */
      template<typename T>
      std::string num2string(std::vector<T> v, const std::string& separator = ",",
-                            const std::string& precision = "");
+                            const std::string& precision = "", bool close = true);
 
     /**
      * Vector of integers to string.
@@ -35,7 +35,7 @@ namespace tools::vector
      * @return std::string
      */
      std::string da_cons2string(const DACE::AlgebraicVector<DACE::DA>& v, const std::string& separator = ",",
-                                const std::string& precision = "");
+                                const std::string& precision = "", bool close = true);
 }
 
 // Include templates implementation
