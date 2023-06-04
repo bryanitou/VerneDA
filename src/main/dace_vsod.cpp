@@ -47,12 +47,12 @@ int main(int argc, char* argv[])
 
     // Set initial state
     DACE::AlgebraicVector<DACE::DA> scv0 = {
-            my_specs.initial_conditions.mean[0] + my_specs.initial_conditions.standard_deviation[0] * my_specs.initial_conditions.confidence_interval[0] * DACE::DA(1),
-            my_specs.initial_conditions.mean[1] + my_specs.initial_conditions.standard_deviation[1] * my_specs.initial_conditions.confidence_interval[1] * DACE::DA(2),
-            my_specs.initial_conditions.mean[2] + my_specs.initial_conditions.standard_deviation[2] * my_specs.initial_conditions.confidence_interval[2] * DACE::DA(3),
-            my_specs.initial_conditions.mean[3] + my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(4),
-            my_specs.initial_conditions.mean[4] + my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval[4] * DACE::DA(5),
-            my_specs.initial_conditions.mean[5] + my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval[5] * DACE::DA(6) };
+            my_specs.initial_conditions.mean[0] + my_specs.initial_conditions.standard_deviation[0] * my_specs.initial_conditions.confidence_interval * DACE::DA(1),
+            my_specs.initial_conditions.mean[1] + my_specs.initial_conditions.standard_deviation[1] * my_specs.initial_conditions.confidence_interval * DACE::DA(2),
+            my_specs.initial_conditions.mean[2] + my_specs.initial_conditions.standard_deviation[2] * my_specs.initial_conditions.confidence_interval * DACE::DA(3),
+            my_specs.initial_conditions.mean[3] + my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(4),
+            my_specs.initial_conditions.mean[4] + my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval * DACE::DA(5),
+            my_specs.initial_conditions.mean[5] + my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval * DACE::DA(6) };
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);

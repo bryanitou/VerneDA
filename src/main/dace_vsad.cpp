@@ -65,13 +65,13 @@ int main(int argc, char* argv[])
 
     // Declare the state control vector with DA
    DACE::AlgebraicVector<DACE::DA> scv0 = {
-            q_init[0] + q_err[0] * my_specs.initial_conditions.confidence_interval[0] * DACE::DA(1),       // q0
-            q_init[1] + q_err[1] * my_specs.initial_conditions.confidence_interval[1] * DACE::DA(2),       // q1
-            q_init[2] + q_err[2] * my_specs.initial_conditions.confidence_interval[2] * DACE::DA(3),       // q2
-            q_init[3] + q_err[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(4),       // q3
-            my_specs.initial_conditions.mean[3] +  my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval[3] * DACE::DA(5),     // w1 -> rotation around 1 axis
-            my_specs.initial_conditions.mean[4] +  my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval[4] * DACE::DA(6),     // w2 -> rotation around 2 axis
-            my_specs.initial_conditions.mean[5] +  my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval[5] * DACE::DA(7) };   // w3 -> rotation around 3 axis
+            q_init[0] + q_err[0] * my_specs.initial_conditions.confidence_interval * DACE::DA(1),       // q0
+            q_init[1] + q_err[1] * my_specs.initial_conditions.confidence_interval * DACE::DA(2),       // q1
+            q_init[2] + q_err[2] * my_specs.initial_conditions.confidence_interval * DACE::DA(3),       // q2
+            q_init[3] + q_err[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(4),       // q3
+            my_specs.initial_conditions.mean[3] +  my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(5),     // w1 -> rotation around 1 axis
+            my_specs.initial_conditions.mean[4] +  my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval * DACE::DA(6),     // w2 -> rotation around 2 axis
+            my_specs.initial_conditions.mean[5] +  my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval * DACE::DA(7) };   // w3 -> rotation around 3 axis
 
     std::cout << scv0 << std::endl;
 
