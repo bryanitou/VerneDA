@@ -3,6 +3,7 @@
  */
 
 #include "integrator.h"
+#include <fstream>
 
 integrator::integrator(INTEGRATOR integrator, double stepmax)
 {
@@ -17,7 +18,7 @@ integrator::integrator(INTEGRATOR integrator, double stepmax)
 DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA> x)
 {
     // Auxiliary bool
-    bool flag_interruption_errToll = false;
+    bool flag_interruption_errToll;
 
     // Iterate
     for(int i = 0; i < this->steps_; i++ )
@@ -32,7 +33,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = !this->check_ads_conditions(x);
+            flag_interruption_errToll = this->check_ads_conditions(x);
 
             // Break integration if needed
             if (flag_interruption_errToll)
@@ -53,7 +54,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVect
 DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x)
 {
     // Auxiliary bool
-    bool flag_interruption_errToll = false;
+    bool flag_interruption_errToll;
 
     // Auxiliary variable for debug
     std::string str2debug;
@@ -122,6 +123,10 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
     // Add 'TRACE' in front
     str2print = "TRACE: " + str2print;
 
+    // std::ofstream outfile;
+//
+    // outfile.open("out/example/attitude_test_RK4/att_integration/test_"+std::to_string(this->patch_id_)+".csv", std::ios_base::app); // append instead of overwrite
+
     // If it is attitude, go this way...
     if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
     {
@@ -135,9 +140,11 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         auto euler2debug = quaternion::quaternion2euler(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
 
         // Euler to string
-        auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
+        auto str4euler = tools::vector::num2string<double>(euler2debug, ", ", "%2.2f", false);
 
-        str2print += tools::string::print2string(" | q_norm: %.2f | Euler: %s", q_norm, str4euler.c_str());
+        str2print += tools::string::print2string(" | q_norm: %.2f | Euler: [%s]", q_norm, str4euler.c_str());
+
+        // outfile << str4euler << std::endl;
 
         // if (q_cons.vnorm() < 0.9)
         // {
@@ -249,30 +256,6 @@ void integrator::set_problem_ptr(problems *problem)
     }
 }
 
-void integrator::set_interrupt_flag(bool* flag)
-{
-    this->interrupt_flags_.push_back(flag);
-}
-
-bool integrator::check_interruption_flags()
-{
-    // Result flag
-    bool result = false;
-
-    // Iterate through all the flags
-    for (auto flag : this->interrupt_flags_)
-    {
-        // Check the bool
-        if (*flag)
-        {
-            result = false;
-            break;
-        }
-    }
-
-    return result;
-}
-
 bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
 {
     // Result of the comparison
@@ -280,13 +263,25 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
 
     for (unsigned int i = 0; i < scv.size(); ++i)
     {
+        // Safety check
+        if (scv[i].size() == 0) { continue; }
+
         // Get error
         auto err = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
 
        //std::cout << tools::vector::num2string(err) << std::endl;
 
         // TODO: What exactly is this
-        auto err2compare = err[err.size()-1];
+        auto err2compare = err.back();
+
+        // Safety check
+        if (std::isnan(err2compare))
+        {
+            continue;
+            // auto errmsg = tools::string::print2string("%s", scv[i].toString().c_str());
+            // errmsg += "Got some nans in the error esimNorm computation. ";
+            // std::fprintf(stderr, "TRACE: %s\n", errmsg.c_str());
+        }
 
         // Compare error
         if (err2compare > this->errToll_[i])
@@ -345,11 +340,14 @@ double normtmp( int N, std::vector<double> X)
 
 template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0)
 {
+    // Auxiliary variables
+    bool flag_interruption_errToll;
+
     // TODO: Investigate what is this
     double ERREST;
-    double H0 = 0.001;
-    double HS = 0.1;
-    double H1 = 100.0;
+    double H0 = 0.001; // Minimum step size
+    double HS = 0.1;   // Initial step size
+    double H1 = 100.0; // Maximum step size
     double EPS = 1.e-12;
     double BS = 20*EPS;
 
@@ -472,16 +470,17 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
         Z[I][1] = 0.0 ;
     }
 
-    H = std::abs(HS);
-    HH0 = std::abs(H0);
-    HH1 = std::abs(H1);
-    X = this->t0_;
+    H = std::abs(HS); // Initial step size
+    HH0 = std::abs(H0); // Minimum step size
+    HH1 = std::abs(H1); // Maximum step size
+    X = this->t_;
     RFNORM = 0.0;
     ERREST = 0.0;
 
     // Iteration
     int idx = 0;
 
+    // Integrate until X reaches the desired time
     while(X != this->t1_)
     {
         // Print detailed info
@@ -493,6 +492,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             // TODO: What is the difference between std::min and min ?
             H = H*min(4.0,exp(HSQR*log(EPS/RFNORM)));
         }
+
+        // If the stepsize is larger in absolute value than HH1, limit it to HH1
         if (std::abs(H) > std::abs(HH1))
         {
             H = HH1;
@@ -512,7 +513,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
         {
             for (I = 0; I<N; I++)
             {
-                Y0[I] = 0.0 ; // EVALUATE RHS AT 13 POINTS
+                Y0[I] = 0.0; // EVALUATE RHS AT 13 POINTS
 
                 for (K=0; K<J; K++)
                 {
@@ -524,6 +525,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             // TODO: Fix this
             Y1 = this->problem_->solve(Y0, X+H*A[J]);
 
+            // std::cout << Y1 << std::endl;
+
             for (I = 0; I<N; I++)
             {
                 Z[I][J+3] = Y1[I];
@@ -532,7 +535,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
 
         for (I = 0; I<N; I++)
         {
-            Z[I][1] = 0.0 ; Z[I][2] = 0.0 ; // EXECUTE 7TH,8TH ORDER STEPS
+            Z[I][1] = 0.0 ;
+            Z[I][2] = 0.0 ; // EXECUTE 7TH,8TH ORDER STEPS
 
             for (J = 0; J<13; J++)
             {
@@ -547,7 +551,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
 
         for (I = 0; I<N; I++)
         {
-            Y1cons[I] = cons(Y1[I]);
+            Y1cons[I] = DACE::cons(Y1[I]);
         }
 
         // ESTIMATE ERROR AND DECIDE ABOUT BACKSTEP
@@ -564,6 +568,29 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             X = X + H;
             VIHMAX = max(VIHMAX,H);
             ERREST = ERREST + RFNORM;
+        }
+
+        // Update times to the class
+        this->t_ = X;
+        this->h_ = H;
+
+        // Check ADS conditions to continue integration
+        if (this->interrupt_)
+        {
+            DACE::AlgebraicVector<DACE::DA> Y1_1(N);
+            for (I = 0; I<N; I++)
+            {
+                Y1_1[I] = Z[I][0];
+            }
+
+            // Check returned flag
+            flag_interruption_errToll = this->check_ads_conditions(Y1_1);
+
+            // Break integration if needed
+            if (flag_interruption_errToll)
+            {
+                break;
+            }
         }
 
         idx++;
