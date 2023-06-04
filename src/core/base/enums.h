@@ -112,10 +112,23 @@ enum class EVAL_TYPE
     CENTER
 };
 
+/**
+ * Wall sides
+ */
 enum class WALL_SIDE
 {
     UP,
     DOWN,
     RIGHT,
     LEFT
+};
+
+/**
+* Algorithm to be used
+*/
+enum class ALGORITHM
+{
+    ADS,
+    LOADS,
+    NA
 };

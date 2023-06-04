@@ -79,11 +79,33 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     // Parse initial conditions
     json_parser::parse_initial_conditions_section(initial_conditions_rsj_obj, &my_specs);
 
-    // Read ads ---------------
-    auto ads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::ADS);
+    // Read ADS/LOADS ---------------
+    if (my_specs.algorithm == ALGORITHM::ADS)
+    {
+        // Get ADS
+        auto ads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::ADS);
 
-    // Parse ads
-    json_parser::parse_ads_section(ads_rsj_obj, &my_specs);
+        // Parse ADS
+        json_parser::parse_ads_section(ads_rsj_obj, &my_specs);
+    }
+    else if (my_specs.algorithm == ALGORITHM::LOADS)
+    {
+        // Get LOADS
+        auto loads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::LOADS);
+
+        // Parse LOADS
+        json_parser::parse_loads_section(loads_rsj_obj, &my_specs);
+
+        // Get SCALING
+        auto scaling_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::SCALING);
+
+        // Parse SCALING
+        json_parser::parse_scaling_section(scaling_rsj_obj, &my_specs);
+    }
+    else
+    {
+        // TODO: Show some error messages
+    }
 
     // Read output -----------
     std::string output_str = tools::string::clean_bars(my_resource_obj["output"].as_str());
@@ -103,6 +125,24 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
 {
     // TODO: Not used now but will be required later
     double mu = rsj_obj["mu"].as<double>();
+
+    // Parse the algorithm to be used: ADS or LOADS
+    std::string algorithm_str = tools::string::clean_bars(rsj_obj["algorithm"].as_str());
+    std::transform(algorithm_str.begin(), algorithm_str.end(), algorithm_str.begin(), ::tolower);
+    json_input_obj->algorithm =
+            algorithm_str == "ads" ? ALGORITHM::ADS :
+            algorithm_str == "loads" ? ALGORITHM::LOADS : ALGORITHM::NA;
+
+    // Safety checks
+    if (json_input_obj->algorithm == ALGORITHM::NA)
+    {
+        // Info and exit program
+        std::fprintf(stdout, "Algorithm type should be: 'ads' or 'loads'. JSON "
+                             "file: '%s'", json_input_obj->filepath.c_str());
+
+        // Exit program
+        std::exit(10);
+    }
 
     // Parse the problem str
     std::string problem_str = tools::string::clean_bars(rsj_obj["problem"].as_str());
@@ -235,6 +275,21 @@ void json_parser::parse_ads_section(RSJresource& rsj_obj, json_input * json_inpu
     // TODO: Add safety checks here
 }
 
+void json_parser::parse_loads_section(RSJresource& rsj_obj, json_input * json_input_obj)
+{
+    json_input_obj->loads.nli_threshold = rsj_obj["nli_threshold"].as<double>();
+    json_input_obj->loads.max_split = rsj_obj["max_split"].as_vector<int>();
+    json_input_obj->loads.set = true;
+}
+
+void json_parser::parse_scaling_section(RSJresource& rsj_obj, json_input * json_input_obj)
+{
+    json_input_obj->scaling.length = rsj_obj["length"].as<double>();
+    json_input_obj->scaling.time = rsj_obj["time"].as<double>();
+    json_input_obj->scaling.speed = rsj_obj["velocity"].as<double>();
+    json_input_obj->scaling.set = true;
+}
+
 // Navigation functions here
 RSJresource json_parser::get_subsection(RSJresource& rsj_obj, const std::string & subsection_name)
 {
@@ -243,4 +298,40 @@ RSJresource json_parser::get_subsection(RSJresource& rsj_obj, const std::string 
 
     // Create object from pure plain text to 'RSJesource' object
     return {desired_section_str};
+}
+
+void json_parser::safety_checks(json_input * json_input_obj)
+{
+    // Should call this function when everything set
+    if (json_input_obj->algorithm == ALGORITHM::LOADS)
+    {
+        // Check we do have scaling
+        bool scaling_error = !json_input_obj->scaling.set || json_input_obj->scaling.length == 0.0 ||
+                json_input_obj->scaling.time == 0.0 || json_input_obj->scaling.speed == 0.0;
+
+        if (scaling_error)
+        {
+            // Info and exit program
+            std::fprintf(stderr, "There was a problem when parsing the scaling section, which is needed for LOADS. "
+                                 "Ensure it is not missing and scaling values are non-zero; 'length', 'time' and 'velocity' "
+                                 "JSON file: '%s'", json_input_obj->filepath.c_str());
+
+            // Exit program
+            std::exit(10);
+        }
+
+        // Check the loads section
+        bool loads_error = !json_input_obj->loads.set ||  json_input_obj->loads.nli_threshold == 0.0 ||
+                json_input_obj->loads.max_split.empty();
+
+        if (loads_error)
+        {
+            // Info and exit program
+            std::fprintf(stderr, "There was a problem when parsing the LOADS section. Ensure any of these"
+                                 " are missing: 'nli_threshold', 'length_units' and 'max_split'. JSON file: '%s'", json_input_obj->filepath.c_str());
+
+            // Exit program
+            std::exit(10);
+        }
+    }
 }
