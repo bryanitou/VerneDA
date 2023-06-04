@@ -86,8 +86,11 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
         // TODO: This check needs to be done only once
         if (errToll.size() != f.size())
         {
-            throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
-                                      "size of Patchs.");
+            // Build err msg
+            auto err_msg = tools::string::print2string("Error in Manifold::getSplitDomain: The Tolerance vector must have the same "
+                                                       "size of Patchs. Size patch: '%d'. Error tolerance size: '%d'", f.size(), errToll.size());
+            // Throw err
+            throw std::runtime_error (err_msg);
         }
 
         /*Estimate the error for each patch in the deque */
@@ -659,7 +662,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 20, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 50, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();
