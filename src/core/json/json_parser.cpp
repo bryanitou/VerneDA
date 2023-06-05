@@ -116,6 +116,9 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     // Read the output directory where the results will be dumped
     my_specs.output_dir = tools::string::clean_bars(output_rsj_obj["directory"].as_str());
 
+    // Check health of the inputs
+    json_parser::safety_checks(&my_specs);
+
     // Return the object
     return my_specs;
 }
@@ -138,7 +141,7 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
     {
         // Info and exit program
         std::fprintf(stdout, "Algorithm type should be: 'ads' or 'loads'. JSON "
-                             "file: '%s'", json_input_obj->filepath.c_str());
+                             "file: '%s'\n", json_input_obj->filepath.c_str());
 
         // Exit program
         std::exit(10);
@@ -156,7 +159,7 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
     {
         // Info and exit program
         std::fprintf(stdout, "Problem type should be: 'two_body_problem' and 'free_torque_motion'. JSON "
-                             "file: '%s'", json_input_obj->filepath.c_str());
+                             "file: '%s'\n", json_input_obj->filepath.c_str());
 
         // Exit program
         std::exit(10);
@@ -287,6 +290,19 @@ void json_parser::parse_scaling_section(RSJresource& rsj_obj, json_input * json_
     json_input_obj->scaling.length = rsj_obj["length"].as<double>();
     json_input_obj->scaling.time = rsj_obj["time"].as<double>();
     json_input_obj->scaling.speed = rsj_obj["velocity"].as<double>();
+
+    // Fill the beta scaling vector
+    json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
+    if (json_input_obj->problem == PROBLEM::TWO_BODY)
+    {
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
+        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
+    }
+
     json_input_obj->scaling.set = true;
 }
 
@@ -313,8 +329,8 @@ void json_parser::safety_checks(json_input * json_input_obj)
         {
             // Info and exit program
             std::fprintf(stderr, "There was a problem when parsing the scaling section, which is needed for LOADS. "
-                                 "Ensure it is not missing and scaling values are non-zero; 'length', 'time' and 'velocity' "
-                                 "JSON file: '%s'", json_input_obj->filepath.c_str());
+                                 "Ensure it is not missing and scaling values are non-zero; 'length', 'time' and 'velocity'. "
+                                 "JSON file: '%s'\n", json_input_obj->filepath.c_str());
 
             // Exit program
             std::exit(10);
@@ -328,10 +344,24 @@ void json_parser::safety_checks(json_input * json_input_obj)
         {
             // Info and exit program
             std::fprintf(stderr, "There was a problem when parsing the LOADS section. Ensure any of these"
-                                 " are missing: 'nli_threshold', 'length_units' and 'max_split'. JSON file: '%s'", json_input_obj->filepath.c_str());
+                                 " are missing: 'nli_threshold', 'length_units' and 'max_split'. JSON file: '%s'\n", json_input_obj->filepath.c_str());
 
             // Exit program
             std::exit(10);
         }
+
+        // Check order loads
+        if (json_input_obj->algebra.order > 2 || json_input_obj->algebra.order == 0)
+        {
+            // Info
+            std::fprintf(stdout, "LOADS has been configured. DA order parsed is '%d'. Nonetheless, "
+                                 "it will be overriden to 2, since LOADS algorithm is designed for that.\n",
+                                 json_input_obj->algebra.order);
+
+            // Set it
+            json_input_obj->algebra.order = 2;
+        }
     }
+
+    // TODO: Do ADS safety checks
 }

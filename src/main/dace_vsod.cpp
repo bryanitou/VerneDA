@@ -66,14 +66,39 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, my_specs.algorithm, dt);
 
     // Define problem to solve
     auto prob = problems(my_specs.problem);
 
+    // Create an empty SuperManifold to be filled in the switch case
+    SuperManifold* super_manifold;
+
     // Build super manifold
-    auto super_manifold = SuperManifold(my_specs.ads.tolerance,
-                                        my_specs.ads.max_split[0]);
+    switch (my_specs.algorithm)
+    {
+        case ALGORITHM::ADS:
+        {
+            // Build super manifold: ADS
+            super_manifold = new SuperManifold(my_specs.ads.tolerance,my_specs.ads.max_split[0], ALGORITHM::ADS);
+            break;
+        }
+        case ALGORITHM::LOADS:
+        {
+            // Build super manifold: LOADS
+            super_manifold = new SuperManifold(my_specs.loads.nli_threshold, my_specs.loads.max_split[0], ALGORITHM::LOADS);
+
+            // Set beta constant in integrator
+            objIntegrator->set_beta(my_specs.scaling.beta);
+            break;
+        }
+        default:
+        {
+            // TODO: Show some errors here
+            std::exit(20);
+        }
+    }
+
 
     // Set problem ptr in the integrator
     objIntegrator->set_problem_ptr(&prob);
@@ -82,7 +107,7 @@ int main(int argc, char* argv[])
     objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
 
     // Set integrator in the super manifold
-    super_manifold.set_integrator_ptr(objIntegrator.get());
+    super_manifold->set_integrator_ptr(objIntegrator.get());
 
     // Docu: Set new truncation error and get the previous one
     double new_eps = 1e-40;
@@ -92,7 +117,7 @@ int main(int argc, char* argv[])
     std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
 
     // ADS and integration algorithm
-    super_manifold.split_domain();
+    super_manifold->split_domain();
 
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>();
@@ -107,7 +132,7 @@ int main(int argc, char* argv[])
     deltas_engine->insert_nominal(my_specs.algebra.variables);
 
     // Set super manifold in deltas engine
-    deltas_engine->set_superManifold(&super_manifold);
+    deltas_engine->set_superManifold(super_manifold);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();

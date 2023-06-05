@@ -7,6 +7,7 @@
 
 // System libraries
 #include <memory>
+#include <fstream>
 
 // Project libraries
 #include "base/enums.h"
@@ -17,6 +18,7 @@
 
 // DACE libraries
 #include "dace/dace.h"
+#include "dace/AlgebraicMatrix_t.h"
 
 class integrator {
 
@@ -25,7 +27,7 @@ public:
      * Class constructor.
      * @param integrator
      */
-    explicit integrator(INTEGRATOR integrator, double stepmax);
+    explicit integrator(INTEGRATOR integrator, ALGORITHM algorithm,  double stepmax);
 
     /**
      * Default destructor
@@ -52,9 +54,14 @@ public:
     void set_integration_parameters(const DACE::AlgebraicVector<DACE::DA> &scv0, double t0, double t1,
                                     bool interrupt = false);
 
-    void set_interrupt_flag(bool* flag);
-
     void set_errToll(const std::vector<double>& errToll);
+
+    void set_nli_threshold(const double &nli_threshold);
+
+    void set_beta(std::vector<double> &beta)
+    {
+        this->beta_ = beta;
+    }
 
     void set_nSplitMax(int nSplitMax)
     {
@@ -114,9 +121,18 @@ private:
     // Some control booleans
     std::vector<bool*> interrupt_flags_;
 
+    // ADS/LOADS common stuff
+    int nSplitMax_;
+
     // ADS constants
     std::vector<double> errToll_;
-    int nSplitMax_;
+
+    // ADS/LOADS algorithm
+    ALGORITHM algorithm_{ALGORITHM::NA};
+
+    // LOADS stuff
+    double nli_threshold_;
+    std::vector<double> beta_;
 
 private:
     // Some auxilary class variables
@@ -156,4 +172,6 @@ private:
     bool check_interruption_flags();
 
     bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
+    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
+    bool check_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
 };

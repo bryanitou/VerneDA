@@ -92,6 +92,7 @@ public:// Attributes
          double length{};
          double time{};
          double speed{};
+         std::vector<double> beta;
 
          // LOADS config set?
          bool set{false};

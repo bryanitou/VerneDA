@@ -3,15 +3,17 @@
  */
 
 #include "integrator.h"
-#include <fstream>
 
-integrator::integrator(INTEGRATOR integrator, double stepmax)
+integrator::integrator(INTEGRATOR integrator, ALGORITHM algorithm, double stepmax)
 {
     // Set type
     this->type = integrator;
 
     // Set step max
     this->hmax_ = stepmax;
+
+    // Set the algorithm
+    this->algorithm_ = algorithm;
 }
 
 
@@ -33,7 +35,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = this->check_ads_conditions(x);
+            flag_interruption_errToll = this->check_conditions(x);
 
             // Break integration if needed
             if (flag_interruption_errToll)
@@ -84,7 +86,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = this->check_ads_conditions(x);
+            flag_interruption_errToll = this->check_conditions(x);
 
             // Break integration if needed
             if (flag_interruption_errToll)
@@ -256,6 +258,28 @@ void integrator::set_problem_ptr(problems *problem)
     }
 }
 
+bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
+{
+
+    switch (this->algorithm_)
+    {
+        case ALGORITHM::ADS:
+        {
+            return this->check_ads_conditions(scv);
+        }
+        case ALGORITHM::LOADS:
+        {
+            return this->check_loads_conditions(scv);
+        }
+        default:
+        {
+            // Show errs...
+        }
+    }
+
+    return false;
+}
+
 bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
 {
     // Result of the comparison
@@ -295,14 +319,98 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     return result;
 }
 
+bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
+{
+    // Auxiliary variables
+    int n_rows = (int) scv.size();
+    int n_cols = (int) DACE::DA::getMaxVariables();
+
+    // Result of the comparison
+    bool result{false};
+
+    // Get the jacobian
+    DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
+    DACE::AlgebraicMatrix<double> jacobian_cons(n_rows, n_cols);
+    DACE::AlgebraicMatrix<DACE::DA> jacobian_first(n_rows, n_cols);
+    DACE::Interval init = {0, 0};
+    DACE::AlgebraicMatrix<DACE::Interval> bounds(n_rows, n_cols, init);
+
+    // Upper bounds sum
+    double upper_bound_sum = 0;
+    double constant_sum = 0;
+
+    // Reference: https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant
+    for (int i = 0; i < n_rows; i++)
+    {
+        for (int j = 0; j < n_cols; j++)
+        {
+            auto comp_ij = (1/this->beta_[j]) * scv[i].deriv(j + 1);
+            auto comp_ij_cons = comp_ij.cons();
+            auto comp_ij_first = comp_ij - comp_ij_cons;
+            jacobian.at(i, j) = comp_ij;
+            jacobian_cons.at(i, j) = comp_ij_cons;
+            jacobian_first.at(i, j) = comp_ij_first;
+
+            // Bounds computation
+            auto bound_ij = comp_ij_first.bound();
+            bounds.at(i, j) = bound_ij;
+
+            // Sum
+            upper_bound_sum += bound_ij.m_ub * bound_ij.m_ub;
+            constant_sum += comp_ij_cons * comp_ij_cons;
+        }
+
+        // Print row
+        // std::cout << DACE::AlgebraicVector<DACE::DA> (jacobian.getrow(i)) << std::endl;
+        // std::cout << DACE::AlgebraicVector<double> (jacobian_cons.getrow(i)) << std::endl;
+    }
+
+    // Compute the NLI
+    auto nli = std::sqrt( upper_bound_sum / constant_sum );
+
+    if (true)
+    {
+        std::ofstream outfile;
+        outfile.open("out/example/loads/nli.csv", std::ios_base::app); // append instead of overwrite
+
+        // String to write
+        auto str2write = tools::string::print2string(" %.2f, %.3f", this->t_, nli);
+
+        // Write
+        outfile << str2write << std::endl;
+    }
+
+    if (nli < this->nli_threshold_ && false)
+    {
+        // It means we have exceeded the threshold!
+        // TODO: write code here
+        result = true;
+    }
+
+    // Now, plot the nli
+
+    // Return the errors
+    return result;
+}
+
+
 void integrator::set_errToll(const std::vector<double> &errToll)
 {
     // Info
     auto vect2str = tools::vector::num2string(errToll, ", ");
-    std::fprintf(stdout, "Setting the Error Tolerances vector: '%s'\n", vect2str.c_str());
+    std::fprintf(stdout, "Setting the Error Tolerances vector to...: '%s'\n", vect2str.c_str());
 
     // Setting it...
     this->errToll_ = errToll;
+}
+
+void integrator::set_nli_threshold(const double &nli_threshold)
+{
+    // Info
+    std::fprintf(stdout, "Setting the NLI threshold to...: '%.3f'\n", nli_threshold);
+
+    // Setting it...
+    this->nli_threshold_ = nli_threshold;
 }
 
 // Some auxiliary functions for the RK78, TODO: Can we get rid of min/max?
@@ -584,7 +692,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             }
 
             // Check returned flag
-            flag_interruption_errToll = this->check_ads_conditions(Y1_1);
+            flag_interruption_errToll = this->check_conditions(Y1_1);
 
             // Break integration if needed
             if (flag_interruption_errToll)

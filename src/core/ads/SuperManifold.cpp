@@ -20,7 +20,20 @@ void SuperManifold::set_integrator_ptr(integrator* integrator)
     this->current_ = new Manifold(integrator->get_scv());
 
     // Set there the error tolerances and the maximum number of splits
-    integrator->set_errToll(this->errToll_);
+    if (this->algorithm_ == ALGORITHM::ADS)
+    {
+        integrator->set_errToll(this->errToll_);
+    }
+    else if (this->algorithm_ == ALGORITHM::LOADS)
+    {
+        integrator->set_nli_threshold(this->nli_threshold_);
+    }
+    else
+    {
+        // TODO: Show some error messages here..
+        std::fprintf(stderr, "Error to be written.");
+    }
+
     integrator->set_nSplitMax(this->nSplitMax_);
 
     // Replace problem pointer
@@ -45,9 +58,22 @@ void SuperManifold::split_domain()
         std::exit(-1);
     }
 
-    // Current passes to be previous
+    // Current passes to be previous in a new pointer
     this->previous_ =  new Manifold(*this->current_);
 
     // Split domain: get current domain
-    this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);
+    if (this->algorithm_ == ALGORITHM::ADS)
+    {
+        this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);
+    }
+    else if (this->algorithm_ == ALGORITHM::LOADS)
+    {
+        this->current_ = this->current_->getSplitDomain(this->nli_threshold_, this->nSplitMax_);
+    }
+    else
+    {
+        // TODO: Show some error messages here..
+        std::fprintf(stderr, "Error to be written.");
+    }
+
 }

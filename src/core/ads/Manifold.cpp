@@ -46,6 +46,83 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
     *this = aux;
 }
 
+Manifold* Manifold::getSplitDomain(const double& nli_threshold, const int nSplitMax, int posOverride)
+{
+    /* Member function elaborating the ADS of initial Manifold (initial Domain)
+     !>> input: (*func) is the expansion function whose error is estimate
+     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
+     double nSplitMax is the threshold for the maximum number of split for each box
+     !<< return Manifold containing the generating Patch */
+
+    /*Automatic Domain Splitting*/
+    auto results = new Manifold();
+
+    // Re-set integrator
+    results->integrator_ = this->integrator_;
+
+    /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
+    // While runs until the vector gets emptied >> (std::deque< Patch >)
+    while (!this->empty())
+    {
+        // Print status
+        this->print_status();
+
+        // Creates new patch from the first position in this Manifold
+        Patch p = this->front();
+
+        // Removes the one in front
+        this->pop_front();
+
+        // Set time for the integrator
+        this->integrator_->t_ = p.t_;
+
+        // Get the new state
+        auto scv = this->integrator_->integrate(p, (int)this->size());
+
+        // Finaaaalized..
+        std::exit(50);
+
+        // Builds patch from the resulting scv
+        Patch f(scv, p.history, this->integrator_->t_);
+
+        /*Estimate the error for each patch in the deque */
+        std::vector<double> error = f.getTruncationErrors();
+        std::vector<double> relativErr(error.size() );
+
+        // Find maximum relative truncation error
+        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
+
+        // If
+        if ( posOverride != 0)
+        {
+            max_error = (relativErr.begin() + posOverride);
+        }
+
+        if (*max_error == 0.0 || p.history.count() == nSplitMax)
+        {
+            // Check the maximum function error and the total number of split for the Patch
+            results->push_back(f);
+        }
+        else
+        {
+            // Function component of maximum error
+            const unsigned int pos = std::distance(relativErr.begin(), max_error);
+
+            // Get the splitting direction
+            const unsigned int dir = f.getSplittingDirection(pos);
+
+            // Split the patch
+            auto s = p.split(dir);
+
+            // Add new manifolds
+            this->push_back(s.first);
+            this->push_back(s.second);
+        }
+    }
+
+    return results;
+}
+
 Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
 {
     /* Member function elaborating the ADS of initial Manifold (initial Domain)

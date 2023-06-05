@@ -130,7 +130,6 @@ set(PYPLOT_TYPE_ATTITUDE "attitude")
 
 # Application version information
 # This is automatic; do not touch anything
-# TODO: No version for the while
 string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
 string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
@@ -152,7 +151,7 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # BUILD EXTERNAL PROJECTS
 ############################################
 # Note for cmake developers: this projects have their own CMakeLists, we have to build and install them
-# TODO: Do something like this if the project requires some kind of system library to be installed in the system.
+# TODO: Do something like this if the project requires some kind of system library to be installed, like boost.
 # find_package(Eigen3 REQUIRED)
 # IF( NOT EIGEN3_INCLUDE_DIR )
 #     MESSAGE( FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
