@@ -63,6 +63,11 @@ public:
         this->beta_ = beta;
     }
 
+    void set_time_scaling(double time_scale)
+    {
+        this->t_scaling_ = time_scale;
+    }
+
     void set_nSplitMax(int nSplitMax)
     {
         this->nSplitMax_ = nSplitMax;
@@ -133,6 +138,7 @@ private:
     // LOADS stuff
     double nli_threshold_;
     std::vector<double> beta_;
+    double t_scaling_;
 
 private:
     // Some auxilary class variables
@@ -172,6 +178,6 @@ private:
     bool check_interruption_flags();
 
     bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
-    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
+    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
     bool check_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
 };

@@ -127,7 +127,7 @@ json_input json_parser::parse_input_file(const std::string& filepath)
 void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_input_obj)
 {
     // TODO: Not used now but will be required later
-    double mu = rsj_obj["mu"].as<double>();
+    json_input_obj->mu = rsj_obj["mu"].as<double>();
 
     // Parse the algorithm to be used: ADS or LOADS
     std::string algorithm_str = tools::string::clean_bars(rsj_obj["algorithm"].as_str());
@@ -287,22 +287,28 @@ void json_parser::parse_loads_section(RSJresource& rsj_obj, json_input * json_in
 
 void json_parser::parse_scaling_section(RSJresource& rsj_obj, json_input * json_input_obj)
 {
+    // Parce standalone doubles
     json_input_obj->scaling.length = rsj_obj["length"].as<double>();
     json_input_obj->scaling.time = rsj_obj["time"].as<double>();
     json_input_obj->scaling.speed = rsj_obj["velocity"].as<double>();
 
     // Fill the beta scaling vector
     json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
+
+    // Do it for TWO_BODY problem for now.. TODO: To be Enhanced with other problems
     if (json_input_obj->problem == PROBLEM::TWO_BODY)
     {
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.length);
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
-        json_input_obj->scaling.beta.push_back(1 / json_input_obj->scaling.speed);
+        // Loop into them
+        for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
+        {
+            // Push back computed beta
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
+        }
     }
 
+    // TODO: Add some safety checks here... have neen they properly set?
+
+    // Scaling variables have been set
     json_input_obj->scaling.set = true;
 }
 

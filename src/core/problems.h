@@ -19,7 +19,7 @@ class problems
 {
 public:
     // Constructor
-    explicit problems(PROBLEM type);
+    explicit problems(PROBLEM type, double mu = constants::earth::mu);
 
     // Destructor
     ~problems();
@@ -30,7 +30,7 @@ public:
 
 private:
     // Problems
-    static DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t);
+    DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t) const;
     static DACE::AlgebraicVector<DACE::DA> FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t);
     DACE::AlgebraicVector<DACE::DA> FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t);
 
@@ -49,6 +49,9 @@ private:
 
     // Type of problem
     PROBLEM type_{PROBLEM::NA};
+
+    // Mu to be set...
+    double mu_{};
 
     static double** get_inverse_matrix(double **a);
 

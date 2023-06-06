@@ -47,12 +47,13 @@ int main(int argc, char* argv[])
 
     // Set initial state
     DACE::AlgebraicVector<DACE::DA> scv0 = {
-            my_specs.initial_conditions.mean[0] + my_specs.initial_conditions.standard_deviation[0] * my_specs.initial_conditions.confidence_interval * DACE::DA(1),
-            my_specs.initial_conditions.mean[1] + my_specs.initial_conditions.standard_deviation[1] * my_specs.initial_conditions.confidence_interval * DACE::DA(2),
-            my_specs.initial_conditions.mean[2] + my_specs.initial_conditions.standard_deviation[2] * my_specs.initial_conditions.confidence_interval * DACE::DA(3),
-            my_specs.initial_conditions.mean[3] + my_specs.initial_conditions.standard_deviation[3] * my_specs.initial_conditions.confidence_interval * DACE::DA(4),
-            my_specs.initial_conditions.mean[4] + my_specs.initial_conditions.standard_deviation[4] * my_specs.initial_conditions.confidence_interval * DACE::DA(5),
-            my_specs.initial_conditions.mean[5] + my_specs.initial_conditions.standard_deviation[5] * my_specs.initial_conditions.confidence_interval * DACE::DA(6) };
+            my_specs.initial_conditions.mean[0] + my_specs.scaling.beta[0] * DACE::DA(1),
+            my_specs.initial_conditions.mean[1] + my_specs.scaling.beta[1] * DACE::DA(2),
+            my_specs.initial_conditions.mean[2] + my_specs.scaling.beta[2] * DACE::DA(3),
+            my_specs.initial_conditions.mean[3] + my_specs.scaling.beta[3] * DACE::DA(4),
+            my_specs.initial_conditions.mean[4] + my_specs.scaling.beta[4] * DACE::DA(5),
+            my_specs.initial_conditions.mean[5] + my_specs.scaling.beta[5] * DACE::DA(6)
+    };
 
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
     auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, my_specs.algorithm, dt);
 
     // Define problem to solve
-    auto prob = problems(my_specs.problem);
+    problems* prob;
 
     // Create an empty SuperManifold to be filled in the switch case
     SuperManifold* super_manifold;
@@ -81,6 +82,10 @@ int main(int argc, char* argv[])
         {
             // Build super manifold: ADS
             super_manifold = new SuperManifold(my_specs.ads.tolerance,my_specs.ads.max_split[0], ALGORITHM::ADS);
+
+            // Define problem
+            prob = new problems(my_specs.problem);
+
             break;
         }
         case ALGORITHM::LOADS:
@@ -90,6 +95,12 @@ int main(int argc, char* argv[])
 
             // Set beta constant in integrator
             objIntegrator->set_beta(my_specs.scaling.beta);
+
+            // Set time scaling
+            objIntegrator->set_time_scaling(my_specs.scaling.time);
+
+            // Define problem
+            prob = new problems(my_specs.problem, my_specs.mu);
             break;
         }
         default:
@@ -101,7 +112,7 @@ int main(int argc, char* argv[])
 
 
     // Set problem ptr in the integrator
-    objIntegrator->set_problem_ptr(&prob);
+    objIntegrator->set_problem_ptr(prob);
 
     // Setting integrator parameters
     objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);

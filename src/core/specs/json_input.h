@@ -113,4 +113,5 @@ public:// Attributes
      std::string output_dir{};
      PROBLEM problem{PROBLEM::NA};
      ALGORITHM algorithm{ALGORITHM::NA};
+     double mu{};
 };

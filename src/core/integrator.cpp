@@ -28,7 +28,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
         // Print detailed info
         this->print_detailed_information(x, i, this->t_);
 
+        // Get new polynomial
         x = this->Euler_step(x, this->t_, this->h_);
+
+        // Increase step time
         this->t_ += this->h_;
 
         // Check ADS conditions to continue integration
@@ -260,20 +263,26 @@ void integrator::set_problem_ptr(problems *problem)
 
 bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
 {
-
+    // Check the proper conditions to be checked in case ADS or LOADS
     switch (this->algorithm_)
     {
         case ALGORITHM::ADS:
         {
+            // Check ADS conditions
             return this->check_ads_conditions(scv);
         }
         case ALGORITHM::LOADS:
         {
+            // Check LOADS conditions
             return this->check_loads_conditions(scv);
         }
         default:
         {
             // Show errs...
+            std::fprintf(stderr, "You have not chosen the conditions to be checked... Whether ADS or LOADS.");
+
+            // Exit code
+            std::exit(50);
         }
     }
 
@@ -285,6 +294,7 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     // Result of the comparison
     bool result{false};
 
+    // Iterate through every polynomial of the SCV
     for (unsigned int i = 0; i < scv.size(); ++i)
     {
         // Safety check
@@ -295,7 +305,7 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
 
        //std::cout << tools::vector::num2string(err) << std::endl;
 
-        // TODO: What exactly is this
+        // Get approximation error
         auto err2compare = err.back();
 
         // Safety check
@@ -319,7 +329,7 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     return result;
 }
 
-bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
+bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv, bool debug)
 {
     // Auxiliary variables
     int n_rows = (int) scv.size();
@@ -327,13 +337,6 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
 
     // Result of the comparison
     bool result{false};
-
-    // Get the jacobian
-    DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
-    DACE::AlgebraicMatrix<double> jacobian_cons(n_rows, n_cols);
-    DACE::AlgebraicMatrix<DACE::DA> jacobian_first(n_rows, n_cols);
-    DACE::Interval init = {0, 0};
-    DACE::AlgebraicMatrix<DACE::Interval> bounds(n_rows, n_cols, init);
 
     // Upper bounds sum
     double upper_bound_sum = 0;
@@ -344,50 +347,51 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     {
         for (int j = 0; j < n_cols; j++)
         {
+            // Check for non-zero values in order to avoid nans
+            if (this->beta_[j] == 0.0)
+            {
+                continue;
+            }
+
+            // Make derivative
             auto comp_ij = (1/this->beta_[j]) * scv[i].deriv(j + 1);
+
+            // Take constant part
             auto comp_ij_cons = comp_ij.cons();
+
+            // Get first term
             auto comp_ij_first = comp_ij - comp_ij_cons;
-            jacobian.at(i, j) = comp_ij;
-            jacobian_cons.at(i, j) = comp_ij_cons;
-            jacobian_first.at(i, j) = comp_ij_first;
 
             // Bounds computation
-            auto bound_ij = comp_ij_first.bound();
-            bounds.at(i, j) = bound_ij;
+            auto bound_ij_ub = comp_ij_first.bound().m_ub;
 
             // Sum
-            upper_bound_sum += bound_ij.m_ub * bound_ij.m_ub;
+            upper_bound_sum += bound_ij_ub * bound_ij_ub;
             constant_sum += comp_ij_cons * comp_ij_cons;
         }
-
-        // Print row
-        // std::cout << DACE::AlgebraicVector<DACE::DA> (jacobian.getrow(i)) << std::endl;
-        // std::cout << DACE::AlgebraicVector<double> (jacobian_cons.getrow(i)) << std::endl;
     }
 
     // Compute the NLI
     auto nli = std::sqrt( upper_bound_sum / constant_sum );
 
-    if (true)
+    if (debug)
     {
         std::ofstream outfile;
-        outfile.open("out/example/loads/nli.csv", std::ios_base::app); // append instead of overwrite
+        auto time_str = std::string (__TIME__);
+        outfile.open("out/example/loads/nli_" + time_str + ".csv", std::ios_base::app); // append instead of overwrite
 
         // String to write
-        auto str2write = tools::string::print2string(" %.2f, %.3f", this->t_, nli);
+        auto str2write = tools::string::print2string(" %.16f, %.16f", this->t_, nli);
 
         // Write
         outfile << str2write << std::endl;
     }
 
-    if (nli < this->nli_threshold_ && false)
+    if (nli >= this->nli_threshold_)
     {
         // It means we have exceeded the threshold!
-        // TODO: write code here
         result = true;
     }
-
-    // Now, plot the nli
 
     // Return the errors
     return result;
