@@ -19,6 +19,9 @@ integrator::integrator(INTEGRATOR integrator, ALGORITHM algorithm, double stepma
 
 DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Auxiliary previous state
+    auto x_prev = x;
+
     // Auxiliary bool
     bool flag_interruption_errToll;
 
@@ -31,9 +34,6 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
         // Get new polynomial
         x = this->Euler_step(x, this->t_, this->h_);
 
-        // Increase step time
-        this->t_ += this->h_;
-
         // Check ADS conditions to continue integration
         if (this->interrupt_)
         {
@@ -43,9 +43,17 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
             // Break integration if needed
             if (flag_interruption_errToll)
             {
+                // Set result to the previous one
+                x = x_prev;
                 break;
             }
         }
+
+        // Increase step time
+        this->t_ += this->h_;
+
+        // Update previous
+        x_prev = x;
     }
 
     return x;
@@ -58,6 +66,9 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVect
 
 DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Auxiliary previous state
+    auto x_prev = x;
+
     // Auxiliary bool
     bool flag_interruption_errToll;
 
@@ -77,13 +88,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     for(int i = 0; i < this->steps_; i++ )
     {
         // Print detailed info
-        this->print_detailed_information(x, i, this->t_);
+        this->print_detailed_information(x_prev, i, this->t_);
 
         // Compute the single step
-        x = this->RK4_step(x, this->t_, this->h_);
-
-        // Increase step time
-        this->t_ += this->h_;
+        x = this->RK4_step(x_prev, this->t_, this->h_);
 
         // Check ADS conditions to continue integration
         if (this->interrupt_)
@@ -94,10 +102,20 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
             // Break integration if needed
             if (flag_interruption_errToll)
             {
+                // Set result to the previous one
+                x = x_prev;
                 break;
             }
         }
+
+        // Increase step time
+        this->t_ += this->h_;
+
+        // Update previous for next iteration
+        x_prev = x;
     }
+
+    this->end_ = std::abs(this->t_ - this->t1_) < 1E-10;
 
     return x;
 }
@@ -338,6 +356,9 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     // Result of the comparison
     bool result{false};
 
+    // Jacobian matrix
+    DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
+
     // Upper bounds sum
     double upper_bound_sum = 0;
     double constant_sum = 0;
@@ -355,6 +376,7 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
 
             // Make derivative
             auto comp_ij = (1/this->beta_[j]) * scv[i].deriv(j + 1);
+            jacobian.at(i, j) = comp_ij;
 
             // Take constant part
             auto comp_ij_cons = comp_ij.cons();
@@ -374,7 +396,10 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     // Compute the NLI
     auto nli = std::sqrt( upper_bound_sum / constant_sum );
 
-    if (debug)
+    // Clear sum
+    upper_bound_sum = 0.0;
+
+    if (debug || true)
     {
         std::ofstream outfile;
         auto time_str = std::string (__TIME__);
@@ -391,6 +416,46 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     {
         // It means we have exceeded the threshold!
         result = true;
+
+        // Compute the direction
+        // DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
+        DACE::AlgebraicVector<DACE::DA> v_list(n_cols, 0.0);
+        std::vector<double> mu_list(n_cols);
+
+        // Algorithm to decide which direction is the one that contributes the most
+        for (int k = 0; k < n_cols; k++)
+        {
+            // Get direction to be evaluated
+            v_list[k] = DACE::DA(k+1);
+
+            for (int i = 0; i < n_rows; i++)
+            {
+                for (int j = 0; j < n_cols; j++)
+                {
+                    // Function composition
+                    auto comp_ij = jacobian.at(i, j).eval(v_list);
+
+                    // Get first term
+                    auto comp_ij_first = comp_ij - comp_ij.cons();
+
+                    // Bounds computation
+                    auto bound_ij_ub = comp_ij_first.bound().m_ub;
+
+                    // Sum
+                    upper_bound_sum += bound_ij_ub * bound_ij_ub;
+                }
+            }
+
+            // Save result
+            mu_list[k] = std::sqrt( upper_bound_sum / constant_sum );
+
+            // Clean stuff
+            upper_bound_sum = 0.0;
+            std::fill(v_list.begin(), v_list.end(), 0.0);
+        }
+
+        // Get the maximum
+       this-> pos_ = (int) std::distance(mu_list.begin(), std::max_element(mu_list.begin(), mu_list.end()));
     }
 
     // Return the errors
@@ -592,6 +657,9 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     // Iteration
     int idx = 0;
 
+    // Auxiliary previous state
+    auto x_prev = Y0;
+
     // Integrate until X reaches the desired time
     while(X != this->t1_)
     {
@@ -682,35 +750,43 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             ERREST = ERREST + RFNORM;
         }
 
-        // Update times to the class
-        this->t_ = X;
-        this->h_ = H;
-
         // Check ADS conditions to continue integration
+        // TODO: Confirm x_prev, Y1check logic assignation, not tested.
         if (this->interrupt_)
         {
-            DACE::AlgebraicVector<DACE::DA> Y1_1(N);
+            DACE::AlgebraicVector<DACE::DA> Y1check(N);
             for (I = 0; I<N; I++)
             {
-                Y1_1[I] = Z[I][0];
+                Y1check[I] = Z[I][0];
             }
 
             // Check returned flag
-            flag_interruption_errToll = this->check_conditions(Y1_1);
+            flag_interruption_errToll = this->check_conditions(Y1check);
 
             // Break integration if needed
             if (flag_interruption_errToll)
             {
+                Y1 = x_prev;
                 break;
             }
+
+            // Update next state
+            x_prev = Y1check;
         }
+
+        // Update times to the class
+        this->t_ = X;
+        this->h_ = H;
 
         idx++;
     }
 
-    for (I = 0; I<N; I++)
+    if (!flag_interruption_errToll)
     {
-        Y1[I] = Z[I][0];
+        for (I = 0; I<N; I++)
+        {
+            Y1[I] = Z[I][0];
+        }
     }
 
     return Y1;

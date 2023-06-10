@@ -12,8 +12,14 @@
 #include <vector>
 #include <cmath>
 
+// Project libraries
+#include "base/enums.h"
+#include "tools/math.h"
+
 // DACE libraries
 #include "dace/dace.h"
+
+
 
 class SplittingHistory : public std::vector<int>
 {
@@ -21,7 +27,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     /*CONSTRUCTORS                                                                */
     ////////////////////////////////////////////////////////////////////////////////
-    SplittingHistory();                                                                     // >! default constructor
+    /**
+     * Default constructor.
+     */
+    SplittingHistory();                                                          // >! default constructor
 
     SplittingHistory(unsigned int size);                                                    // >! Constructor with dimension gives by size
 
@@ -46,6 +55,8 @@ public:
     std::vector<double> center();                                                                                 // >! Function to compute the center
 
     std::vector<double> width();                                                                                  // >! Function to compute the center
+
+    static unsigned int getdir(int val);
 
     bool contain (std::vector<double> pt);                                                                        // >! Function to verify the point belonging of point
 

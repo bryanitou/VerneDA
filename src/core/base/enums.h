@@ -132,3 +132,14 @@ enum class ALGORITHM
     LOADS,
     NA
 };
+
+/**
+* Left, right or center split
+*/
+enum class SPLITTING_PLACE
+{
+    LEFT,
+    RIGHT,
+    MIDDLE,
+    NA
+};

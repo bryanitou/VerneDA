@@ -46,7 +46,7 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
     *this = aux;
 }
 
-Manifold* Manifold::getSplitDomain(const double& nli_threshold, const int nSplitMax, int posOverride)
+Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOverride)
 {
     /* Member function elaborating the ADS of initial Manifold (initial Domain)
      !>> input: (*func) is the expansion function whose error is estimate
@@ -79,44 +79,24 @@ Manifold* Manifold::getSplitDomain(const double& nli_threshold, const int nSplit
         // Get the new state
         auto scv = this->integrator_->integrate(p, (int)this->size());
 
-        // Finaaaalized..
-        std::exit(50);
-
         // Builds patch from the resulting scv
         Patch f(scv, p.history, this->integrator_->t_);
 
-        /*Estimate the error for each patch in the deque */
-        std::vector<double> error = f.getTruncationErrors();
-        std::vector<double> relativErr(error.size() );
-
-        // Find maximum relative truncation error
-        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
-
-        // If
-        if ( posOverride != 0)
-        {
-            max_error = (relativErr.begin() + posOverride);
-        }
-
-        if (*max_error == 0.0 || p.history.count() == nSplitMax)
+        if (p.history.count() == nSplitMax || this->integrator_->end_)
         {
             // Check the maximum function error and the total number of split for the Patch
             results->push_back(f);
         }
         else
         {
-            // Function component of maximum error
-            const unsigned int pos = std::distance(relativErr.begin(), max_error);
-
-            // Get the splitting direction
-            const unsigned int dir = f.getSplittingDirection(pos);
-
             // Split the patch
-            auto s = p.split(dir);
+            auto s = p.split(integrator_->get_splitting_pos() + 1, algorithm);
 
-            // Add new manifolds
-            this->push_back(s.first);
-            this->push_back(s.second);
+            // Add new patches
+            for (auto & p_new : s)
+            {
+                this->push_back(p_new);
+            }
         }
     }
 
@@ -216,8 +196,8 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
             auto s = p.split(dir);
 
             // Add new manifolds
-            this->push_back(s.first);
-            this->push_back(s.second);
+            this->push_back(s[0]); // Left patch
+            this->push_back(s[1]); // Right patch
         }
     }
 
@@ -255,8 +235,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
             const unsigned int pos = std::distance(error.begin(), max_error);  // function component of maximum error
             const unsigned int dir = f.getSplittingDirection(pos);
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+            this -> push_back(s[0]);
+            this -> push_back(s[1]);
         }
 
     }
@@ -296,8 +276,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
             const unsigned int pos = std::distance(error.begin(), max_error);  // function component of maximum error
             const unsigned int dir = f.getSplittingDirection(pos);
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+            this -> push_back(s[0]);
+            this -> push_back(s[1]);
         }
 
     }
@@ -347,8 +327,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
             const unsigned int pos = std::distance(relativErr.begin(), max_error);  // function component of maximum error
             const unsigned int dir = f.getSplittingDirection(pos);
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+            this -> push_back(s[0]);
+            this -> push_back(s[1]);
         }
         
     }
@@ -397,8 +377,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
             const unsigned int pos = std::distance(error.begin(), max_error);  // function component of maximum error
             const unsigned int dir = f.getSplittingDirection(pos);
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+            this -> push_back(s[0]);
+            this -> push_back(s[1]);
         }
 
     }
@@ -448,8 +428,8 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
             const unsigned int pos = std::distance(relativErr.begin(), max_error);  // function component of maximum error
             const unsigned int dir = f.getSplittingDirection(pos);
             auto s = p.split(dir);
-            this -> push_back(s.first);
-            this -> push_back(s.second);
+            this -> push_back(s[0]);
+            this -> push_back(s[1]);
         }
 
     }
@@ -493,8 +473,8 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
                 return this -> at(i).eval(ptPatch);
             }
 
-            /*In case that the manifold is been modified, i.e delate some Patch,
-            and the point belongs to a delated Patch, the member function riturn
+            /*In case that the manifold is been modified, i.e delete some Patch,
+            and the point belongs to a deleted Patch, the member function return
             a NaN vector ! ATTENTION*/
             if ( i == size-1 )
             {
@@ -638,7 +618,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
              * a NaN vector !
              * ATTENTION
              */
-            if ( i == size-1 )
+            if ( i == size - 1 )
             {
                 // Create Null vector
                 DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN);

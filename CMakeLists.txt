@@ -312,17 +312,34 @@ set_target_properties(base
 set(LIBRARY_TOOLS "tools")
 
 add_library(${LIBRARY_TOOLS} SHARED
-        src/core/tools/vo.cpp
         src/core/tools/str.cpp
-        src/core/tools/math.cpp)
-
-add_dependencies(tools
-        dace)
-
-target_link_libraries(${LIBRARY_TOOLS}
-        ${LIBRARY_DACE})
+        src/core/tools/math.cpp
+        src/core/tools/str.cpp
+        src/core/tools/ep.cpp)
 
 set_target_properties(${LIBRARY_TOOLS} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#
+#===========================================
+# LIBRARY: VerneDA DA_TOOLS
+#===========================================
+set(LIBRARY_DATOOLS "datools")
+
+add_library(${LIBRARY_DATOOLS} SHARED
+        src/core/tools/vo.cpp
+        src/core/tools/io.cpp)
+
+add_dependencies(datools
+        dace
+        tools)
+
+target_link_libraries(${LIBRARY_DATOOLS}
+        ${LIBRARY_DACE}
+        ${LIBRARY_TOOLS})
+
+set_target_properties(${LIBRARY_DATOOLS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
@@ -373,10 +390,6 @@ set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
-        src/core/tools/ep.cpp
-        src/core/tools/io.cpp
-        src/core/tools/vo.cpp
-        src/core/tools/str.cpp
         src/core/conversions/angles.cpp
         src/core/geometry/point.cpp
         src/core/solids/solid.cpp
@@ -409,11 +422,12 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/ads.h)
 
 add_dependencies(ads
-        dace)
+        dace
+        tools)
 
 target_link_libraries(${LIBRARY_ADS}
         ${LIBRARY_DACE}
-        ${LIBRARY_TOLS})
+        ${LIBRARY_TOOLS})
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -543,6 +557,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         dacelib
         base
         tools
+        datools
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -571,6 +586,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         dacelib
         base
         tools
+        datools
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

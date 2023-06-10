@@ -92,4 +92,15 @@ namespace tools::math
      * @return generated samples
      */
     std::vector<std::vector<double>> hypercubeEdges(int ndim, int ns, const std::vector<int>& sweep = {}, const std::vector<bool>& path = {});
+
+    /**
+     * Returns -1 for negative numbers and +1 for positive numbers.
+     * @tparam T [in] [T]
+     * @param val [in] value
+     * @return -1 or 1
+     */
+    template <typename T> int sgn(T val);
 }
+
+// Include templates
+#include "math_temp.cpp"

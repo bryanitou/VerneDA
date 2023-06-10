@@ -76,7 +76,7 @@ public: // Methods
      * @return Manifold*
      */
     Manifold* getSplitDomain(const std::vector<double>& errToll, int nSplitMax, int posOverride = 0);
-    Manifold *getSplitDomain(const double &nli_threshold, int nSplitMax, int posOverride = 0);
+    Manifold *getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOverride = 0);
 
     /**
      * Evaluates a point in this manifold, returns the corresponding translation using the proper patch.

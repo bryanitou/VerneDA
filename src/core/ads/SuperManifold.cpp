@@ -68,7 +68,7 @@ void SuperManifold::split_domain()
     }
     else if (this->algorithm_ == ALGORITHM::LOADS)
     {
-        this->current_ = this->current_->getSplitDomain(this->nli_threshold_, this->nSplitMax_);
+        this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
     }
     else
     {

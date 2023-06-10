@@ -8,7 +8,6 @@
 /********************************************************************************************/
 #include "SplittingHistory.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /*CONSTRUCTORS                                                                */
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,6 +44,11 @@ SplittingHistory::SplittingHistory(const std::vector<int> &v, unsigned int first
         // Notice that the range in the std::vector constructor above includes all
         // elements between first and last, including the first excluding the last.
         // Hence the +1.
+}
+
+template <typename T> int sgn(T val)
+{
+    return (T(0) < val) - (val < T(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +121,7 @@ std::vector<double> SplittingHistory::center()
     // Get number of variables
     const unsigned int var = DACE::DA::getMaxVariables();
 
-    // Check this size
+    // Check this size: splitting history: That is, the information on how this patch has been partitioned
     const unsigned int size =  this->size();
 
     // Auxiliary variable for the initial center and width
@@ -125,13 +129,23 @@ std::vector<double> SplittingHistory::center()
 
     for ( unsigned int i = 0; i < size; ++i)
     {
-        unsigned int n = abs((*this)[i]) - 1;
+        // Get the direction in which it was splitted and if left or right or center
+        auto splitting_val = (*this)[i];
 
-        // Before it has been evaluated the half of displacement
-        w[n] = 0.5*w[n];
+        // Get the splitting direction
+        unsigned int dir = SplittingHistory::getdir(splitting_val);
 
-        // Then the previous computation is added to the constant part
-        c[n] = c[n] + 0.5*((double)((*this)[i]/abs((*this)[i])))*std::fabs(w[n]);
+        // Get the splitting position
+        unsigned int n = dir - 1;
+
+        // Before it has been evaluated the half of displacement TODO: MAKE A CHOICE HERE
+        w[n] = 1.0/3.0 * w[n];
+
+        // Get the sign as double
+        auto sign = (double)(tools::math::sgn(splitting_val));
+
+        // Then the previous computation is added to the constant part TODO: Ensure 0.5 is fixed
+        c[n] = c[n] + 0.5 * sign * std::fabs(w[n]);
     }
 
       return c;
@@ -148,16 +162,20 @@ std::vector<double> SplittingHistory::width()
     const unsigned int size = this -> size();
     std::vector <double> w(var, 2.0);
 
-    for (unsigned int i = 0; i < size; ++i) {
-        unsigned int n = abs((*this)[i]) - 1;
-        w[n] = 0.5*std::fabs(w[n]);
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        // Get the direction
+        auto dir = SplittingHistory::getdir((*this)[i]);
+
+        // TODO: MAKE A CHOICE HERE
+        w[dir - 1] = 1.0/3.0 * std::fabs(w[dir -1]);
     }
 
     return w;
 }
 
 
-bool SplittingHistory::contain (std::vector<double> pt)
+bool SplittingHistory::contain(std::vector<double> pt)
 {
     /* member function to know if a point belong to an assigned box
     INPUT pt: vector conteining the point to check the belonging
@@ -202,4 +220,11 @@ bool SplittingHistory::contain (std::vector<double> pt)
 
     // Everything is alright
     return true;
+}
+
+unsigned int SplittingHistory::getdir(int val) {
+    // Get the direction in which it was splitted and if left or right or center
+    auto splitting_side = val < 0 ? SPLITTING_PLACE::LEFT : val < 100 ? SPLITTING_PLACE::RIGHT : SPLITTING_PLACE::MIDDLE;
+
+    return splitting_side == SPLITTING_PLACE::MIDDLE ? val/100 :  abs(val);
 }

@@ -8,9 +8,6 @@
 #include <fstream>
 #include <filesystem>
 
-// DA library
-#include "delta.h"
-
 // Project libraries
 #include "base/enums.h"
 

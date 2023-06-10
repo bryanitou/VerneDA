@@ -35,6 +35,7 @@ public:
     ~integrator() = default;
 
     double t_{};
+    bool end_{false};
 private:
     std::vector<int> vector;
 
@@ -80,6 +81,11 @@ public:
     DACE::AlgebraicVector<DACE::DA> get_scv()
     {
         return this->scv_;
+    }
+
+    [[nodiscard]] int get_splitting_pos() const
+    {
+        return this->pos_;
     }
 
 private:
@@ -128,6 +134,7 @@ private:
 
     // ADS/LOADS common stuff
     int nSplitMax_;
+    int pos_;
 
     // ADS constants
     std::vector<double> errToll_;

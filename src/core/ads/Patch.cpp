@@ -153,7 +153,7 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
 }
 
 
-std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> obj )
+std::vector<Patch> Patch::split( int dir, ALGORITHM algorithm, DACE::AlgebraicVector<DACE::DA> obj)
 {
     /*
      * Member function to split the Patch \param[in] the hidden input is the 'Patch'
@@ -175,32 +175,35 @@ std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> o
         dir = Patch::getSplittingDirection(pos);
     }
 
-    std::pair<Patch, Patch> output;
+    std::vector<Patch> output(ALGORITHM::LOADS == algorithm ? 3 : 2);
     Patch temp = (*this);
 
-    temp.history.push_back( -dir );
-    obj[dir-1] =  -0.5 + 0.5*DACE::DA(dir);
-    temp = this -> eval(obj);
-    output.first = temp;
-    temp.history.pop_back();
+    // Set some values
+    double scaling = ALGORITHM::LOADS == algorithm ? 1.0/3.0 : 0.5;
+    double center = ALGORITHM::LOADS == algorithm ? 2.0/3.0 : 0.5;
 
-    // std::cout << (*this) << std::endl;
-    // std::cout << "#################################################################" << std::endl;
-//
-//
-    // std::cout << obj << std::endl;
-    // std::cout << temp << std::endl;
-    // std::cout << "#################################################################" << std::endl;
+    temp.history.push_back( -dir );
+    obj[dir-1] = -center + scaling * DACE::DA(dir);
+    temp = this -> eval(obj);
+    output[0] = temp;
+    temp.history.pop_back();
 
 
     temp.history.push_back( dir );
-    obj[dir-1] =  0.5 + 0.5*DACE::DA(dir);
+    obj[dir-1] = +center + scaling * DACE::DA(dir);
     temp = this -> eval(obj);
-    output.second = temp;
+    output[1] = temp;
     temp.history.pop_back();
 
-    //std::cout << obj << std::endl;
-    //std::cout << temp << std::endl;
+    // In case of having loads, input the scaled centered patch
+    if (ALGORITHM::LOADS == algorithm)
+    {
+        temp.history.push_back( dir * 100);
+        obj[dir-1] = 0.0 + scaling * DACE::DA(dir);
+        temp = this -> eval(obj);
+        output[2] = temp;
+        temp.history.pop_back();
+    }
 
     return output;
 }
