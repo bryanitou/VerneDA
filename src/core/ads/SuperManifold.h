@@ -31,6 +31,7 @@ public:
 public:// Attributes
     Manifold* previous_ = nullptr;
     Manifold* current_ = nullptr;
+    Manifold* splitbox_ = nullptr;
 
 private:
     // Tolerance error vector
@@ -47,11 +48,15 @@ public:
     // Manifold operations
     void split_domain();
 
-public:
 
+
+public:
+    // Setters
     void set_integrator_ptr(integrator *integrator);
 
 public:
     // Getters
     [[nodiscard]] Manifold* get_final_manifold() const {return this->current_; };
+
+    Manifold* get_box_manifold() const;
 };

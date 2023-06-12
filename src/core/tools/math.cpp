@@ -25,5 +25,5 @@ std::vector<int> tools::math::range(const int a, const int b, const int s) {
 }
 
 std::vector<std::vector<double>> tools::math::hypercubeEdges(const int ndim, const int ns, const std::vector<int>& sweep, const std::vector<bool>& path) {
-    return tools::math::hypercubeEdges(-1.0, 1.0, ndim, ns, sweep, path);
+    return tools::math::hypercubeEdges2(-1.0, 1.0, ndim, ns, sweep, path);
 }

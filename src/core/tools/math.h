@@ -22,8 +22,7 @@
 #include <stdexcept>
 #include <valarray>
 
-namespace tools::math
-{
+namespace tools::math {
     /**
      * Range function.
      * @param a start (included)
@@ -81,7 +80,7 @@ namespace tools::math
      */
     template<typename T>
     std::vector<std::vector<T>> hypercubeEdges(const T &left, const T &right, int ndim, int ns,
-                                               const std::vector<int>& sweep = {},
+                                               const std::vector<int> &sweep = {},
                                                std::vector<bool> path = {});
 
 
@@ -91,7 +90,13 @@ namespace tools::math
      * @param ns number of samples per edge
      * @return generated samples
      */
-    std::vector<std::vector<double>> hypercubeEdges(int ndim, int ns, const std::vector<int>& sweep = {}, const std::vector<bool>& path = {});
+    std::vector<std::vector<double>>
+    hypercubeEdges(int ndim, int ns, const std::vector<int> &sweep = {}, const std::vector<bool> &path = {});
+
+    template<typename T>
+    std::vector<std::vector<T>>
+    hypercubeEdges2(const T &left, const T &right, const int ndim, const int ns, const std::vector<int> &sweep,
+                    std::vector<bool> path);
 
     /**
      * Returns -1 for negative numbers and +1 for positive numbers.
@@ -99,8 +104,10 @@ namespace tools::math
      * @param val [in] value
      * @return -1 or 1
      */
-    template <typename T> int sgn(T val);
+    template<typename T>
+    int sgn(T val);
 }
+
 
 // Include templates
 #include "math_temp.cpp"

@@ -54,12 +54,13 @@ def plot_banana(deltas_dict: dict,
     # Build x, y dictionary
     x = {}
     y = {}
-
+    v_deltas = None
     # Get vectors
-    v_deltas = get_vector(deltas_dict, idx=2, verbose=verbose)
+    if deltas_dict is not None:
+        v_deltas = get_vector(deltas_dict, idx=2, verbose=verbose)
 
-    x["deltas"] = v_deltas[0]
-    y["deltas"] = v_deltas[1]
+        x["deltas"] = v_deltas[0]
+        y["deltas"] = v_deltas[1]
 
     if centers_dict is not None:
         v_centers = get_vector(centers_dict, idx=2, verbose=verbose)
@@ -87,7 +88,7 @@ def plot_banana(deltas_dict: dict,
     if plot_type == PlotType.attitude:
         plot_attitude(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix)
     elif plot_type == PlotType.translation:
-        plot_translation(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix)
+        plot_translation(x, y, None, unit_str=unit_str, prefix=output_prefix)
     else:
         print("I can only do Translation and Attitude plots!")
         exit(-1)
@@ -131,10 +132,11 @@ def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLi
 
 def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
 
     # Plot projections in three planes: XY, YZ, XZ
-    plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
+    if z is not None:
+        plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
 
 
 def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or str):
@@ -142,9 +144,11 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
     fig = plt.figure(figsize=(16, 9))
     # plt.show()
     # plt.ion()
-    # Finally, we can plot everything
-    plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
-
+    # plt.ylim([-1.25, 1.25])
+    # plt.xlim([-1.5, 1.5])
+    # # Finally, we can plot everything
+    if "deltas" in x and "deltas" in y:
+        plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
     if "centers" in x and "centers" in y:
         plt.scatter(x["centers"], y["centers"], s=20, marker="o", color="orange")
     if "walls" in x and "walls" in y:
@@ -154,7 +158,12 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
         for p in range(0, len(x["walls"])):
             patch_x = x["walls"][p]
             patch_y = y["walls"][p]
-            plt.plot(patch_x, patch_y, linewidth=0.2, color="black")
+            plt.plot(patch_x, patch_y, linewidth=1, color="black")
+            # patch_x = x["walls"][p][:8]
+            # patch_y = y["walls"][p][:8]
+            # for it in range(0, len(patch_x) - 1):
+            #     plt.plot(patch_x[it:it+2], patch_y[it:it+2], linewidth=0.2, color="black")
+
 
     plt.xlabel(f"{'roll' if unit_str in ['rad', 'deg'] else 'x'}  [{unit_str}]")
     plt.ylabel(f"{'pitch' if unit_str in ['rad', 'deg'] else 'y'}  [{unit_str}]")
@@ -166,7 +175,7 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
     plt.grid(True)
     # plt.show()
     # Save fig
-    plt.savefig(output, format="pdf", bbox_inches="tight")
+    plt.savefig(output, format="png", bbox_inches="tight")
 
     # Clear
     plt.clf()
@@ -186,7 +195,7 @@ def plot_quaternion(w: [float], x: [float], y: [float], z: [float], unit_str: st
     plot_3d_vectors(roll, pitch, yaw, unit_str, output)
 
 
-def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str):
+def plot_projections(x: [float], y: [float], z: [float], unit_str: str, output: os.PathLike or str) -> object:
     # Initialise the subplot function using number of rows and columns
     fig, ax = plt.subplots(1, 3, figsize=(16, 9))
 
@@ -397,7 +406,6 @@ def main(args: list = None, verbose: bool = False) -> None:
                     centers_dict=eval_centers_dict,
                     walls_dict=eval_walls_dict,
                     verbose=verbose)
-
 
 if __name__ == '__main__':
     # Call to main running function

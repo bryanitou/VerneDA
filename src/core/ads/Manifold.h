@@ -76,7 +76,7 @@ public: // Methods
      * @return Manifold*
      */
     Manifold* getSplitDomain(const std::vector<double>& errToll, int nSplitMax, int posOverride = 0);
-    Manifold *getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOverride = 0);
+    Manifold *getSplitDomain(ALGORITHM algorithm, int nSplitMax);
 
     /**
      * Evaluates a point in this manifold, returns the corresponding translation using the proper patch.
@@ -105,6 +105,7 @@ public: // Methods
      */
     void print_status();
 
+    Manifold *get_initial_split_domain();
 
     /*
      * GRAVEYARD
@@ -120,4 +121,5 @@ public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
 
     std::vector<std::vector<DACE::AlgebraicVector<double>>> wallsPointEvaluationManifold_useless();
+
 };

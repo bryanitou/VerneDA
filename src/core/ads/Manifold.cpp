@@ -9,6 +9,9 @@
 
 #include "Manifold.h"
 
+#include "tools/io.h"
+
+
 struct Observable;
 
 Manifold::Manifold() : std::deque< Patch >()
@@ -18,7 +21,7 @@ Manifold::Manifold() : std::deque< Patch >()
 
 Manifold::Manifold( const Manifold& m) : std::deque< Patch >(m)
 {
-
+    this->integrator_ = m.integrator_;
 }
 
 Manifold::Manifold( const Patch& p)
@@ -46,19 +49,16 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
     *this = aux;
 }
 
-Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOverride)
+Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
 {
-    /* Member function elaborating the ADS of initial Manifold (initial Domain)
-     !>> input: (*func) is the expansion function whose error is estimate
-     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
-     double nSplitMax is the threshold for the maximum number of split for each box
-     !<< return Manifold containing the generating Patch */
-
     /*Automatic Domain Splitting*/
     auto results = new Manifold();
 
     // Re-set integrator
     results->integrator_ = this->integrator_;
+
+    // Iterator
+    int i = 0;
 
     /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
     // While runs until the vector gets emptied >> (std::deque< Patch >)
@@ -67,6 +67,20 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOv
         // Print status
         this->print_status();
 
+        /**
+        * INITIAL DEBUG
+        */
+        // Debugging information
+        // Create the file stream
+        std::ofstream file2write;
+        auto format_int = tools::string::print2string("%06d", i);
+        file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film/" + format_int + ".walls");
+        tools::io::dace::print_each_patch_wall(this->get_initial_split_domain()->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
+        // Close the stream
+        file2write.close();
+        /**
+         * FINAL DEBUG
+         */
         // Creates new patch from the first position in this Manifold
         Patch p = this->front();
 
@@ -98,6 +112,8 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, int posOv
                 this->push_back(p_new);
             }
         }
+
+        i++;
     }
 
     return results;
@@ -719,7 +735,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 50, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 2, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();
@@ -886,3 +902,22 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     return result;
 }
 
+
+Manifold* Manifold::get_initial_split_domain()
+{
+    // Create manifold to return
+    auto splitbox = new Manifold(*this);
+    splitbox->clear();
+
+    // Replay history for every path
+    for (auto & p : *this)
+    {
+        // Get the new patch
+        auto new_p = p.replay();
+
+        // Push back in the box manifold
+        splitbox->push_back(new_p);
+    }
+
+    return splitbox;
+}

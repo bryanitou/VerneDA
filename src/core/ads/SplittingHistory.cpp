@@ -98,17 +98,42 @@ DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay(DACE::AlgebraicVector<D
     DACE::AlgebraicVector<DACE::DA> x = DACE::AlgebraicVector<DACE::DA>::identity();
     const unsigned int size = this -> size();
 
-    for ( unsigned int i = 0; i < size; ++i) {
+    for ( unsigned int i = 0; i < size; ++i)
+    {
+        // Get the direction in which it was split and if left or right or center
+        auto splitting_val = (*this)[i];
 
-        int n = abs(this -> at(i)) - 1;
-        x[n] = 0.5*(double)((*this)[i]/abs((*this)[i])) + 0.5*DACE::DA(n+1);
+        // Get the splitting direction
+        unsigned int dir = SplittingHistory::getdir(splitting_val);
+
+        // Get the splitting position
+        unsigned int n = dir - 1;
+
+        // Get the sign as double
+        auto sign = (double)(tools::math::sgn(splitting_val));
+
+        // Shifting
+        auto shift = SplittingHistory::get_splitting_place(splitting_val) == SPLITTING_PLACE::MIDDLE ? 0.0 :  2.0 / 3.0 * sign ;
+
+        // Shift and scale
+        x[n] = shift + 1.0/3.0 * DACE::DA(n+1);
+
+        // Compose
         obj = obj.eval(x);
-        x[n] = DACE::DA(n+1);
+
+        x[n] = DACE::DA(n + 1);
     }
 
     return obj;
 }
 
+/**
+ *      int n = abs(this -> at(i)) - 1;
+        x[n] = 0.5*(double)((*this)[i]/abs((*this)[i])) + 0.5*DACE::DA(n+1);
+        obj = obj.eval(x);
+        x[n] = DACE::DA(n+1);
+ * @return
+ */
 
 std::vector<double> SplittingHistory::center()
 {
@@ -129,7 +154,7 @@ std::vector<double> SplittingHistory::center()
 
     for ( unsigned int i = 0; i < size; ++i)
     {
-        // Get the direction in which it was splitted and if left or right or center
+        // Get the direction in which it was split and if left or right or center
         auto splitting_val = (*this)[i];
 
         // Get the splitting direction
@@ -138,14 +163,14 @@ std::vector<double> SplittingHistory::center()
         // Get the splitting position
         unsigned int n = dir - 1;
 
-        // Before it has been evaluated the half of displacement TODO: MAKE A CHOICE HERE
-        w[n] = 1.0/3.0 * w[n];
-
         // Get the sign as double
         auto sign = (double)(tools::math::sgn(splitting_val));
 
-        // Then the previous computation is added to the constant part TODO: Ensure 0.5 is fixed
-        c[n] = c[n] + 0.5 * sign * std::fabs(w[n]);
+        // Shift center // TODO: Make a choice here LOADS vs. ADS.
+        c[n] = c[n] + ((SPLITTING_PLACE::MIDDLE == get_splitting_place(splitting_val)) ? 0.0 : 1.0/3.0 * sign * w[n]);
+
+        // Re-scale width
+        w[n] = 1.0/3.0 * w[n];
     }
 
       return c;
@@ -222,9 +247,14 @@ bool SplittingHistory::contain(std::vector<double> pt)
     return true;
 }
 
-unsigned int SplittingHistory::getdir(int val) {
+SPLITTING_PLACE SplittingHistory::get_splitting_place(int val)
+{
     // Get the direction in which it was splitted and if left or right or center
-    auto splitting_side = val < 0 ? SPLITTING_PLACE::LEFT : val < 100 ? SPLITTING_PLACE::RIGHT : SPLITTING_PLACE::MIDDLE;
+    return val < 0 ? SPLITTING_PLACE::LEFT : val < 100 ? SPLITTING_PLACE::RIGHT : SPLITTING_PLACE::MIDDLE;
+}
 
-    return splitting_side == SPLITTING_PLACE::MIDDLE ? val/100 :  abs(val);
+unsigned int SplittingHistory::getdir(int val)
+{
+    // Get the direction from the place
+    return SplittingHistory::get_splitting_place(val) == SPLITTING_PLACE::MIDDLE ? val/100 :  std::abs(val);
 }

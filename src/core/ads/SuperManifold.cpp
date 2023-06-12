@@ -77,3 +77,18 @@ void SuperManifold::split_domain()
     }
 
 }
+
+Manifold *SuperManifold::get_box_manifold() const
+{
+    // Safety checks
+    if (!this->current_)
+    {
+        // Throw FTL
+        std::fprintf(stderr, "Current manifold is nullptr! Cannot compute the initial split domain box!\n");
+
+        // Exit program
+        std::exit(-1);
+    }
+
+    return this->current_->get_initial_split_domain();
+}

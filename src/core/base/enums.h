@@ -109,7 +109,9 @@ enum class EVAL_TYPE
 {
     DELTA,
     WALLS,
-    CENTER
+    INITIAL_WALLS,
+    CENTER,
+    INITIAL_CENTER,
 };
 
 /**

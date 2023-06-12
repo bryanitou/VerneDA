@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 1000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 1);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
@@ -151,31 +151,43 @@ int main(int argc, char* argv[])
     // Set output path for results
     std::filesystem::path output_dir = my_specs.output_dir;
     std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
+    std::filesystem::path output_eval_deltas_box_path_dd =  output_dir / "eval_deltas_expression_box_RK4.dd";
     std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
 
     // Some other useful optional outputs: validation
     std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
+    std::filesystem::path output_walls_box = output_dir / "eval_walls_box_RK4.walls";
     std::filesystem::path output_centers = output_dir / "eval_centers.dd";
+    std::filesystem::path output_centers_box = output_dir / "eval_centers_box.dd";
+
+    // Debugging files
+    std::filesystem::path output_debug_splitting_history = output_dir / "splitting_history.txt";
 
     // Dump non evaluated deltas
     tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
 
     // Dump evaluated deltas
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_box_path_dd);
 
     // Dump eval points at the walls
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls_box, EVAL_TYPE::INITIAL_WALLS);
 
     // Dump eval points at the center
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers_box, EVAL_TYPE::INITIAL_CENTER);
+
+    // Debugging dumps
+    tools::io::dace::dump_splitting_history(deltas_engine.get(), output_debug_splitting_history);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_eval_deltas_path_dd},
+            {"file", output_eval_deltas_box_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
-            {"centers", output_centers},
-            {"walls", output_walls},
+            {"centers", output_centers_box},
+            {"walls", output_walls_box},
             {"silent", "false"}
     };
 

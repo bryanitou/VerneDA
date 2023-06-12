@@ -67,6 +67,25 @@ namespace tools::io
          */
         void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked,
                                  std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
+
+        /**
+        * Dump evaluated deltas.
+        * @param delta [in] [delta]
+        * @param file_path [in] [std::filesystem::path]
+        */
+        void dump_splitting_history(delta* delta, const std::filesystem::path &file_path);
+
+        /**
+         * Print each evaluated sample
+         * @param deltas_poly [in] [std::vector<DACE::AlgebraicVector<double>>]
+         * @param file2write [in] [std::ofstream]
+         * @param eval_type [in] [EVAL_TYPE]
+         */
+        void print_each_delta(std::vector<DACE::AlgebraicVector<double>> deltas_poly, std::ofstream &file2write, EVAL_TYPE eval_type, bool print_header = true);
+
+        void print_each_patch_wall(std::vector<std::vector<DACE::AlgebraicVector<double>>> patches,
+                                   std::ofstream &file2write,
+                                   EVAL_TYPE eval_type, bool print_header = true);
     }
 
     /**

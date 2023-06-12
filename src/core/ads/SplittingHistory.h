@@ -56,6 +56,7 @@ public:
 
     std::vector<double> width();                                                                                  // >! Function to compute the center
 
+    static SPLITTING_PLACE get_splitting_place(int val);
     static unsigned int getdir(int val);
 
     bool contain (std::vector<double> pt);                                                                        // >! Function to verify the point belonging of point

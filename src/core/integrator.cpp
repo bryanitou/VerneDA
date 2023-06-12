@@ -412,7 +412,7 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
         outfile << str2write << std::endl;
     }
 
-    if (nli >= this->nli_threshold_)
+    if (nli > this->nli_threshold_)
     {
         // It means we have exceeded the threshold!
         result = true;
@@ -755,10 +755,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
         if (this->interrupt_)
         {
             DACE::AlgebraicVector<DACE::DA> Y1check(N);
-            for (I = 0; I<N; I++)
-            {
-                Y1check[I] = Z[I][0];
-            }
+            for (I = 0; I<N; I++) { Y1check[I] = Z[I][0]; }
 
             // Check returned flag
             flag_interruption_errToll = this->check_conditions(Y1check);
