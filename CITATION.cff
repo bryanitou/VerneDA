@@ -1,0 +1,9 @@
+cff-version: 1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Cabrera Ramirez
+    given-names: Bryan Gustavo
+title: "VerneDA++ precise orbital mechanics propagator"
+version: 1.0
+date-released: 2023-06-13
+url: "https://github.com/bryanitou/VerneDA"
