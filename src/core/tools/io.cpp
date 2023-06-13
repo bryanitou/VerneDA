@@ -358,12 +358,12 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
     std::string line2write{};
 
     // Write the header
-    file2write << "PATCH_ID, HISTORY" << std::endl;
+    file2write << "PATCH_ID, HISTORY, SPLIT_NLI, SPLIT_TIME" << std::endl;
     int i = 0;
     for (auto & patch : *current_manifold)
     {
         history = tools::vector::num2string(patch.history, ", ", "%3d");
-        line2write = tools::string::print2string( "%3d, %s", i, history.c_str());
+        line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f", i, history.c_str(), patch.nli, patch.t_split_);
 
         // Write line
         file2write << line2write << std::endl;

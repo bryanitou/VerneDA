@@ -55,6 +55,8 @@ int main(int argc, char* argv[])
             my_specs.initial_conditions.mean[5] + my_specs.scaling.beta[5] * DACE::DA(6)
     };
 
+    std::cout << scv0 << std::endl;
+
     // Declare and initialize class
     auto s0 = std::make_unique<scv>(scv0);
 

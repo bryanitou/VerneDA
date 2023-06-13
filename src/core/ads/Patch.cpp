@@ -51,13 +51,15 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     history = s;
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time) : DACE::AlgebraicVector<DACE::DA>(v)
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
 {
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
      */
-    history = s;
-    t_ = time;
+    this->history = s;
+    this->t_ = time;
+    this->nli = nli;
+    this->t_split_ = time_split;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

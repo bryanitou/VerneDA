@@ -160,7 +160,6 @@ std::vector<std::vector<T>> tools::math::hypercubeEdges2(const T &left, const T 
             {
                 // Compute position and reset iterator
                 f = i * n_edg * n_vrt + j*n_vrt + g;
-                // std::fprintf(stdout, "%4d\n", f);
                 m = 0;
 
                 // Iterate through the dimensions
@@ -190,6 +189,9 @@ std::vector<std::vector<T>> tools::math::hypercubeEdges2(const T &left, const T 
         p++;
     }
 
+    // for (int i = 0; i < out.size(); i++) {
+    //     std::fprintf(stdout, "%s\n", tools::vector::num2string(out[i]).c_str());
+    // }
 
     return out;
 }

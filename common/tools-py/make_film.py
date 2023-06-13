@@ -4,7 +4,7 @@ import banana
 
 
 def main():
-    dirpath = "/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film"
+    dirpath = "/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film2"
     filenames = os.listdir(dirpath)
     filenames.sort()
 

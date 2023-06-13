@@ -36,6 +36,7 @@ public:
 
     double t_{};
     bool end_{false};
+    double nli_current_;
 private:
     std::vector<int> vector;
 

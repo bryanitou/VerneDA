@@ -22,6 +22,8 @@
 #include <stdexcept>
 #include <valarray>
 
+#include "tools/vo.h"
+
 namespace tools::math {
     /**
      * Range function.

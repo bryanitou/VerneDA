@@ -72,12 +72,16 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         */
         // Debugging information
         // Create the file stream
-        std::ofstream file2write;
-        auto format_int = tools::string::print2string("%06d", i);
-        file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film/" + format_int + ".walls");
-        tools::io::dace::print_each_patch_wall(this->get_initial_split_domain()->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
-        // Close the stream
-        file2write.close();
+        if (false)
+        {
+            std::ofstream file2write;
+            auto format_int = tools::string::print2string("%06d", i);
+            file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film2/" + format_int + ".walls");
+            tools::io::dace::print_each_patch_wall(results->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
+            // Close the stream
+            file2write.close();
+        }
+
         /**
          * FINAL DEBUG
          */
@@ -94,7 +98,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         auto scv = this->integrator_->integrate(p, (int)this->size());
 
         // Builds patch from the resulting scv
-        Patch f(scv, p.history, this->integrator_->t_);
+        Patch f(scv, p.history, this->integrator_->t_, p.nli, p.t_split_);
 
         if (p.history.count() == nSplitMax || this->integrator_->end_)
         {
@@ -109,6 +113,8 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
             // Add new patches
             for (auto & p_new : s)
             {
+                p_new.nli = this->integrator_->nli_current_;
+                p_new.t_split_ = this->integrator_->t_;
                 this->push_back(p_new);
             }
         }
@@ -153,7 +159,7 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
         auto scv = this->integrator_->integrate(p, (int)this->size());
 
         // Builds patch from the resulting scv
-        Patch f(scv, p.history, this->integrator_->t_);
+        Patch f(scv, p.history, this->integrator_->t_, this->integrator_->nli_current_);
 
         // Check for tolerance
         // TODO: This check needs to be done only once

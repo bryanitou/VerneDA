@@ -394,7 +394,7 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     }
 
     // Compute the NLI
-    auto nli = std::sqrt( upper_bound_sum / constant_sum );
+    this->nli_current_ = std::sqrt( upper_bound_sum / constant_sum );
 
     // Clear sum
     upper_bound_sum = 0.0;
@@ -406,13 +406,13 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
         outfile.open("out/example/loads/nli_" + time_str + ".csv", std::ios_base::app); // append instead of overwrite
 
         // String to write
-        auto str2write = tools::string::print2string(" %.16f, %.16f", this->t_, nli);
+        auto str2write = tools::string::print2string(" %.16f, %.16f", this->t_, this->nli_current_);
 
         // Write
         outfile << str2write << std::endl;
     }
 
-    if (nli > this->nli_threshold_)
+    if (this->nli_current_ > this->nli_threshold_)
     {
         // It means we have exceeded the threshold!
         result = true;

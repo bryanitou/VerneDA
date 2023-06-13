@@ -28,6 +28,8 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     SplittingHistory history;
     double t_ = 0.0;
+    double nli = -1;
+    double t_split_ = -1;
 
     ////////////////////////////////////////////////////////////////////////////////
     /*CONSTRUCTORS                                                                */
@@ -43,7 +45,7 @@ public:
     Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s);  // >! Copy constructor of existing DAvector and SplittingHistory
 
 
-    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time);  // >! Copy constructor of existing DAvector and SplittingHistory
+    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
 
     ////////////////////////////////////////////////////////////////////////////////
     /*OVERLOAD OPERATORS                                                          */
