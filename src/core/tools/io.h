@@ -9,16 +9,8 @@
 #include <filesystem>
 #include <unordered_map>
 
-// DA library
-#include "dace/dace.h"
-#include "delta.h"
-
 // Project libraries
-#include "base/enums.h"
-
-// Imported tools
-#include "tools/vo.h"
-#include "tools/str.h"
+#include "delta.h"
 
 namespace tools::io
 {

@@ -9,8 +9,6 @@
 
 #include "Manifold.h"
 
-#include "tools/io.h"
-
 
 struct Observable;
 
@@ -74,12 +72,12 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         // Create the file stream
         if (false)
         {
-            std::ofstream file2write;
-            auto format_int = tools::string::print2string("%06d", i);
-            file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film2/" + format_int + ".walls");
-            tools::io::dace::print_each_patch_wall(results->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
-            // Close the stream
-            file2write.close();
+            // std::ofstream file2write;
+            // auto format_int = tools::string::print2string("%06d", i);
+            // file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film2/" + format_int + ".walls");
+            // tools::io::dace::print_each_patch_wall(results->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
+            // // Close the stream
+            // file2write.close();
         }
 
         /**

@@ -11,12 +11,8 @@
 // System libraries
 #include <algorithm>
 
-// DACE libraries
-#include "dace/dace.h"
-
 // Project libraries
 #include "SplittingHistory.h"
-#include "base/enums.h"
 
 struct Observable;
 

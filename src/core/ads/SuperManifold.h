@@ -4,10 +4,8 @@
 
 #pragma once
 
-// System libraries
-
 // Project libraries
-#include "Manifold.h"
+#include "ads/Manifold.h"
 
 class SuperManifold
 {
@@ -58,5 +56,5 @@ public:
     // Getters
     [[nodiscard]] Manifold* get_final_manifold() const {return this->current_; };
 
-    Manifold* get_box_manifold() const;
+    [[nodiscard]] Manifold* get_box_manifold() const;
 };

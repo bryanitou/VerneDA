@@ -12,9 +12,6 @@
 // Project libraries
 #include "scv.h"
 #include "tools/ep.h"
-#include "tools/vo.h"
-#include "quaternion.h"
-#include "tools/str.h"
 #include "ads/SuperManifold.h"
 
 class delta {

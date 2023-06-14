@@ -12,13 +12,9 @@
 #include <deque>
 #include <algorithm>
 
-// DACE libraries
-#include "dace/dace.h"
-
 // Project libraries
 #include "Patch.h"
 #include "integrator.h"
-#include "tools/math.h"
 
 struct Observable;
 

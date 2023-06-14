@@ -20,7 +20,6 @@
 #include "dace/dace.h"
 
 
-
 class SplittingHistory : public std::vector<int>
 {
 public:

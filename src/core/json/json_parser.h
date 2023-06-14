@@ -6,13 +6,13 @@
 // Include system libraries
 #include <string>
 #include <vector>
+#include <cmath>
 
 // Include JSON thirdparty parser
 #include "RSJparser.tcc"
 
 // Include project libraries
 #include "tools/str.h"
-#include "conversions/angles.h"
 #include "specs/json_input.h"
 
 namespace json_parser

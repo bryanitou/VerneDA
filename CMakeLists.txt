@@ -314,8 +314,13 @@ set(LIBRARY_TOOLS "tools")
 add_library(${LIBRARY_TOOLS} SHARED
         src/core/tools/str.cpp
         src/core/tools/math.cpp
-        src/core/tools/str.cpp
         src/core/tools/ep.cpp)
+
+add_dependencies(tools
+        base)
+
+target_link_libraries(${LIBRARY_TOOLS}
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_TOOLS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -332,7 +337,7 @@ add_library(${LIBRARY_DATOOLS} SHARED
         src/core/tools/io.cpp)
 
 add_dependencies(datools
-        dace
+        dacelib
         tools)
 
 target_link_libraries(${LIBRARY_DATOOLS}
@@ -349,16 +354,14 @@ set_target_properties(${LIBRARY_DATOOLS} PROPERTIES
 set(LIBRARY_SPECIFICATIONS "specs_input")
 
 add_library(${LIBRARY_SPECIFICATIONS} SHARED
-        src/core/specs/specs.cpp
         src/core/specs/args_input.cpp
         )
 
 add_dependencies(specs_input
-        base
-        core)
+        base)
 
 target_link_libraries(${LIBRARY_SPECIFICATIONS}
-        ${LIBRARY_CORE})
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_SPECIFICATIONS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -374,10 +377,12 @@ add_library(${LIBRARY_JSON_PARSER} SHARED
 
 add_dependencies(json
         rsjp
+        tools
         specs_input)
 
 target_link_libraries(json
         rsjp
+        tools
         specs_input)
 
 set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
@@ -400,10 +405,12 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/quaternion.cpp)
 
 add_dependencies(core
-        dace)
+        datools
+        )
 
 target_link_libraries(${LIBRARY_CORE}
-        ${LIBRARY_DACE})
+        ${LIBRARY_DATOOLS}
+        )
 
 set_target_properties(${LIBRARY_CORE} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -418,21 +425,18 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/Manifold.cpp
         src/core/ads/SuperManifold.cpp
         src/core/ads/Patch.cpp
-        src/core/ads/SplittingHistory.cpp
-        src/core/ads/ads.h)
+        src/core/ads/SplittingHistory.cpp)
 
 add_dependencies(ads
-        dace
-        tools)
+        core)
 
 target_link_libraries(${LIBRARY_ADS}
-        ${LIBRARY_DACE}
-        ${LIBRARY_TOOLS})
+        ${LIBRARY_CORE}
+        )
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
-
 
 ########################################################################################################################
 # EXECUTABLES: DACE mains
@@ -580,13 +584,9 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
-        tools
-        datools
+        json
+        ads
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

@@ -6,16 +6,11 @@
 #include "dace/dace.h"
 
 // Project libraries
-#include "scv.h"
-#include "integrator.h"
-#include "problems.h"
-#include "delta.h"
+#include "base/Header_Info.h"
+#include "ads/SuperManifold.h"
 #include "tools/io.h"
 #include "json/json_parser.h"
 #include "specs/args_input.h"
-
-// ADS library
-#include "ads/ads.h"
 
 
 /**
