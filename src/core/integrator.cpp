@@ -66,6 +66,9 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVect
 
 DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Set not end
+    this->end_ = false;
+
     // Auxiliary previous state
     auto x_prev = x;
 
@@ -85,7 +88,7 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     DACE::AlgebraicVector<DACE::DA> k4;
 
     // Iterate
-    for(int i = 0; i < this->steps_; i++ )
+    for(int i = 0; this->t_ < this->t1_; i++)
     {
         // Print detailed info
         this->print_detailed_information(x_prev, i, this->t_);
@@ -115,8 +118,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         x_prev = x;
     }
 
-    this->end_ = std::abs(this->t_ - this->t1_) < 1E-10;
+    // Check end condition
+    this->end_ = this->t_ > this->t1_;
 
+    // Return state
     return x;
 }
 
@@ -141,7 +146,7 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
     auto str2print = this->patch_id_ > -1 ? tools::string::print2string("p: %6d | ", this->patch_id_) : "";
 
     // Common info shared on bot attitude and orbit determination
-    str2print += tools::string::print2string("i: %6d | t: %10.2f | v: %s", i, t, str2debug.c_str());
+    str2print += tools::string::print2string("i: %6d | t: %10.6f | v: %s", i, t, str2debug.c_str());
 
     // Add 'TRACE' in front
     str2print = "TRACE: " + str2print;

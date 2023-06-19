@@ -180,11 +180,11 @@ int main(int argc, char* argv[])
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_eval_deltas_box_path_dd},
+            {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "m"},
-            {"centers", output_centers_box},
-            {"walls", output_walls_box},
+            {"centers", output_centers},
+            {"walls", output_walls},
             {"silent", "false"}
     };
 

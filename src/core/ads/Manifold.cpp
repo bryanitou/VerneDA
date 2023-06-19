@@ -84,7 +84,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
          * FINAL DEBUG
          */
         // Creates new patch from the first position in this Manifold
-        Patch p = this->front();
+        auto p = this->front();
 
         // Removes the one in front
         this->pop_front();
@@ -98,7 +98,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         // Builds patch from the resulting scv
         Patch f(scv, p.history, this->integrator_->t_, p.nli, p.t_split_);
 
-        if (p.history.count() == nSplitMax || this->integrator_->end_)
+        if (f.history.count() == nSplitMax || this->integrator_->end_)
         {
             // Check the maximum function error and the total number of split for the Patch
             results->push_back(f);
@@ -106,7 +106,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         else
         {
             // Split the patch
-            auto s = p.split(integrator_->get_splitting_pos() + 1, algorithm);
+            auto s = f.split(this->integrator_->get_splitting_pos() + 1, algorithm);
 
             // Add new patches
             for (auto & p_new : s)

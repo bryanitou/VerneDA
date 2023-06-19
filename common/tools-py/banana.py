@@ -132,7 +132,7 @@ def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLi
 
 def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.png")
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
 
     # Plot projections in three planes: XY, YZ, XZ
     if z is not None:
@@ -175,7 +175,7 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
     plt.grid(True)
     # plt.show()
     # Save fig
-    plt.savefig(output, format="png", bbox_inches="tight")
+    plt.savefig(output, format="pdf", bbox_inches="tight")
 
     # Clear
     plt.clf()
@@ -390,12 +390,15 @@ def main(args: list = None, verbose: bool = False) -> None:
             exit(-1)
 
         # Now, we should get the information from the file
-        eval_deltas_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose)
-        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"], verbose=verbose)
-        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose, walls=True)
+        eval_deltas_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose) if "file" in parsed_dict else None
+        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"], verbose=verbose) if "centers" in parsed_dict else None
+        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose, walls=True) if "walls" in parsed_dict else None
 
         # From the file, get the parent folder and save it
-        parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"]))
+        parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"])) if eval_deltas_dict is not None else None
+        parent_folder = (os.path.abspath(os.path.dirname(parsed_dict["centers"])) if eval_centers_dict is not None else parent_folder) if parent_folder is None else parent_folder
+        parent_folder = (os.path.abspath(os.path.dirname(parsed_dict["walls"])) if eval_walls_dict is not None else parent_folder) if parent_folder is None else parent_folder
+
         output_prefix = os.path.join(parent_folder, "attitude" if plot_type == PlotType.attitude else "translation")
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients

@@ -134,10 +134,10 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
 
     // Set result
     // TODO: Fix this equation from politecnico di torino paper
-    res[0] = 0.5 * (-omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]);
-    res[1] = 0.5 * ( omega[0] * q[0] + omega[2] * q[2] - omega[1] * q[3]);
-    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] + omega[0] * q[3]);
-    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[2] * q[2]);
+    res[0] = 0.5 * (       0.0       - omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]);
+    res[1] = 0.5 * ( omega[0] * q[0] +       0.0       + omega[2] * q[2] - omega[1] * q[3]);
+    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] +       0.0       + omega[0] * q[3]);
+    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[2] * q[2] +       0.0      );
     res[4] = this->inverse_[0][0] * c[0] + this->inverse_[0][1] * c[1] + this->inverse_[0][2] * c[2];; // omega_y_dot
     res[5] = this->inverse_[1][0] * c[0] + this->inverse_[1][1] * c[1] + this->inverse_[1][2] * c[2];; // omega_z_dot
     res[6] = this->inverse_[2][0] * c[0] + this->inverse_[2][1] * c[1] + this->inverse_[2][2] * c[2];; // omega_z_dot
