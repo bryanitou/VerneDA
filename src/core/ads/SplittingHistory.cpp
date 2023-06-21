@@ -173,7 +173,7 @@ std::vector<double> SplittingHistory::center(ALGORITHM algorithm)
         }
         else
         {
-            c[n] = c[n] + 0.5 * sign * w[n];
+            c[n] = c[n] + 0.5*0.5 * sign * w[n];
         }
 
         // Re-scale width
