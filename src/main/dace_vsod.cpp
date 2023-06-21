@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
