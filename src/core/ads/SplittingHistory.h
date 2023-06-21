@@ -49,15 +49,15 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     unsigned int count(unsigned int n = 0);                                                                       // >! Function to count the number of splits (default is total splits)
 
-    DACE::AlgebraicVector<DACE::DA> replay(DACE::AlgebraicVector<DACE::DA>  obj = DACE::AlgebraicVector<DACE::DA>::identity());     // >! Function to replicate the split Box
+    DACE::AlgebraicVector<DACE::DA> replay(DACE::AlgebraicVector<DACE::DA>  obj = DACE::AlgebraicVector<DACE::DA>::identity(), ALGORITHM algorithm = ALGORITHM::NA);     // >! Function to replicate the split Box
 
-    std::vector<double> center();                                                                                 // >! Function to compute the center
+    std::vector<double> center( ALGORITHM algorithm);                                                                                 // >! Function to compute the center
 
-    std::vector<double> width();                                                                                  // >! Function to compute the center
+    std::vector<double> width( ALGORITHM algorithm);                                                                                  // >! Function to compute the center
 
     static SPLITTING_PLACE get_splitting_place(int val);
     static unsigned int getdir(int val);
 
-    bool contain (std::vector<double> pt);                                                                        // >! Function to verify the point belonging of point
+    bool contain (std::vector<double> pt, ALGORITHM algorithm);                                                                        // >! Function to verify the point belonging of point
 
 };

@@ -194,6 +194,10 @@ void delta::evaluate_deltas()
                 this->sm_->previous_->front(),
                 sample,
                 1);
+        if (single_sol.empty())
+        {
+            continue;
+        }
 
         // Check the norm for DEBUG PURPOSES
         if (this->attitude_)

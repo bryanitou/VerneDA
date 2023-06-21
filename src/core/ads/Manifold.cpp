@@ -97,9 +97,9 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         auto scv = this->integrator_->integrate(p, p.id_);
 
         // Builds patch from the resulting scv
-        Patch f(scv, p.history, this->integrator_->t_, p.nli, p.t_split_);
+        Patch f(scv, p.get_history_int(), algorithm, this->integrator_->t_, p.nli, p.t_split_);
 
-        if (f.history.count() == nSplitMax || this->integrator_->end_)
+        if (f.get_history_count() == nSplitMax || this->integrator_->end_) // TODO: What about this case: (*max_error == 0.0) See old function
         {
             // Check the maximum function error and the total number of split for the Patch
             results->push_back(f);
@@ -107,7 +107,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         else
         {
             // Split the patch
-            auto s = f.split(this->integrator_->get_splitting_pos() + 1, algorithm);
+            auto s = f.split(this->integrator_->get_splitting_pos() + 1);
 
             // Add new patches
             for (auto & p_new : s)
@@ -136,21 +136,22 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
     return results;
 }
 
+/*
 Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int nSplitMax, int posOverride)
 {
-    /* Member function elaborating the ADS of initial Manifold (initial Domain)
-     !>> input: (*func) is the expansion function whose error is estimate
-     std::vector<double> errToll is the threshold for the estimation error for each component of Patch
-     double nSplitMax is the threshold for the maximum number of split for each box
-     !<< return Manifold containing the generating Patch */
+    //  Member function elaborating the ADS of initial Manifold (initial Domain)
+    //  !>> input: (*func) is the expansion function whose error is estimate
+    //  std::vector<double> errToll is the threshold for the estimation error for each component of Patch
+    //  double nSplitMax is the threshold for the maximum number of split for each box
+    //  !<< return Manifold containing the generating Patch
 
-    /*Automatic Domain Splitting*/
+    // Automatic Domain Splitting
     auto results = new Manifold();
 
     // Re-set integrator
     results->integrator_ = this->integrator_;
 
-    /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
+    // execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch
     // While runs until the vector gets emptied >> (std::deque< Patch >)
     while (!this->empty())
     {
@@ -183,7 +184,7 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
             throw std::runtime_error (err_msg);
         }
 
-        /*Estimate the error for each patch in the deque */
+        // Estimate the error for each patch in the deque
         std::vector<double> error = f.getTruncationErrors();
         std::vector<double> relativErr(error.size() );
 
@@ -236,32 +237,33 @@ Manifold* Manifold::getSplitDomain(const std::vector<double>& errToll, const int
 
     return results;
 }
-
+*/
+/**
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA> ), const double errToll, const int nSplitMax, int posOverride) {
-  /* Member function elaborating the ADS of initial Manifold (initial Domain)
+  // Member function elaborating the ADS of initial Manifold (initial Domain)
   !>> input: (*func) is the expansion function whose error is estimate
              double errToll is the threshold for the estimation error
              double nSplitMax is the threshold for the maximun number of split for each box
-   !<< return Manifold containing the generating Patch */
+   !<< return Manifold containing the generating Patch
 
-    /*automatic Domain splitting*/
+    // automatic Domain splitting
 
     Manifold results;
 
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
+    // execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch
     while ( !this -> empty() ) {
 
         Patch p = this -> front();
         this -> pop_front();
 
-        Patch f(func(p), p.history);
+        Patch f(func(p), p.get_history_int());
 
-        /*Estimate the error for each patch in the deque */
+        // Estimate the error for each patch in the deque
         auto error = f.getTruncationErrors();
         std::vector<double>::iterator max_error = std::max_element(error.begin(), error.end());   // find maximum truncation error
         if ( posOverride != 0) max_error = (error.begin() + posOverride);
 
-        if ( *max_error < errToll || p.history.count() == nSplitMax) { //check the maximum function error and the total number of split for the Patch
+        if ( *max_error < errToll || p.get_history_int().count() == nSplitMax) { //check the maximum function error and the total number of split for the Patch
             results.push_back(f);
         }
         else {
@@ -278,17 +280,17 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 }
 
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, double ), const double errtol, const int nSplitMax, const double mu, int posOverride) {
-  /* Member function elaborating the ADS of initial Manifold (initial Domain)
+  // Member function elaborating the ADS of initial Manifold (initial Domain)
   !>> input: (*func) is the expansion function whose error is estimate
              double errtol is the threshold for the estimation error
              double nSplitMax is the threshold for the maximun number of split for each box
-   !<< return Manifold containing the generating Patch */
+   !<< return Manifold containing the generating Patch
 
-    /*automatic Domain splitting*/
+    // automatic Domain splitting
 
     Manifold results;
 
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
+    // execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch
     while ( !this -> empty() ) {
 
         Patch p = this -> front();
@@ -296,7 +298,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 
         Patch f(func(p, mu), p.history);
 
-        /*Estimate the error for each patch in the deque */
+        // Estimate the error for each patch in the deque
         auto error = f.getTruncationErrors();
         std::vector<double>::iterator max_error = std::max_element(error.begin(), error.end());   // find maximum truncation error
         if ( posOverride != 0) max_error = (error.begin() + posOverride);
@@ -323,13 +325,12 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
      !>> input: (*func) is the expansion function whose error is estimate
      std::vector<double> errToll is the threshold for the estimation error for aech component of Patch
      double nSplitMax is the threshold for the maximun number of split for each box
-     !<< return Manifold containing the generating Patch */
+     !<< return Manifold containing the generating Patch
     
-    /*automatic Domain splitting*/
+    //automatic Domain splitting
     
     Manifold results;
-    
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
+
     while ( !this -> empty() ) {
         
         Patch p = this -> front();
@@ -337,8 +338,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
         
         Patch f(func(p, mu), p.history);
         if ( errToll.size() != f.size() ) throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tollerance vector must have the same size of Patchs ");
-        
-        /*Estimate the error for each patch in the deque */
+
         std::vector<double> error = f.getTruncationErrors();
         std::vector<double> relativErr(error.size() );
         
@@ -368,29 +368,18 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
     
     return results;
 }
-
-
-void Manifold::print_status()
-{
-    std::string msg2write = tools::string::print2string("TRACE: Manifold size: %10d", this->size());
-
-    // Print msg
-    std::fprintf(stdout, "%s\n", msg2write.c_str());
-}
-
-
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const double errToll, const int nSplitMax, Observable* param, const double mu, int posOverride) {
-  /* Member function elaborating the ADS of initial Manifold (initial Domain)
+  // Member function elaborating the ADS of initial Manifold (initial Domain)
   !>> input: (*func) is the expansion function whose error is estimate
              double errToll is the threshold for the estimation error
              double nSplitMax is the threshold for the maximun number of split for each box
-   !<< return Manifold containing the generating Patch */
+   !<< return Manifold containing the generating Patch
 
-    /*automatic Domain splitting*/
+    automatic Domain splitting
 
     Manifold results;
 
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
+    // execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch
     while ( !this -> empty() ) {
 
         Patch p = this -> front();
@@ -398,7 +387,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 
         Patch f(func(p, param, mu), p.history);
 
-        /*Estimate the error for each patch in the deque */
+        // Estimate the error for each patch in the deque
         auto error = f.getTruncationErrors();
         std::vector<double>::iterator max_error = std::max_element(error.begin(), error.end());   // find maximum truncation error
         if ( posOverride != 0) max_error = (error.begin() + posOverride);
@@ -420,17 +409,17 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
 }
 
 Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride) {
-  /* Member function elaborating the ADS of initial Manifold (initial Domain)
+  // Member function elaborating the ADS of initial Manifold (initial Domain)
   !>> input: (*func) is the expansion function whose error is estimate
              std::vector<double> errToll is the threshold for the estimation error for aech component of Patch
              double nSplitMax is the threshold for the maximun number of split for each box
-   !<< return Manifold containing the generating Patch */
+   !<< return Manifold containing the generating Patch
 
-    /*automatic Domain splitting*/
+    // automatic Domain splitting
 
     Manifold results;
 
-    /*execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch*/
+    // execute steps of automatic domain splitting, calling the function to eximate the error and to split the Patch
     while ( !this -> empty() ) {
 
         Patch p = this -> front();
@@ -439,7 +428,7 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
         Patch f(func(p, param, mu), p.history);
         if ( errToll.size() != f.size() ) throw std::runtime_error ("Error in Manifold::getSplitDomain: The Tollerance vector must have the same size of Patchs ");
 
-        /*Estimate the error for each patch in the deque */
+        Estimate the error for each patch in the deque
         std::vector<double> error = f.getTruncationErrors();
         std::vector<double> relativErr(error.size() );
 
@@ -470,6 +459,16 @@ Manifold Manifold::getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::
     return results;
 }
 
+**/
+void Manifold::print_status()
+{
+    std::string msg2write = tools::string::print2string("TRACE: Manifold size: %10d", this->size());
+
+    // Print msg
+    std::fprintf(stdout, "%s\n", msg2write.c_str());
+}
+
+
 DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::AlgebraicVector<DACE::DA>& InitSet, DACE::AlgebraicVector<double> pt, const int flag)
 {
   /* Member function elaborating the Manifold after split
@@ -484,6 +483,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The dimension of selected point is wrong, the dimension must be the same of Patch variables");
     }
 
+    /*
     if ( flag == 0 )
     {
         SplittingHistory empty;
@@ -499,23 +499,22 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
 
             if ( (*this).at(i).history.contain(pt) )
             {
-
                 DACE::AlgebraicVector<double> c((*this).at(i).history.center() );
                 DACE::AlgebraicVector<double> w((*this).at(i).history.width() );
                 DACE::AlgebraicVector<double> ptPatch = 2.0*(pt - c)/w;
                 return this -> at(i).eval(ptPatch);
             }
 
-            /*In case that the manifold is been modified, i.e delete some Patch,
+            // In case that the manifold is been modified, i.e delete some Patch,
             and the point belongs to a deleted Patch, the member function return
-            a NaN vector ! ATTENTION*/
+            a NaN vector ! ATTENTION
             if ( i == size-1 )
             {
                 DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN );
                 return Null;
             }
         }
-    }
+    }*/
 
     if ( flag == 1 )
     {
@@ -567,7 +566,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         SplittingHistory empty;
 
         // Check if the normalized point is within the limit box
-        if (!empty.contain(ptUnit))
+        if (!empty.contain(ptUnit, ALGORITHM::NONE))
         {
             // If here, it means that point lies outside the initial domain, should check for the nearest patch
             double distance = INFINITY;
@@ -577,10 +576,10 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
             for ( unsigned int i = 0; i < size; ++i )
             {
                 // If so, get the center
-                DACE::AlgebraicVector<double> cP((*this).at(i).history.center());
+                DACE::AlgebraicVector<double> cP((*this).at(i).get_center());
 
                 // Get the width
-                DACE::AlgebraicVector<double> wP((*this).at(i).history.width());
+                DACE::AlgebraicVector<double> wP((*this).at(i).get_width());
 
                 // Get the distance
                 double dist_patch_i = (cP - ptUnit).vnorm();
@@ -594,10 +593,10 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
             }
 
             // If so, get the center
-            DACE::AlgebraicVector<double> cP((*this).at(patch_idx).history.center());
+            DACE::AlgebraicVector<double> cP((*this).at(patch_idx).get_center());
 
             // Get the width
-            DACE::AlgebraicVector<double> wP((*this).at(patch_idx).history.width());
+            DACE::AlgebraicVector<double> wP((*this).at(patch_idx).get_width());
 
             // Evaluate point in the nearest patch
             DACE::AlgebraicVector<double> ptPatch = 2.0 * (ptUnit - cP) / wP;
@@ -622,16 +621,16 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         for ( unsigned int i = 0; i < size; ++i )
         {
             // Is this polynomial within the limit box?
-            auto inside_limits = (*this).at(i).history.contain(ptUnit);
+            auto inside_limits = (*this).at(i).history_contains(ptUnit);
 
             // Is within limits?
             if (inside_limits)
             {
                 // If so, get the center
-                DACE::AlgebraicVector<double> cP((*this).at(i).history.center());
+                DACE::AlgebraicVector<double> cP((*this).at(i).get_center());
 
                 // Get the width
-                DACE::AlgebraicVector<double> wP((*this).at(i).history.width());
+                DACE::AlgebraicVector<double> wP((*this).at(i).get_width());
 
                 // Center the normalized 'ptUnit' vector to the center of the patch, to be evaluated
                 // later
@@ -752,7 +751,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 20, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 10, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();

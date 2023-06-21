@@ -202,7 +202,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
-    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS)
+    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS && false)
     {
         for (auto & val : json_input_obj->initial_conditions.mean)
         {
@@ -272,7 +272,7 @@ void json_parser::parse_ads_section(RSJresource& rsj_obj, json_input * json_inpu
     json_input_obj->ads.max_split = rsj_obj["max_split"].as_vector<int>();
     json_input_obj->ads.set = true;
 
-    if (json_input_obj->ads.length_units == LENGTH_UNITS::KILOMETERS)
+    if (json_input_obj->ads.length_units == LENGTH_UNITS::KILOMETERS && false)
     {
         for (auto & val : json_input_obj->ads.tolerance)
         {
@@ -374,6 +374,14 @@ void json_parser::set_betas(json_input * json_input_obj)
         // Treat relying on the algorithm
         switch (json_input_obj->algorithm)
         {
+            case ALGORITHM::NONE:
+            {
+                // Same as having ADS
+            }
+            case ALGORITHM::ADS:
+            {
+                // Same as having LODS
+            }
             case ALGORITHM::LOADS:
             {
                 // Loop into them
@@ -382,16 +390,6 @@ void json_parser::set_betas(json_input * json_input_obj)
                     // Push back computed beta
                     json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
                 }
-                break;
-            }
-            case ALGORITHM::ADS:
-            {
-                // Same as having NONE
-            }
-            case ALGORITHM::NONE:
-            {
-                // Beta is equal to stddev vector
-                json_input_obj->scaling.beta = json_input_obj->initial_conditions.standard_deviation;
                 break;
             }
             default:

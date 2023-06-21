@@ -73,16 +73,9 @@ void SuperManifold::split_domain()
     this->previous_ =  new Manifold(*this->current_);
 
     // Split domain: get current domain
-    if (this->algorithm_ == ALGORITHM::ADS)
+    if (this->algorithm_ != ALGORITHM::NONE)
     {
-        this->current_ = this->current_->getSplitDomain(this->errToll_, this->nSplitMax_);
-    }
-    else if (this->algorithm_ == ALGORITHM::LOADS)
-    {
-        this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
-    }
-    else if (this->algorithm_ == ALGORITHM::NONE)
-    {
+        // Integrate and/or split
         this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
     }
     else

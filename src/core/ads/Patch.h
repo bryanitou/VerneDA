@@ -10,6 +10,7 @@
 
 // System libraries
 #include <algorithm>
+#include <utility>
 
 // Project libraries
 #include "SplittingHistory.h"
@@ -22,11 +23,20 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     /*MEMBER CLASS                                                                */
     ////////////////////////////////////////////////////////////////////////////////
-    SplittingHistory history;
     double t_ = 0.0;
     double nli = -1;
     double t_split_ = -1;
     int id_ = 0;
+    ALGORITHM algorithm_{ALGORITHM::NONE};
+
+    // Auxiliary variables
+    double scaling;
+    double center;
+
+private: // Attributes
+    SplittingHistory history;
+
+public:
     ////////////////////////////////////////////////////////////////////////////////
     /*CONSTRUCTORS                                                                */
     ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +51,7 @@ public:
     Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s);  // >! Copy constructor of existing DAvector and SplittingHistory
 
 
-    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
+    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, ALGORITHM algorithm, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
 
     ////////////////////////////////////////////////////////////////////////////////
     /*OVERLOAD OPERATORS                                                          */
@@ -55,9 +65,21 @@ public:
 
     std::vector<double> getTruncationErrors();
 
-    unsigned int getSplittingDirection(const unsigned int comp);
+    std::vector<Patch>  split( int dir = 0, DACE::AlgebraicVector<DACE::DA> obj = DACE::AlgebraicVector<DACE::DA>::identity());
 
-    std::vector<Patch>  split( int dir = 0, ALGORITHM algorithm = ALGORITHM::NA,  DACE::AlgebraicVector<DACE::DA> obj = DACE::AlgebraicVector<DACE::DA>::identity());
+    unsigned int getSplittingDirection(unsigned int comp);
 
+    static unsigned int getSplittingDirection(unsigned int comp, AlgebraicVector <DACE::DA> algebraicVector);
+
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /*HISTORY WRAPPER                                                             */
+    ////////////////////////////////////////////////////////////////////////////////
+    auto history_is_empty() { return this->history.empty(); }
+    auto get_history_int() {return (std::vector<int>)this->history;}
+    auto get_history_count(int n = 0) {return (int)this->history.count(n); }
+    auto history_contains(std::vector<double> pt) { return this->history.contain(std::move(pt), this->algorithm_); }
+    auto get_center() { return this->history.center(this->algorithm_); }
+    auto get_width() { return this->history.width(this->algorithm_); }
 };
 

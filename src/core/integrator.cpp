@@ -3,6 +3,7 @@
  */
 
 #include "integrator.h"
+#include "ads/Patch.h"
 
 integrator::integrator(INTEGRATOR integrator, ALGORITHM algorithm, double stepmax)
 {
@@ -317,6 +318,9 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     // Result of the comparison
     bool result{false};
 
+    // Auxiliary variables
+    std::vector<double> truncation_errors(scv.size());
+
     // Iterate through every polynomial of the SCV
     for (unsigned int i = 0; i < scv.size(); ++i)
     {
@@ -324,15 +328,18 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
         if (scv[i].size() == 0) { continue; }
 
         // Get error
-        auto err = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
+        auto errors = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
 
        //std::cout << tools::vector::num2string(err) << std::endl;
 
         // Get approximation error
-        auto err2compare = err.back();
+        auto trunc_err2check = errors.back();
+
+        // Save truncation errors for future treatment
+        truncation_errors[i] = trunc_err2check;
 
         // Safety check
-        if (std::isnan(err2compare))
+        if (std::isnan(trunc_err2check))
         {
             continue;
             // auto errmsg = tools::string::print2string("%s", scv[i].toString().c_str());
@@ -341,11 +348,55 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
         }
 
         // Compare error
-        if (err2compare > this->errToll_[i])
+        if (trunc_err2check > this->errToll_[i])
         {
             result = true;
             break;
         }
+    }
+
+    // Compute the splitting direction right now
+    if (result)
+    {
+        // Compute relative error from truncation errors
+        std::vector<double> relativErr(truncation_errors.size());
+
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            relativErr[k] = truncation_errors[k] - this->errToll_[k];
+        }
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            if (truncation_errors[k] > this->errToll_[k])
+            {
+                relativErr[k] = DACE::abs(relativErr[k]);
+            }
+            else
+            {
+                relativErr[k] = 0.0;
+            }
+        }
+
+        // Find maximum relative truncation error
+        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
+
+        // TODO: Are we interested in this?
+        // If position override is different than zero, set max error to that position
+        // if ( posOverride != 0)
+        // {
+        //     max_error = (relativErr.begin() + posOverride);
+        // }
+
+        if (*max_error == 0.0)
+        {
+            bool a = true;
+        }
+
+        // Function component of maximum error
+        const unsigned int pos = std::distance(relativErr.begin(), max_error);
+
+        // Get the splitting direction
+        this->pos_ = (int) Patch::getSplittingDirection(pos, scv) - 1;
     }
 
     // Return the errors

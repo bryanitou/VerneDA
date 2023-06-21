@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
             super_manifold = new SuperManifold(my_specs.ads.tolerance,my_specs.ads.max_split[0], ALGORITHM::ADS);
 
             // Define problem
-            prob = new problems(my_specs.problem);
+            prob = new problems(my_specs.problem, my_specs.mu);
 
             // Deduce whether interruption should be made or not
             interruption = !my_specs.ads.max_split.empty() && my_specs.ads.max_split[0] > 0;
@@ -130,7 +130,6 @@ int main(int argc, char* argv[])
         }
     }
 
-
     // Set problem ptr in the integrator
     objIntegrator->set_problem_ptr(prob);
 
@@ -157,7 +156,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);

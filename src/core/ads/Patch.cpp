@@ -51,7 +51,7 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     history = s;
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
 {
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
@@ -60,6 +60,11 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     this->t_ = time;
     this->nli = nli;
     this->t_split_ = time_split;
+    this->algorithm_ = algorithm;
+
+    // Set some constants
+    this->scaling = ALGORITHM::LOADS == this->algorithm_ ? 1.0/3.0 : 0.5;
+    this->center = ALGORITHM::LOADS == this->algorithm_ ? 2.0/3.0 : 0.5;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +129,11 @@ std::vector<double> Patch::getTruncationErrors()
 
 unsigned int Patch::getSplittingDirection(const unsigned int comp)
 {
+    return Patch::getSplittingDirection(comp, DACE::AlgebraicVector<DACE::DA>(*this));
+}
+
+unsigned int Patch::getSplittingDirection(const unsigned int comp, DACE::AlgebraicVector<DACE::DA> algebraicVector)
+{
     /** Member function to calculate the splitting direction this constructor is allowed to call by means a Patch element
       * \param[in]: the hidden input is the Patch element.
       * int comp: is the component of function DA vector with maximum error
@@ -138,7 +148,7 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
     unsigned int n_max_ord = DACE::DA::getMaxOrder();
 
     // Get the patch which is supposed to have the maximum error
-    auto da2eval_max_err = (*this)[comp];
+    auto da2eval_max_err = algebraicVector[comp];
 
     // Iterate 'n_var' times
     for (unsigned int i = 0; i < n_var; ++i )
@@ -155,7 +165,7 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
 }
 
 
-std::vector<Patch> Patch::split( int dir, ALGORITHM algorithm, DACE::AlgebraicVector<DACE::DA> obj)
+std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
 {
     /*
      * Member function to split the Patch \param[in] the hidden input is the 'Patch'
@@ -177,28 +187,24 @@ std::vector<Patch> Patch::split( int dir, ALGORITHM algorithm, DACE::AlgebraicVe
         dir = Patch::getSplittingDirection(pos);
     }
 
-    std::vector<Patch> output(ALGORITHM::LOADS == algorithm ? 3 : 2);
+    std::vector<Patch> output(ALGORITHM::LOADS == this->algorithm_ ? 3 : 2);
     Patch temp = (*this);
 
-    // Set some values
-    double scaling = ALGORITHM::LOADS == algorithm ? 1.0/3.0 : 0.5;
-    double center = ALGORITHM::LOADS == algorithm ? 2.0/3.0 : 0.5;
-
     temp.history.push_back( -dir );
-    obj[dir-1] = -center + scaling * DACE::DA(dir);
+    obj[dir-1] = -this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
     output[0] = temp;
     temp.history.pop_back();
 
 
     temp.history.push_back( dir );
-    obj[dir-1] = +center + scaling * DACE::DA(dir);
+    obj[dir-1] = +this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
     output[1] = temp;
     temp.history.pop_back();
 
     // In case of having loads, input the scaled centered patch
-    if (ALGORITHM::LOADS == algorithm)
+    if (ALGORITHM::LOADS == this->algorithm_)
     {
         temp.history.push_back( dir * 100);
         obj[dir-1] = 0.0 + scaling * DACE::DA(dir);
