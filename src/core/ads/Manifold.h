@@ -62,6 +62,15 @@ public:
      */
     void set_integrator_ptr(integrator* integrator);
 
+public:
+    // Getters
+
+    /**
+     * Gets integrator pointer
+     * \return integrator pointer
+     */
+    integrator* get_integrator_ptr() {return this->integrator_;};
+
 public: // Methods
 
     /**

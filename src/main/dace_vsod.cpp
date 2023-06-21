@@ -66,6 +66,9 @@ int main(int argc, char* argv[])
     // Initialize integrator
     auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, my_specs.algorithm, dt);
 
+    // Deduce whether interruption feature shall be made or not
+    bool interruption = false;
+
     // Define problem to solve
     problems* prob;
 
@@ -83,6 +86,10 @@ int main(int argc, char* argv[])
             // Define problem
             prob = new problems(my_specs.problem);
 
+            // Deduce whether interruption should be made or not
+            interruption = !my_specs.ads.max_split.empty() && my_specs.ads.max_split[0] > 0;
+
+            // Exit switch case
             break;
         }
         case ALGORITHM::LOADS:
@@ -96,8 +103,24 @@ int main(int argc, char* argv[])
             // Set time scaling
             objIntegrator->set_time_scaling(my_specs.scaling.time);
 
-            // Define problem
+            // Initialize problem
             prob = new problems(my_specs.problem, my_specs.mu);
+
+            // Deduce whether interruption should be made or not
+            interruption = !my_specs.loads.max_split.empty() && my_specs.loads.max_split[0] > 0;
+
+            // Exit switch case
+            break;
+        }
+        case ALGORITHM::NONE:
+        {
+            // NONE algorithm is equivalent to Splitting algorithms but with interruption mode DISABLED
+            super_manifold = new SuperManifold(ALGORITHM::NONE);
+
+            // Initialize problem
+            prob = new problems(my_specs.problem, my_specs.mu);
+
+            // Exit switch case
             break;
         }
         default:
@@ -112,7 +135,7 @@ int main(int argc, char* argv[])
     objIntegrator->set_problem_ptr(prob);
 
     // Setting integrator parameters
-    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
+    objIntegrator->set_integration_parameters(scv0_DA, t0, tf,interruption);
 
     // Set integrator in the super manifold
     super_manifold->set_integrator_ptr(objIntegrator.get());
@@ -134,7 +157,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 1);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);

@@ -362,6 +362,13 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
     int i = 0;
     for (auto & patch : *current_manifold)
     {
+        // Safety check it is not empty
+        if (patch.history.empty())
+        {
+            continue;
+        }
+
+        // Get the vector
         history = tools::vector::num2string(patch.history, ", ", "%3d");
         line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f", i, history.c_str(), patch.nli, patch.t_split_);
 

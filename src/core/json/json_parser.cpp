@@ -104,8 +104,12 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     }
     else
     {
-        // TODO: Show some error messages
+        // No algorithm has been chosen
+        std::fprintf(stdout, "No algorithm (ADS / LOADS) has been chosen!");
     }
+
+    // Set beta, relying on which algorithm was used
+    json_parser::set_betas(&my_specs);
 
     // Read output -----------
     std::string output_str = tools::string::clean_bars(my_resource_obj["output"].as_str());
@@ -134,13 +138,14 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
     std::transform(algorithm_str.begin(), algorithm_str.end(), algorithm_str.begin(), ::tolower);
     json_input_obj->algorithm =
             algorithm_str == "ads" ? ALGORITHM::ADS :
-            algorithm_str == "loads" ? ALGORITHM::LOADS : ALGORITHM::NA;
+            algorithm_str == "loads" ? ALGORITHM::LOADS :
+            algorithm_str == "none" || algorithm_str == "-" || algorithm_str.empty() ? ALGORITHM::NONE : ALGORITHM::NA;
 
     // Safety checks
     if (json_input_obj->algorithm == ALGORITHM::NA)
     {
         // Info and exit program
-        std::fprintf(stdout, "Algorithm type should be: 'ads' or 'loads'. JSON "
+        std::fprintf(stdout, "Algorithm type should be: ADS, LOADS or NONE. JSON "
                              "file: '%s'\n", json_input_obj->filepath.c_str());
 
         // Exit program
@@ -292,20 +297,6 @@ void json_parser::parse_scaling_section(RSJresource& rsj_obj, json_input * json_
     json_input_obj->scaling.time = rsj_obj["time"].as<double>();
     json_input_obj->scaling.speed = rsj_obj["velocity"].as<double>();
 
-    // Fill the beta scaling vector
-    json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
-
-    // Do it for TWO_BODY problem for now.. TODO: To be Enhanced with other problems
-    if (json_input_obj->problem == PROBLEM::TWO_BODY)
-    {
-        // Loop into them
-        for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
-        {
-            // Push back computed beta
-            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
-        }
-    }
-
     // TODO: Add some safety checks here... have neen they properly set?
 
     // Scaling variables have been set
@@ -370,4 +361,45 @@ void json_parser::safety_checks(json_input * json_input_obj)
     }
 
     // TODO: Do ADS safety checks
+}
+
+void json_parser::set_betas(json_input * json_input_obj)
+{
+    // Fill the beta scaling vector
+    json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
+
+    // Do it for TWO_BODY problem for now.. TODO: To be Enhanced with other problems
+    if (json_input_obj->problem == PROBLEM::TWO_BODY)
+    {
+        // Treat relying on the algorithm
+        switch (json_input_obj->algorithm)
+        {
+            case ALGORITHM::LOADS:
+            {
+                // Loop into them
+                for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
+                {
+                    // Push back computed beta
+                    json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
+                }
+                break;
+            }
+            case ALGORITHM::ADS:
+            {
+                // Same as having NONE
+            }
+            case ALGORITHM::NONE:
+            {
+                // Beta is equal to stddev vector
+                json_input_obj->scaling.beta = json_input_obj->initial_conditions.standard_deviation;
+                break;
+            }
+            default:
+            {
+                // Should never reach here
+                std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
+                std::exit(111);
+            }
+        }
+    }
 }

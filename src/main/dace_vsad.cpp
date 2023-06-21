@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     objIntegrator->set_problem_ptr(&prob);
 
     // Setting integrator parameters
-    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
+    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true );
 
     // Set integrator in the super manifold
     super_manifold.set_integrator_ptr(objIntegrator.get());

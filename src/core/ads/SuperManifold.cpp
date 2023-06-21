@@ -22,19 +22,30 @@ void SuperManifold::set_integrator_ptr(integrator* integrator)
     // Set there the error tolerances and the maximum number of splits
     if (this->algorithm_ == ALGORITHM::ADS)
     {
+        // Set error tolerances
         integrator->set_errToll(this->errToll_);
+
+        // Set the NSPLIT max
+        integrator->set_nSplitMax(this->nSplitMax_);
     }
     else if (this->algorithm_ == ALGORITHM::LOADS)
     {
+        // Set the NLI threshold
         integrator->set_nli_threshold(this->nli_threshold_);
+
+        // Set the NSPLIT max
+        integrator->set_nSplitMax(this->nSplitMax_);
+    }
+    else if (this->algorithm_ == ALGORITHM::NONE)
+    {
+        // NONE algorithm will be used
+        std::fprintf(stderr, "Super Manifold: No algorithm for splitting will be used!\n");
     }
     else
     {
         // TODO: Show some error messages here..
-        std::fprintf(stderr, "Error to be written.");
+        std::fprintf(stderr, "Super Manifold: Error to be written.\n");
     }
-
-    integrator->set_nSplitMax(this->nSplitMax_);
 
     // Replace problem pointer
     this->current_->set_integrator_ptr(integrator);
@@ -70,10 +81,14 @@ void SuperManifold::split_domain()
     {
         this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
     }
+    else if (this->algorithm_ == ALGORITHM::NONE)
+    {
+        this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
+    }
     else
     {
-        // TODO: Show some error messages here..
-        std::fprintf(stderr, "Error to be written.");
+        //
+        std::fprintf(stderr, "Error to be written.\n");
     }
 
 }

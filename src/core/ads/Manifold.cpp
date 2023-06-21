@@ -57,6 +57,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
 
     // Iterator
     int i = 0;
+    int split_count = 1;
 
     /*execute steps of Automatic Domain Splitting, calling the function to estimate the error and to split the Patch*/
     // While runs until the vector gets emptied >> (std::deque< Patch >)
@@ -93,7 +94,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         this->integrator_->t_ = p.t_;
 
         // Get the new state
-        auto scv = this->integrator_->integrate(p, (int)this->size());
+        auto scv = this->integrator_->integrate(p, p.id_);
 
         // Builds patch from the resulting scv
         Patch f(scv, p.history, this->integrator_->t_, p.nli, p.t_split_);
@@ -111,10 +112,22 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
             // Add new patches
             for (auto & p_new : s)
             {
+                // To cunt this we have to do several trials
+                p_new.id_ = split_count;
                 p_new.nli = this->integrator_->nli_current_;
                 p_new.t_split_ = this->integrator_->t_;
                 this->push_back(p_new);
+
+                // Increase split count
+                split_count++;
             }
+
+            // split_count += 3;
+            // std::ofstream file2write;
+            // file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/n_split_vs_time.csv", std::ios_base::app);
+            // file2write  << std::to_string(this->integrator_->t_ / (M_PI * 2)) << "," << std::to_string(split_count) << std::endl;
+            // // // Close the stream
+            // file2write.close();
         }
 
         i++;
@@ -667,7 +680,7 @@ void Manifold::set_integrator_ptr(integrator* integrator)
     this->integrator_ = integrator;
 
     // Info
-    std::fprintf(stdout, "Integrator object pointer ('%p') successfully set in Manifold ('%p').\n",
+    std::fprintf(stdout, "Manifold: Integrator object pointer ('%p') successfully set in Manifold ('%p').\n",
                  this->integrator_, this);
 
 }
@@ -739,7 +752,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 2, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 20, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();

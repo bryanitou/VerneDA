@@ -132,6 +132,7 @@ enum class ALGORITHM
 {
     ADS,
     LOADS,
+    NONE,
     NA
 };
 

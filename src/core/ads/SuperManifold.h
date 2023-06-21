@@ -15,6 +15,7 @@ public:
      * Default constructor.
      * @param current
      */
+    explicit SuperManifold(ALGORITHM algorithm) : algorithm_(algorithm) {};
     explicit SuperManifold(const std::vector<double> &errToll, int nSplitMax, ALGORITHM algorithm)
     : errToll_(errToll), nSplitMax_(nSplitMax), algorithm_(algorithm) {};
     explicit SuperManifold(const double &nli_treshold, int nSplitMax, ALGORITHM algorithm)
@@ -37,7 +38,7 @@ private:
     double nli_threshold_{}; // LOADS
 
     // Number of maximum splits, should be set to some integer
-    int nSplitMax_;
+    int nSplitMax_{};
 
     // ADS/LOADS?
     ALGORITHM algorithm_{ALGORITHM::NA};
@@ -45,8 +46,6 @@ private:
 public:
     // Manifold operations
     void split_domain();
-
-
 
 public:
     // Setters

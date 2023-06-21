@@ -54,5 +54,7 @@ namespace json_parser
     void parse_loads_section(RSJresource &rsj_obj, json_input *json_input_obj);
 
     void parse_scaling_section(RSJresource &rsj_obj, json_input *json_input_obj);
+
+    void set_betas(json_input *json_input_obj);
 };
 

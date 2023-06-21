@@ -100,10 +100,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = this->check_conditions(x);
+            flag_interruption_errToll = this->check_conditions(x, true);
 
             // Break integration if needed
-            if (flag_interruption_errToll)
+            if (flag_interruption_errToll && this->interrupt_)
             {
                 // Set result to the previous one
                 x = x_prev;
@@ -284,7 +284,7 @@ void integrator::set_problem_ptr(problems *problem)
     }
 }
 
-bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
+bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv, bool debug)
 {
     // Check the proper conditions to be checked in case ADS or LOADS
     switch (this->algorithm_)
@@ -297,7 +297,7 @@ bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
         case ALGORITHM::LOADS:
         {
             // Check LOADS conditions
-            return this->check_loads_conditions(scv);
+            return this->check_loads_conditions(scv, debug);
         }
         default:
         {
@@ -404,21 +404,25 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
     // Clear sum
     upper_bound_sum = 0.0;
 
-    if (debug || true)
+    if (debug)
     {
         std::ofstream outfile;
         auto time_str = std::string (__TIME__);
         outfile.open("out/example/loads/nli_" + time_str + ".csv", std::ios_base::app); // append instead of overwrite
 
         // String to write
-        auto str2write = tools::string::print2string(" %.16f, %.16f", this->t_, this->nli_current_);
+        auto str2write = tools::string::print2string(" %.16f, %.16f, %d", this->t_, this->nli_current_, this->patch_id_);
 
         // Write
         outfile << str2write << std::endl;
     }
 
-    if (this->nli_current_ > this->nli_threshold_)
+    if (this->nli_current_ > this->nli_threshold_ || this->patch_id_ == 0 && (this->nli_current_ > 0.004) && false)
     {
+        if (this->patch_id_ == 3)
+        {
+            bool a = true;
+        }
         // It means we have exceeded the threshold!
         result = true;
 
