@@ -150,7 +150,7 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
     if "deltas" in x and "deltas" in y:
         plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
     if "centers" in x and "centers" in y:
-        plt.scatter(x["centers"], y["centers"], s=20, marker="o", color="orange")
+        plt.scatter(x["centers"], y["centers"], s=5, marker="o", color="orange")
     if "walls" in x and "walls" in y:
         # Iterate through every wall
         # patches_x = np.array(x["walls"]).ravel()
@@ -164,12 +164,11 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
             # for it in range(0, len(patch_x) - 1):
             #     plt.plot(patch_x[it:it+2], patch_y[it:it+2], linewidth=0.2, color="black")
 
-
     plt.xlabel(f"{'roll' if unit_str in ['rad', 'deg'] else 'x'}  [{unit_str}]")
     plt.ylabel(f"{'pitch' if unit_str in ['rad', 'deg'] else 'y'}  [{unit_str}]")
 
     # Write legend
-    # plt.legend([f"{taylor['function']['name']}", "Taylor expansion"])
+    plt.legend([f"MC Samples", "Patch centers", "Patch bounds"])
 
     # Plt show grid
     plt.grid(True)
@@ -391,15 +390,30 @@ def main(args: list = None, verbose: bool = False) -> None:
 
         # Now, we should get the information from the file
         eval_deltas_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose) if "file" in parsed_dict else None
-        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"], verbose=verbose) if "centers" in parsed_dict else None
-        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose, walls=True) if "walls" in parsed_dict else None
+        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"],
+                                                verbose=verbose) if "centers" in parsed_dict else None
+        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose,
+                                              walls=True) if "walls" in parsed_dict else None
 
         # From the file, get the parent folder and save it
-        parent_folder = os.path.abspath(os.path.dirname(parsed_dict["file"])) if eval_deltas_dict is not None else None
-        parent_folder = (os.path.abspath(os.path.dirname(parsed_dict["centers"])) if eval_centers_dict is not None else parent_folder) if parent_folder is None else parent_folder
-        parent_folder = (os.path.abspath(os.path.dirname(parsed_dict["walls"])) if eval_walls_dict is not None else parent_folder) if parent_folder is None else parent_folder
+        if "output_prefix" in parsed_dict:
+            output_prefix = parsed_dict["output_prefix"]
+        else:
+            print("No <output_dir> passed as argument!")
+            print(get_usage())
+            exit(-1)
 
-        output_prefix = os.path.join(parent_folder, "attitude" if plot_type == PlotType.attitude else "translation")
+        # If it is not a directory, add hyphen
+        if not os.path.isdir(output_prefix):
+            output_prefix += "-"
+
+        # Add whether attitude of translation
+        output_prefix += "attitude" if plot_type == PlotType.attitude else "translation"
+
+        # Build prefix relying on passed information
+        output_prefix += "-walls" if eval_walls_dict is not None else ""
+        output_prefix += "-centers" if eval_centers_dict is not None else ""
+        output_prefix += "-samples" if eval_deltas_dict is not None else ""
 
         # Now, we should plot this Taylor polynomial, we have all the coefficients
         plot_banana(eval_deltas_dict,
@@ -409,6 +423,7 @@ def main(args: list = None, verbose: bool = False) -> None:
                     centers_dict=eval_centers_dict,
                     walls_dict=eval_walls_dict,
                     verbose=verbose)
+
 
 if __name__ == '__main__':
     # Call to main running function

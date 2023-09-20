@@ -49,8 +49,14 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
 
 Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
 {
-    /*Automatic Domain Splitting*/
+    /* (Low Order?) Automatic Domain Splitting Algorithm */
     auto results = new Manifold();
+
+    // Collection of "pictures" during the propagation
+    std::vector<Manifold*> domain_record{};
+
+    // Auxiliary variables
+    bool domain_evolution = true;
 
     // Re-set integrator
     results->integrator_ = this->integrator_;
@@ -65,13 +71,17 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
     {
         // Print status
         this->print_status();
+        if (this->size() == 126)
+        {
+            bool a = true;
+        }
 
         /**
         * INITIAL DEBUG
         */
         // Debugging information
-        // Create the file stream
-        if (false)
+
+        if (domain_evolution)
         {
             // std::ofstream file2write;
             // auto format_int = tools::string::print2string("%06d", i);
@@ -79,6 +89,9 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
             // tools::io::dace::print_each_patch_wall(results->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
             // // Close the stream
             // file2write.close();
+
+            // Make a copy and store its pointer TODO: Finish this
+            domain_record.emplace_back(new Manifold(*this));
         }
 
         /**
@@ -97,7 +110,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
         auto scv = this->integrator_->integrate(p, p.id_);
 
         // Builds patch from the resulting scv
-        Patch f(scv, p.get_history_int(), algorithm, this->integrator_->t_, p.nli, p.t_split_);
+        Patch f(scv, p.get_history_int(), p.get_times_doubles(), algorithm, this->integrator_->t_, p.nli, p.t_split_);
 
         if (f.get_history_count() == nSplitMax || this->integrator_->end_) // TODO: What about this case: (*max_error == 0.0) See old function
         {
@@ -116,6 +129,8 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
                 p_new.id_ = split_count;
                 p_new.nli = this->integrator_->nli_current_;
                 p_new.t_split_ = this->integrator_->t_;
+
+                // TODO: push back of this object... copies are lost? Analyze what's happening in memory
                 this->push_back(p_new);
 
                 // Increase split count
@@ -751,7 +766,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 10, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 2, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();
@@ -921,7 +936,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
 
 Manifold* Manifold::get_initial_split_domain()
 {
-    // Create manifold to return
+    // Create manifold to return TODO: What the fuck, why it is copied from this class? After it is cleared...
     auto splitbox = new Manifold(*this);
     splitbox->clear();
 

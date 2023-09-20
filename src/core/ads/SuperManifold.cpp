@@ -73,15 +73,15 @@ void SuperManifold::split_domain()
     this->previous_ =  new Manifold(*this->current_);
 
     // Split domain: get current domain
-    if (this->algorithm_ != ALGORITHM::NONE)
+    if (this->algorithm_ != ALGORITHM::NA)
     {
         // Integrate and/or split
         this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
     }
     else
     {
-        //
-        std::fprintf(stderr, "Error to be written.\n");
+        // No algorithm has been chosen...
+        std::fprintf(stderr, "Error to be written. SuperManifold.cpp line 84.\n");
     }
 
 }

@@ -40,7 +40,7 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v) : DACE::AlgebraicVector<D
     /*! Copy constructor to create a copy of any existing DAvector.
        \param[in] v DAvector to be copied into Patch DAvector
      */
-    history = std::vector<int>();
+    this->history = std::vector<int>();
 }
 
 Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s) : DACE::AlgebraicVector<DACE::DA>(v)
@@ -51,12 +51,13 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     history = s;
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const SplittingTimes &t, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
 {
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
      */
     this->history = s;
+    this->times = t;
     this->t_ = time;
     this->nli = nli;
     this->t_split_ = time_split;
@@ -193,24 +194,48 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
     temp.history.push_back( -dir );
     obj[dir-1] = -this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
-    output[0] = temp;
-    temp.history.pop_back();
 
+    // Save time
+    temp.times.push_back(this->t_);
+
+    // Make copy
+    output[0] = temp;
+
+    // Clear last position
+    temp.history.pop_back();
+    temp.times.pop_back();
 
     temp.history.push_back( dir );
     obj[dir-1] = +this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
+
+    // Save time
+    temp.times.push_back(this->t_);
+
+    // Make copy
     output[1] = temp;
+
+    // Clear last position
     temp.history.pop_back();
+    temp.times.pop_back();
 
     // In case of having loads, input the scaled centered patch
     if (ALGORITHM::LOADS == this->algorithm_)
     {
+        // Set temporal patch
         temp.history.push_back( dir * 100);
         obj[dir-1] = 0.0 + scaling * DACE::DA(dir);
         temp = this -> eval(obj);
+
+        // Save time
+        temp.times.push_back(this->t_);
+
+        // Make copy
         output[2] = temp;
+
+        // Clear last position
         temp.history.pop_back();
+        temp.times.pop_back();
     }
 
     return output;

@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     // Show to the used the new epsilon value
     std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
 
-    // ADS and integration algorithm
+    // Apply main algorithm: ADS / LOADS. And integration algorithm
     super_manifold->split_domain();
 
     // Build deltas class
@@ -200,17 +200,33 @@ int main(int argc, char* argv[])
     // Debugging dumps
     tools::io::dace::dump_splitting_history(deltas_engine.get(), output_debug_splitting_history);
 
+    // Output prefixes for plots
+    std::filesystem::path output_dir_prefix_plot_projection = output_dir.string() + "projection";
+    std::filesystem::path output_dir_prefix_plot_box = output_dir.string() + "box";
+
     // Prepare arguments for python call
-    std::unordered_map<std::string, std::string> py_args = {
+    std::unordered_map<std::string, std::string> py_args_projection = {
             {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
-            {"metrics", "m"},
+            {"metrics", "km"},
             {"centers", output_centers},
             {"walls", output_walls},
-            {"silent", "false"}
+            {"silent", "false"},
+            {"output_prefix", output_dir_prefix_plot_projection}
+    };
+
+    std::unordered_map<std::string, std::string> py_args_box = {
+            {"file", output_eval_deltas_path_dd},
+            {"plot_type", PYPLOT_TRANSLATION},
+            {"metrics", "km"},
+            {"centers", output_centers_box},
+            {"walls", output_walls_box},
+            {"silent", "false"},
+            {"output_prefix", output_dir_prefix_plot_box}
     };
 
     // Draw plots
-    tools::io::plot_variables(PYPLOT_BANANA, py_args, false);
+    tools::io::plot_variables(PYPLOT_BANANA, py_args_projection, false);
+    tools::io::plot_variables(PYPLOT_BANANA, py_args_box, false);
 
 }

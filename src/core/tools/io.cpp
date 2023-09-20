@@ -120,9 +120,6 @@ void tools::io::dace::dump_algebraic_vector(const DACE::AlgebraicVector<DACE::DA
 
 void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type)
 {
-    // Auxiliary variable
-    bool monomial_masked;
-
     // Get directory
     auto out_dir = file_path.parent_path();
 
@@ -171,7 +168,6 @@ void tools::io::dace::print_each_patch_wall(std::vector<std::vector<DACE::Algebr
 {
     // Auxiliary variable
     bool monomial_masked;
-
 
     // Print header if required
     if (print_header)
@@ -355,10 +351,11 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
 
     // String containing the history
     std::string history{};
+    std::string times{};
     std::string line2write{};
 
     // Write the header
-    file2write << "PATCH_ID, HISTORY, SPLIT_NLI, SPLIT_TIME" << std::endl;
+    file2write << "PATCH_ID, HISTORY, SPLIT_NLI, BIRTH_TIME, SPLITTING_TIME" << std::endl;
     int i = 0;
     for (auto & patch : *current_manifold)
     {
@@ -370,7 +367,9 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
 
         // Get the vector
         history = tools::vector::num2string(patch.get_history_int(), ", ", "%3d");
-        line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f", i, history.c_str(), patch.nli, patch.t_split_);
+        times = tools::vector::num2string(patch.get_times_doubles(), ", ", "%3.16f");
+        line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f, %s",
+                                                  i, history.c_str(), patch.nli, patch.t_split_, times.c_str());
 
         // Write line
         file2write << line2write << std::endl;

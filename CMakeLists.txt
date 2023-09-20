@@ -425,7 +425,8 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/Manifold.cpp
         src/core/ads/SuperManifold.cpp
         src/core/ads/Patch.cpp
-        src/core/ads/SplittingHistory.cpp)
+        src/core/ads/SplittingHistory.cpp
+        src/core/ads/SplittingTimes.cpp)
 
 add_dependencies(ads
         core)

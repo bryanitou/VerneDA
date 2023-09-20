@@ -14,6 +14,7 @@
 
 // Project libraries
 #include "SplittingHistory.h"
+#include "SplittingTimes.h"
 
 struct Observable;
 
@@ -34,7 +35,13 @@ public:
     double center;
 
 private: // Attributes
+
+    // Stores the history of the patch by integer information (how every patch has been partitioned along the time)
     SplittingHistory history;
+
+
+    // Stores the history of the patch by its
+    SplittingTimes times;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +58,7 @@ public:
     Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s);  // >! Copy constructor of existing DAvector and SplittingHistory
 
 
-    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, ALGORITHM algorithm, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
+    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const SplittingTimes &t, ALGORITHM algorithm, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
 
     ////////////////////////////////////////////////////////////////////////////////
     /*OVERLOAD OPERATORS                                                          */
@@ -81,5 +88,10 @@ public:
     auto history_contains(std::vector<double> pt) { return this->history.contain(std::move(pt), this->algorithm_); }
     auto get_center() { return this->history.center(this->algorithm_); }
     auto get_width() { return this->history.width(this->algorithm_); }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /*TIMES WRAPPER                                                             */
+    ////////////////////////////////////////////////////////////////////////////////
+    auto get_times_doubles() {return this->times;}
 };
 
