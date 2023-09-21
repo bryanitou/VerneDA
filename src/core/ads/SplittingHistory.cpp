@@ -88,16 +88,21 @@ unsigned int SplittingHistory::count(unsigned int n)
 }
 
 
-DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay(DACE::AlgebraicVector<DACE::DA> obj, ALGORITHM algorithm)
+DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay( ALGORITHM algorithm, DACE::AlgebraicVector<DACE::DA> obj)
 {
     /*member function to replicate the box splitted by means the assigned splitting history
     INPUT param[in]: the splitting history vector is the hidden object of function
           AlgebraicVector<DA> obj: DAvector of initial Domain
     OUTPUT return the AlgebraicVector <DA> of box corresponding to splitting history
     */
+
+    // Create 'x' identity, hypercube of N dimension
     DACE::AlgebraicVector<DACE::DA> x = DACE::AlgebraicVector<DACE::DA>::identity();
+
+    // Get size of history vector
     const unsigned int size = this -> size();
 
+    // Iterate through every splitting direction that this patch has been partitioned
     for ( unsigned int i = 0; i < size; ++i)
     {
         // Get the direction in which it was split and if left or right or center
@@ -112,8 +117,13 @@ DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay(DACE::AlgebraicVector<D
         // Get the sign as double
         auto sign = (double)(tools::math::sgn(splitting_val));
 
+        // Get the place
+        auto patch_place = SplittingHistory::get_splitting_place(splitting_val);
+
         // Shifting
-        auto shift = SplittingHistory::get_splitting_place(splitting_val) == SPLITTING_PLACE::MIDDLE ? 0.0 :  (algorithm == ALGORITHM::LOADS ? 1.0/3.0 : 0.5 ) * sign ;
+        auto shift =
+                patch_place == SPLITTING_PLACE::MIDDLE ? 0.0 :
+                (algorithm == ALGORITHM::LOADS ? 2.0/3.0 : 0.5 ) * sign ;
 
         // Shift and scale
         x[n] = shift + (algorithm == ALGORITHM::LOADS ? 1.0/3.0 : 0.5 ) * DACE::DA(n+1);
@@ -121,7 +131,8 @@ DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay(DACE::AlgebraicVector<D
         // Compose
         obj = obj.eval(x);
 
-        x[n] = DACE::DA(n + 1);
+        // Re-set identity to its initial value
+        x[n] = DACE::DA(dir);
     }
 
     return obj;

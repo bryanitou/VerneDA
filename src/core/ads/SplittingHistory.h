@@ -66,7 +66,7 @@ public: // Methods
      * @param algorithm [in] [ALGORITHM]
      * @return
      */
-    DACE::AlgebraicVector<DACE::DA> replay(DACE::AlgebraicVector<DACE::DA>  obj = DACE::AlgebraicVector<DACE::DA>::identity(), ALGORITHM algorithm = ALGORITHM::NA);
+    DACE::AlgebraicVector<DACE::DA> replay( ALGORITHM algorithm, DACE::AlgebraicVector<DACE::DA>  obj = DACE::AlgebraicVector<DACE::DA>::identity());
 
     /**
      *
