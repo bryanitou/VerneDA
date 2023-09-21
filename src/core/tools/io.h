@@ -73,11 +73,27 @@ namespace tools::io
          * @param file2write [in] [std::ofstream]
          * @param eval_type [in] [EVAL_TYPE]
          */
-        void print_each_delta(std::vector<DACE::AlgebraicVector<double>> deltas_poly, std::ofstream &file2write, EVAL_TYPE eval_type, bool print_header = true);
+        void print_each_delta(std::vector<DACE::AlgebraicVector<double>> deltas_poly, std::ofstream &file2write,
+                              EVAL_TYPE eval_type, bool print_header = true);
 
+        /**
+         * Print each patch wall
+         * @param patches [in] [std::vector<std::vector<DACE::AlgebraicVector<double>>>]
+         * @param file2write [in] [std::ofstream]
+         * @param eval_type [in] [EVAL_TYPE]
+         * @param print_header [in] [bool]
+         */
         void print_each_patch_wall(std::vector<std::vector<DACE::AlgebraicVector<double>>> patches,
-                                   std::ofstream &file2write,
-                                   EVAL_TYPE eval_type, bool print_header = true);
+                                   std::ofstream &file2write, EVAL_TYPE eval_type, bool print_header = true);
+
+        /**
+         * Print all the evolution (evolution of manifolds)
+         * @param delta [in] [delta*]
+         * @param dir_path [in] [std::filesystem::path]
+         */
+        void print_manifold_evolution(delta* delta, const std::filesystem::path &dir_path, EVAL_TYPE eval_type);
+
+
     }
 
     /**

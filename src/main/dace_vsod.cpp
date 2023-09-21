@@ -201,8 +201,8 @@ int main(int argc, char* argv[])
     tools::io::dace::dump_splitting_history(deltas_engine.get(), output_debug_splitting_history);
 
     // Output prefixes for plots
-    std::filesystem::path output_dir_prefix_plot_projection = output_dir.string() + "projection";
-    std::filesystem::path output_dir_prefix_plot_box = output_dir.string() + "box";
+    std::filesystem::path output_dir_prefix_plot_projection = output_dir / "projection";
+    std::filesystem::path output_dir_prefix_plot_box = output_dir / "box";
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args_projection = {
@@ -216,7 +216,6 @@ int main(int argc, char* argv[])
     };
 
     std::unordered_map<std::string, std::string> py_args_box = {
-            {"file", output_eval_deltas_path_dd},
             {"plot_type", PYPLOT_TRANSLATION},
             {"metrics", "km"},
             {"centers", output_centers_box},
@@ -225,8 +224,79 @@ int main(int argc, char* argv[])
             {"output_prefix", output_dir_prefix_plot_box}
     };
 
+    // TODO: Decide or not whether to do this massive debugging task
+    // Extra debugging stuff
+    std::filesystem::path output_dir_film = output_dir / "film";
+    std::filesystem::path output_dir_film_source = output_dir_film / "source";
+    std::filesystem::path output_dir_film_frames = output_dir_film / "frames";
+    std::filesystem::path output_dir_film_frames_INI = output_dir_film_frames / "ini";
+    std::filesystem::path output_dir_film_frames_FIN = output_dir_film_frames / "fin";
+    std::filesystem::path output_dir_film_source_INI = output_dir_film_source / "ini";
+    std::filesystem::path output_dir_film_source_FIN = output_dir_film_source / "fin";
+    tools::io::dace::print_manifold_evolution(deltas_engine.get(), output_dir_film_source_INI, EVAL_TYPE::INITIAL_WALLS);
+    tools::io::dace::print_manifold_evolution(deltas_engine.get(), output_dir_film_source_FIN, EVAL_TYPE::WALLS);
+
+    // Check directory exists
+    if (!std::filesystem::is_directory(output_dir_film_frames_INI))
+    {
+        // TODO: Check returned flag: true / false
+        std::filesystem::create_directories(output_dir_film_frames_INI);
+    }
+    // Check directory exists
+    if (!std::filesystem::is_directory(output_dir_film_frames_FIN))
+    {
+        // TODO: Check returned flag: true / false
+        std::filesystem::create_directories(output_dir_film_frames_FIN);
+    }
+
+    // Auxiliary variable
+    std::filesystem::path output_dir_film_frame{};
+
+    // Launch massive plotting
+    for (const auto & entry : std::filesystem::directory_iterator(output_dir_film_source_FIN))
+    {
+        // Name of the plot
+        output_dir_film_frame = output_dir_film_frames_FIN / entry.path().filename().replace_extension();
+
+        // Set arguments
+        std::unordered_map<std::string, std::string> py_args_box_evolution = {
+                {"plot_type", PYPLOT_TRANSLATION},
+                {"metrics", "km"},
+                {"walls", entry.path()},
+                {"silent", "false"},
+                {"output_prefix", output_dir_film_frame},
+                {"output_format", "png"},
+                {"legend_fixed", "true"},
+                {"axis_fixed", "false"}
+        };
+        tools::io::plot_variables(PYPLOT_BANANA, py_args_box_evolution, false);
+    }
+
+    // Launch massive plotting
+     for (const auto & entry : std::filesystem::directory_iterator(output_dir_film_source_INI))
+     {
+         // Name of the plot
+         output_dir_film_frame = output_dir_film_frames_INI / entry.path().filename().replace_extension();
+
+         // Set arguments
+         std::unordered_map<std::string, std::string> py_args_box_evolution = {
+                 {"plot_type", PYPLOT_TRANSLATION},
+                 {"metrics", "km"},
+                 {"walls", entry.path()},
+                 {"silent", "false"},
+                 {"output_prefix", output_dir_film_frame},
+                 {"output_format", "png"},
+                 {"legend_fixed", "true"},
+                 {"axis_fixed", "true"}
+         };
+         tools::io::plot_variables(PYPLOT_BANANA, py_args_box_evolution, false);
+     }
+
+    // ffmpeg -framerate 5 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
+
     // Draw plots
     tools::io::plot_variables(PYPLOT_BANANA, py_args_projection, false);
     tools::io::plot_variables(PYPLOT_BANANA, py_args_box, false);
+
 
 }

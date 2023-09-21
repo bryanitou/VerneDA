@@ -53,6 +53,10 @@ private:
     // Attributes
     integrator* integrator_ = nullptr;
 
+    // Domain evolution
+    std::vector<Manifold*>* ini_domain_record = new std::vector<Manifold*>();
+    std::vector<Manifold*>* fin_domain_record = new std::vector<Manifold*>();
+
 public:
     // Setters
 
@@ -69,7 +73,15 @@ public:
      * Gets integrator pointer
      * \return integrator pointer
      */
-    integrator* get_integrator_ptr() {return this->integrator_;};
+    auto get_integrator_ptr() {return this->integrator_;};
+
+
+    /**
+     * Gets pointer to domain record
+     * @return std::vector<Manifold*>*
+     */
+    auto get_ini_domain_record() {return this->ini_domain_record; }
+    auto get_fin_domain_record() {return this->fin_domain_record; }
 
 public: // Methods
 
@@ -81,7 +93,7 @@ public: // Methods
      * @return Manifold*
      */
     Manifold* getSplitDomain(const std::vector<double>& errToll, int nSplitMax, int posOverride = 0);
-    Manifold *getSplitDomain(ALGORITHM algorithm, int nSplitMax);
+    Manifold* getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool domain_evolution = true);
 
     /**
      * Evaluates a point in this manifold, returns the corresponding translation using the proper patch.

@@ -37,6 +37,9 @@ def plot_banana(deltas_dict: dict,
                 metrics: str,
                 centers_dict: dict = None,
                 walls_dict: dict = None,
+                output_format: str = "pdf",
+                legend_fixed: bool = False,
+                axis_fixed: bool = False,
                 verbose: bool = False) -> None:
     """
     Plots the taylor
@@ -47,7 +50,10 @@ def plot_banana(deltas_dict: dict,
     :param plot_type: what should we plot? Attitude, translation...
     :param centers_dict: centers dictionary
     :param walls_dict: walls dictionary
+    :param output_format: output format
+    :param legend_fixed: legend fixed or not (best location)
     :param verbose: verbosity indicator
+    :param axis_fixed: true or false (axis fixed set them to 1 and -1)
     :return: None
     """
 
@@ -86,9 +92,9 @@ def plot_banana(deltas_dict: dict,
 
     # Call to plots relying on PlotType class
     if plot_type == PlotType.attitude:
-        plot_attitude(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix)
+        plot_attitude(x, y, v_deltas[2], unit_str=unit_str, prefix=output_prefix, output_format=output_format, legend_fixed=legend_fixed, axis_fixed=axis_fixed)
     elif plot_type == PlotType.translation:
-        plot_translation(x, y, None, unit_str=unit_str, prefix=output_prefix)
+        plot_translation(x, y, None, unit_str=unit_str, prefix=output_prefix, output_format=output_format, legend_fixed=legend_fixed, axis_fixed=axis_fixed)
     else:
         print("I can only do Translation and Attitude plots!")
         exit(-1)
@@ -119,9 +125,9 @@ def get_vector(taylor: dict, idx: int, verbose: bool = False) -> [[float]]:
     return v
 
 
-def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
+def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str, output_format: str = "pdf", legend_fixed: bool = False, axis_fixed: bool = False) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
+    plot_xy_projection(x, y, unit_str,  output=f"{prefix}-XY_projection.{output_format}", output_format=output_format, legend_fixed=legend_fixed, axis_fixed=axis_fixed)
 
     # Plot projections in three planes: XY, YZ, XZ
     plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
@@ -130,16 +136,19 @@ def plot_attitude(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLi
     plot_3d_vectors(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_rotations.pdf")
 
 
-def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str) -> None:
+def plot_translation(x: dict, y: dict, z: [float], unit_str: str, prefix: os.PathLike or str, output_format: str = "pdf", legend_fixed: bool = False, axis_fixed: bool = False) -> None:
     # Plot XY Projection
-    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.pdf")
+    plot_xy_projection(x, y, unit_str, output=f"{prefix}-XY_projection.{output_format}", output_format=output_format, legend_fixed=legend_fixed, axis_fixed=axis_fixed)
 
     # Plot projections in three planes: XY, YZ, XZ
     if z is not None:
         plot_projections(x["deltas"], y["deltas"], z, unit_str, output=f"{prefix}-3D_projections.pdf")
 
 
-def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or str):
+def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or str, output_format: str = "pdf", legend_fixed: bool = False, axis_fixed: bool = False) -> None:
+    # Auxiliary variable
+    legend_aux = []
+
     # Set the size
     fig = plt.figure(figsize=(16, 9))
     # plt.show()
@@ -149,8 +158,12 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
     # # Finally, we can plot everything
     if "deltas" in x and "deltas" in y:
         plt.scatter(x["deltas"], y["deltas"], s=10, marker="x", color="grey", linewidths=0.5)
+        # Add to legend
+        legend_aux.append("MC Samples")
     if "centers" in x and "centers" in y:
         plt.scatter(x["centers"], y["centers"], s=5, marker="o", color="orange")
+        # Add to legend
+        legend_aux.append("Patch centers")
     if "walls" in x and "walls" in y:
         # Iterate through every wall
         # patches_x = np.array(x["walls"]).ravel()
@@ -164,17 +177,27 @@ def plot_xy_projection(x: dict, y: dict, unit_str: str, output: os.PathLike or s
             # for it in range(0, len(patch_x) - 1):
             #     plt.plot(patch_x[it:it+2], patch_y[it:it+2], linewidth=0.2, color="black")
 
+        # Add to legend
+        legend_aux.append("Patch bounds")
+
+    # Labels
     plt.xlabel(f"{'roll' if unit_str in ['rad', 'deg'] else 'x'}  [{unit_str}]")
     plt.ylabel(f"{'pitch' if unit_str in ['rad', 'deg'] else 'y'}  [{unit_str}]")
 
+    # Axis fixed?
+    if axis_fixed:
+        plt.xlim([-1.1, 1.1])
+        plt.ylim([-1.1, 1.1])
+
     # Write legend
-    plt.legend([f"MC Samples", "Patch centers", "Patch bounds"])
+    plt.legend(legend_aux, loc=f"upper right" if legend_fixed else "best")
 
     # Plt show grid
     plt.grid(True)
+
     # plt.show()
     # Save fig
-    plt.savefig(output, format="pdf", bbox_inches="tight")
+    plt.savefig(output, format=f"{output_format}", bbox_inches="tight")
 
     # Clear
     plt.clf()
@@ -388,12 +411,31 @@ def main(args: list = None, verbose: bool = False) -> None:
             print(get_usage())
             exit(-1)
 
+        # Default format
+        output_format = "pdf"
+
+        # Check format to be plot
+        if "output_format" in parsed_dict:
+            output_format = parsed_dict["output_format"]
+
+        # Default legend
+        legend_fixed = False
+
+        # Legend details
+        if "legend_fixed" in parsed_dict:
+            legend_fixed = str(parsed_dict["legend_fixed"]).lower() == "true"
+
+        # Axis bounds
+        axis_fixed = False
+
+        # Legend details
+        if "axis_fixed" in parsed_dict:
+            axis_fixed = str(parsed_dict["axis_fixed"]).lower() == "true"
+
         # Now, we should get the information from the file
         eval_deltas_dict = reader.read_dd_file(parsed_dict["file"], verbose=verbose) if "file" in parsed_dict else None
-        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"],
-                                                verbose=verbose) if "centers" in parsed_dict else None
-        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose,
-                                              walls=True) if "walls" in parsed_dict else None
+        eval_centers_dict = reader.read_dd_file(parsed_dict["centers"], verbose=verbose) if "centers" in parsed_dict else None
+        eval_walls_dict = reader.read_dd_file(parsed_dict["walls"], verbose=verbose, walls=True) if "walls" in parsed_dict else None
 
         # From the file, get the parent folder and save it
         if "output_prefix" in parsed_dict:
@@ -422,6 +464,9 @@ def main(args: list = None, verbose: bool = False) -> None:
                     metrics=metrics,
                     centers_dict=eval_centers_dict,
                     walls_dict=eval_walls_dict,
+                    output_format=output_format,
+                    legend_fixed=legend_fixed,
+                    axis_fixed=axis_fixed,
                     verbose=verbose)
 
 

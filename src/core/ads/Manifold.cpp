@@ -47,16 +47,10 @@ Manifold::Manifold( const DACE::AlgebraicVector<DACE::DA>& p)
     *this = aux;
 }
 
-Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
+Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool domain_evolution)
 {
     /* (Low Order?) Automatic Domain Splitting Algorithm */
     auto results = new Manifold();
-
-    // Collection of "pictures" during the propagation
-    std::vector<Manifold*> domain_record{};
-
-    // Auxiliary variables
-    bool domain_evolution = true;
 
     // Re-set integrator
     results->integrator_ = this->integrator_;
@@ -71,32 +65,21 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax)
     {
         // Print status
         this->print_status();
+
+        // Remove this when problem solved
         if (this->size() == 126)
         {
             bool a = true;
         }
 
-        /**
-        * INITIAL DEBUG
-        */
         // Debugging information
-
         if (domain_evolution)
         {
-            // std::ofstream file2write;
-            // auto format_int = tools::string::print2string("%06d", i);
-            // file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/translation_loads_RK4_validation_nli_0.02_time_4.71238898038469/film2/" + format_int + ".walls");
-            // tools::io::dace::print_each_patch_wall(results->wallsPointEvaluationManifold(), file2write, EVAL_TYPE::INITIAL_WALLS);
-            // // Close the stream
-            // file2write.close();
-
-            // Make a copy and store its pointer TODO: Finish this
-            domain_record.emplace_back(new Manifold(*this));
+            // Make a copy and store its pointer
+            results->ini_domain_record->push_back(new Manifold(*this));
+            results->fin_domain_record->push_back(new Manifold(*results));
         }
 
-        /**
-         * FINAL DEBUG
-         */
         // Creates new patch from the first position in this Manifold
         auto p = this->front();
 
@@ -939,6 +922,9 @@ Manifold* Manifold::get_initial_split_domain()
     // Create manifold to return TODO: What the fuck, why it is copied from this class? After it is cleared...
     auto splitbox = new Manifold(*this);
     splitbox->clear();
+
+    // TODO: Reserve, since we know the amount of patches
+    // splitbox->shrink_to_fit();
 
     // Replay history for every path
     for (auto & p : *this)

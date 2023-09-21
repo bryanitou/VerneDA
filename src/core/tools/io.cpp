@@ -383,6 +383,48 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
 
 }
 
+void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesystem::path &dir_path, EVAL_TYPE eval_type)
+{
+    // Auxiliary variable
+    std::filesystem::path file_path{};
+
+    // From each manifold, print centers, walls and deltas if available
+    auto domain_record =  eval_type == EVAL_TYPE::INITIAL_WALLS ?  delta->get_SuperManifold()->get_final_manifold()->get_ini_domain_record() :
+                          delta->get_SuperManifold()->get_final_manifold()->get_fin_domain_record();
+
+    // Check directory exists
+    if (!std::filesystem::is_directory(dir_path))
+    {
+        // TODO: Check returned flag: true / false
+        std::filesystem::create_directories(dir_path);
+    }
+
+    // Iterate through every domain record
+    for (unsigned int i = 0; i < domain_record->size(); i++)
+    {
+        // Evaluate walls
+        auto intermediate_manifold_patches =
+                eval_type == EVAL_TYPE::INITIAL_WALLS ? domain_record->at(i)->get_initial_split_domain()->wallsPointEvaluationManifold() :
+                 domain_record->at(i)->wallsPointEvaluationManifold() ;
+
+        // Build file path from dir
+        file_path = dir_path / tools::string::print2string("%s_eval_walls-%06d.walls", eval_type == EVAL_TYPE::INITIAL_WALLS ? "ini" : "fin", i);
+
+        // Create the file stream
+        std::ofstream file2write;
+        file2write.open(file_path);
+
+        // Print them all
+        tools::io::dace::print_each_patch_wall(intermediate_manifold_patches, file2write, eval_type);
+
+        // Close stream
+        file2write.close();
+
+        // Clean name
+        file_path.clear();
+    }
+}
+
 
 [[maybe_unused]] void tools::io::plot_variables(const std::string& python_executable,
                                                 const std::unordered_map<std::string, std::string>& args,
@@ -418,7 +460,7 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
         }
 
         // Info
-        std::fprintf(stdout, "INFO: Launching command: %s", cmd.c_str());
+        std::fprintf(stdout, "INFO: Launching command: %s\n", cmd.c_str());
 
         // Launch command
         std::system(cmd.c_str());

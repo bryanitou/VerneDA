@@ -93,7 +93,7 @@ DACE::AlgebraicVector<DACE::DA> Patch::replay(DACE::AlgebraicVector<DACE::DA> ob
     AlgebraicVector<DA> obj: DAvector of initial Domain
     return: the function call the SplittingHistory replay*/
 
-    return history.replay(obj);
+    return history.replay(this->algorithm_, obj);
 }
 
 std::vector<double> Patch::getTruncationErrors()
