@@ -135,10 +135,10 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     file2write.open(file_path);
 
     // Iterate through the deltas
-    if (eval_type == EVAL_TYPE::WALLS || eval_type == EVAL_TYPE::INITIAL_WALLS)
+    if (eval_type == EVAL_TYPE::FINAL_WALLS || eval_type == EVAL_TYPE::INITIAL_WALLS)
     {
         // Compute wall points
-        auto patches = eval_type == EVAL_TYPE::WALLS ?
+        auto patches = eval_type == EVAL_TYPE::FINAL_WALLS ?
                 delta->get_SuperManifold()->get_final_manifold()->wallsPointEvaluationManifold() :
                        delta->get_SuperManifold()->get_box_manifold()->wallsPointEvaluationManifold();
 
@@ -148,11 +148,12 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     else
     {
         // Get the pointer where all the evaluations are
-        auto deltas_poly = eval_type == EVAL_TYPE::CENTER ?
+        auto deltas_poly = eval_type == EVAL_TYPE::FINAL_CENTER ?
                 delta->get_SuperManifold()->get_final_manifold()->centerPointEvaluationManifold() :
                            eval_type == EVAL_TYPE::INITIAL_CENTER ?
                            delta->get_SuperManifold()->get_box_manifold()->centerPointEvaluationManifold() :
-                *delta->get_eval_deltas_poly();
+                           eval_type == EVAL_TYPE::FINAL_DELTA ?
+                *delta->get_eval_deltas_poly() : *delta->get_non_eval_deltas_poly();
 
         // Print the evaluated points
         tools::io::dace::print_each_delta(deltas_poly, file2write, eval_type);
@@ -261,14 +262,14 @@ void tools::io::dace::dump_non_eval_deltas(delta* delta, const std::filesystem::
     for (int d = 0; d < non_eval_deltas_poly->size(); d++)
     {
         // Retrieve scv
-        auto scv = (*non_eval_deltas_poly)[d]->get_state_vector_copy();
+        auto scv = (*non_eval_deltas_poly)[d];
 
         // Iterate through every SCV variable in this delta variation
         for (int v = 0; v < scv.size(); v++)
         {
             // Retrieve values to print
             auto da_var = scv[v];
-            int n_da_var = static_cast<int>(da_var.size());
+            int n_da_var = static_cast<int>(0);
 
             // Should we mask?
             // TODO: revise this masking... not very clear why this masking is needed
@@ -305,7 +306,7 @@ void tools::io::dace::print_each_monomial(std::ofstream &file2write, const DACE:
         auto indexes2write = tools::string::print2string("%i, %i", idx[0], idx[1]);
 
         // Add one more indexes if walls are to be dumped
-        indexes2write += EVAL_TYPE::WALLS == eval_type  || eval_type == EVAL_TYPE::INITIAL_WALLS ? tools::string::print2string(" ,%i", idx[2]) : "";
+        indexes2write += EVAL_TYPE::FINAL_WALLS == eval_type || eval_type == EVAL_TYPE::INITIAL_WALLS ? tools::string::print2string(" ,%i", idx[2]) : "";
 
         // Prepare line to write
         auto line2write = tools::string::print2string(" ,%i, %0.8f, %i, %s",
@@ -451,6 +452,34 @@ void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesyst
             cmd += value;
             cmd += " ";
         }
+
+        // Is it an asynchronous process?
+        if (async)
+        {
+            cmd += "&";
+            cmd += " ";
+        }
+
+        // Info
+        std::fprintf(stdout, "INFO: Launching command: %s\n", cmd.c_str());
+
+        // Launch command
+        std::system(cmd.c_str());
+    }
+}
+
+void tools::io::make_film(std::string args_str, bool async)
+{
+    // Ensure system() is available
+    if (std::system(nullptr))
+    {
+        // TODO: remove such amount of inputs and use a non-ordered map or something like this
+        //  this way it will be a more general function
+        // Build command
+        std::string cmd{};
+        cmd = "ffmpeg";
+        cmd += " ";
+        cmd += args_str;
 
         // Is it an asynchronous process?
         if (async)

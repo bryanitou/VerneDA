@@ -86,7 +86,7 @@ public: // Getters
      * Get evaluated deltas polynomial.
      * @return deltas_poly
      */
-    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> get_eval_deltas_poly()
+    auto get_eval_deltas_poly()
     {
         return eval_deltas_poly_;
     };
@@ -95,7 +95,7 @@ public: // Getters
      * Get not evaluated deltas polynomial.
      * @return not evaluated deltas scv
      */
-    std::shared_ptr<std::vector<std::shared_ptr<scv>>> get_non_eval_deltas_poly()
+    auto get_non_eval_deltas_poly()
     {
         return scv_deltas_;
     };
@@ -111,7 +111,7 @@ public: // Getters
 
 private:
     // List of deltas: not evaluated
-    std::shared_ptr<std::vector<std::shared_ptr<scv>>> scv_deltas_ = nullptr;
+    std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> scv_deltas_ = nullptr;
     // List of results:
     std::shared_ptr<std::vector<DACE::AlgebraicVector<double>>> eval_deltas_poly_ = nullptr;
 

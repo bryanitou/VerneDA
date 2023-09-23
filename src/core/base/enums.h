@@ -107,10 +107,11 @@ enum class LENGTH_UNITS
 */
 enum class EVAL_TYPE
 {
-    DELTA,
-    WALLS,
+    FINAL_DELTA,
+    INITIAL_DELTA,
+    FINAL_WALLS,
     INITIAL_WALLS,
-    CENTER,
+    FINAL_CENTER,
     INITIAL_CENTER,
 };
 
@@ -133,5 +134,15 @@ enum class SPLITTING_PLACE
     LEFT,
     RIGHT,
     MIDDLE,
+    NA
+};
+
+/**
+ * Type of film to be done
+ */
+enum class FILM
+{
+    INITIAL,
+    FINAL,
     NA
 };

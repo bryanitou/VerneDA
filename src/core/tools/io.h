@@ -39,7 +39,7 @@ namespace tools::io
          * @param delta [in] [delta]
          * @param file_path [in] [std::filesystem::path]
          */
-        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
+        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type = EVAL_TYPE::FINAL_DELTA);
 
         /**
          * Dump non evaluated deltas.
@@ -58,7 +58,7 @@ namespace tools::io
          * @param v [in] [int]
          */
         void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked,
-                                 std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
+                                 std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::FINAL_DELTA);
 
         /**
         * Dump evaluated deltas.
@@ -92,8 +92,6 @@ namespace tools::io
          * @param dir_path [in] [std::filesystem::path]
          */
         void print_manifold_evolution(delta* delta, const std::filesystem::path &dir_path, EVAL_TYPE eval_type);
-
-
     }
 
     /**
@@ -105,4 +103,10 @@ namespace tools::io
     void plot_variables(const std::string &python_executable,
                         const std::unordered_map<std::string, std::string> &args, bool async = false);
 
+    /**
+     * Calls to python file, passes the output file and executes it.
+     * @param args_str [in] [std::string]
+     * @param async [in] [bool]
+     */
+    void make_film(std::string args_str, bool async);
 };

@@ -11,7 +11,8 @@
 #include "tools/io.h"
 #include "json/json_parser.h"
 #include "specs/args_input.h"
-
+#include "writer.h"
+#include "FileProcessor.h"
 
 /**
  * Main entry point
@@ -167,136 +168,24 @@ int main(int argc, char* argv[])
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
 
-    // Set output path for results
-    std::filesystem::path output_dir = my_specs.output_dir;
-    std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
-    std::filesystem::path output_eval_deltas_box_path_dd =  output_dir / "eval_deltas_expression_box_RK4.dd";
-    std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
+    // Create writer object to write files
+    writer writer{};
 
-    // Some other useful optional outputs: validation
-    std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
-    std::filesystem::path output_walls_box = output_dir / "eval_walls_box_RK4.walls";
-    std::filesystem::path output_centers = output_dir / "eval_centers.dd";
-    std::filesystem::path output_centers_box = output_dir / "eval_centers_box.dd";
+    // What to write
+    writer.set_dump_nominal_results(true, true);
+    writer.set_dump_frames_results(true, true);
 
-    // Debugging files
-    std::filesystem::path output_debug_splitting_history = output_dir / "splitting_history.txt";
+    // Write files
+    writer.write_files(deltas_engine.get(), my_specs.output_dir);
 
-    // Dump non evaluated deltas
-    tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
+    // Create post-processing object
+    FileProcessor fproc(writer.get_out_obj());
 
-    // Dump evaluated deltas
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_box_path_dd);
+    // Set UCFLAGS
+    fproc.set_ucflags(PYPLOT_TRANSLATION, PYPLOT_BANANA);
 
-    // Dump eval points at the walls
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls_box, EVAL_TYPE::INITIAL_WALLS);
+    // Process files
+    fproc.process_files();
 
-    // Dump eval points at the center
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers_box, EVAL_TYPE::INITIAL_CENTER);
-
-    // Debugging dumps
-    tools::io::dace::dump_splitting_history(deltas_engine.get(), output_debug_splitting_history);
-
-    // Output prefixes for plots
-    std::filesystem::path output_dir_prefix_plot_projection = output_dir / "projection";
-    std::filesystem::path output_dir_prefix_plot_box = output_dir / "box";
-
-    // Prepare arguments for python call
-    std::unordered_map<std::string, std::string> py_args_projection = {
-            {"file", output_eval_deltas_path_dd},
-            {"plot_type", PYPLOT_TRANSLATION},
-            {"metrics", "km"},
-            {"centers", output_centers},
-            {"walls", output_walls},
-            {"silent", "false"},
-            {"output_prefix", output_dir_prefix_plot_projection}
-    };
-
-    std::unordered_map<std::string, std::string> py_args_box = {
-            {"plot_type", PYPLOT_TRANSLATION},
-            {"metrics", "km"},
-            {"centers", output_centers_box},
-            {"walls", output_walls_box},
-            {"silent", "false"},
-            {"output_prefix", output_dir_prefix_plot_box}
-    };
-
-    // TODO: Decide or not whether to do this massive debugging task
-    // Extra debugging stuff
-    std::filesystem::path output_dir_film = output_dir / "film";
-    std::filesystem::path output_dir_film_source = output_dir_film / "source";
-    std::filesystem::path output_dir_film_frames = output_dir_film / "frames";
-    std::filesystem::path output_dir_film_frames_INI = output_dir_film_frames / "ini";
-    std::filesystem::path output_dir_film_frames_FIN = output_dir_film_frames / "fin";
-    std::filesystem::path output_dir_film_source_INI = output_dir_film_source / "ini";
-    std::filesystem::path output_dir_film_source_FIN = output_dir_film_source / "fin";
-    tools::io::dace::print_manifold_evolution(deltas_engine.get(), output_dir_film_source_INI, EVAL_TYPE::INITIAL_WALLS);
-    tools::io::dace::print_manifold_evolution(deltas_engine.get(), output_dir_film_source_FIN, EVAL_TYPE::WALLS);
-
-    // Check directory exists
-    if (!std::filesystem::is_directory(output_dir_film_frames_INI))
-    {
-        // TODO: Check returned flag: true / false
-        std::filesystem::create_directories(output_dir_film_frames_INI);
-    }
-    // Check directory exists
-    if (!std::filesystem::is_directory(output_dir_film_frames_FIN))
-    {
-        // TODO: Check returned flag: true / false
-        std::filesystem::create_directories(output_dir_film_frames_FIN);
-    }
-
-    // Auxiliary variable
-    std::filesystem::path output_dir_film_frame{};
-
-    // Launch massive plotting
-    for (const auto & entry : std::filesystem::directory_iterator(output_dir_film_source_FIN))
-    {
-        // Name of the plot
-        output_dir_film_frame = output_dir_film_frames_FIN / entry.path().filename().replace_extension();
-
-        // Set arguments
-        std::unordered_map<std::string, std::string> py_args_box_evolution = {
-                {"plot_type", PYPLOT_TRANSLATION},
-                {"metrics", "km"},
-                {"walls", entry.path()},
-                {"silent", "false"},
-                {"output_prefix", output_dir_film_frame},
-                {"output_format", "png"},
-                {"legend_fixed", "true"},
-                {"axis_fixed", "false"}
-        };
-        tools::io::plot_variables(PYPLOT_BANANA, py_args_box_evolution, false);
-    }
-
-    // Launch massive plotting
-     for (const auto & entry : std::filesystem::directory_iterator(output_dir_film_source_INI))
-     {
-         // Name of the plot
-         output_dir_film_frame = output_dir_film_frames_INI / entry.path().filename().replace_extension();
-
-         // Set arguments
-         std::unordered_map<std::string, std::string> py_args_box_evolution = {
-                 {"plot_type", PYPLOT_TRANSLATION},
-                 {"metrics", "km"},
-                 {"walls", entry.path()},
-                 {"silent", "false"},
-                 {"output_prefix", output_dir_film_frame},
-                 {"output_format", "png"},
-                 {"legend_fixed", "true"},
-                 {"axis_fixed", "true"}
-         };
-         tools::io::plot_variables(PYPLOT_BANANA, py_args_box_evolution, false);
-     }
-
-    // ffmpeg -framerate 5 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
-
-    // Draw plots
-    tools::io::plot_variables(PYPLOT_BANANA, py_args_projection, false);
-    tools::io::plot_variables(PYPLOT_BANANA, py_args_box, false);
-
-
+    // TODO: Destroy here all the stuff to avoid mem-leaks
 }

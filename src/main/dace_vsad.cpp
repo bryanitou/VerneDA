@@ -158,10 +158,10 @@ int main(int argc, char* argv[])
     tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
 
     // Dump eval points at the walls
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::FINAL_WALLS);
 
     // Dump eval points at the center
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
+    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::FINAL_CENTER);
 
     // Prepare arguments for python call
     std::unordered_map<std::string, std::string> py_args = {

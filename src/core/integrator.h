@@ -89,6 +89,7 @@ public:
         return this->pos_;
     }
 
+    auto get_algorithm() {return this->algorithm_;}
 private:
     // Private attributes
 

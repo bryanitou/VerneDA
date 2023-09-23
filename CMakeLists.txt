@@ -300,6 +300,7 @@ add_library(base SHARED
         src/core/base/enums.h
         src/core/base/constants.h
         src/core/base/Header_Info.cpp
+        src/core/base/structs.h
         )
 
 set_target_properties(base
@@ -436,6 +437,44 @@ target_link_libraries(${LIBRARY_ADS}
         )
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
+# LIBRARY: VerneDA WRITER (Writer)
+#===========================================
+set(LIBRARY_WRITER "writer")
+
+add_library(${LIBRARY_WRITER} SHARED
+        src/core/writer.cpp)
+
+add_dependencies(writer
+        core)
+
+target_link_libraries(${LIBRARY_WRITER}
+        ${LIBRARY_CORE}
+)
+
+set_target_properties(${LIBRARY_WRITER} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
+# LIBRARY: VerneDA FILE PROCESSOR (File processor)
+#===========================================
+set(LIBRARY_FILE_PROCESSOR "file_processor")
+
+add_library(${LIBRARY_FILE_PROCESSOR} SHARED
+        src/core/FileProcessor.cpp)
+
+add_dependencies(file_processor
+        tools)
+
+target_link_libraries(${LIBRARY_FILE_PROCESSOR}
+        ${LIBRARY_TOOLS}
+)
+
+set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
@@ -588,6 +627,8 @@ target_link_libraries(${EXECUTABLE_NAME}
         base
         json
         ads
+        file_processor
+        writer
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

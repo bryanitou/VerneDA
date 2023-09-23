@@ -202,7 +202,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
-    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS && false)
+    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS  && false)
     {
         for (auto & val : json_input_obj->initial_conditions.mean)
         {

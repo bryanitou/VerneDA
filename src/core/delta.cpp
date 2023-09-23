@@ -58,7 +58,7 @@ void delta::generate_deltas(DISTRIBUTION type, int n)
 void delta::generate_gaussian_deltas(int n)
 {
     // Stack results here: no need to initialize!
-    std::vector<std::shared_ptr<scv>> deltas;
+    std::vector<DACE::AlgebraicVector<double>> deltas;
 
     // Compute deltas: by hard set values
     // n: experiments
@@ -83,7 +83,7 @@ void delta::generate_gaussian_deltas(int n)
     for (int i=0; i<n; ++i)
     {
         // TODO: Discuss this logic, leave this demonstration for the while
-        std::vector<DACE::DA> new_delta;
+        DACE::AlgebraicVector<double> new_delta;
         if (this->attitude_)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
@@ -153,16 +153,12 @@ void delta::generate_gaussian_deltas(int n)
                     stddevs_distr[5](generator)};
         }
 
-
-        // Generate the scv from the base csv
-        auto scv_delta = std::make_shared<scv>(new_delta);
-
         // Append scv in the list
-        deltas.emplace_back(scv_delta);
+        deltas.push_back(new_delta);
     }
 
     // Make shared and save
-    this->scv_deltas_ = std::make_shared<std::vector<std::shared_ptr<scv>>>(deltas);
+    this->scv_deltas_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(deltas) ;
 
     // Print first one
     // std::cout << this->scv_deltas_->front()->get_state_vector_copy().front().toString() << std::endl;
@@ -188,11 +184,9 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *this->scv_deltas_)
     {
         // Evaluate and save
-        // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
-        auto sample = scv_delta->get_state_vector_copy().cons();
         auto single_sol = this->sm_->get_final_manifold()->pointEvaluationManifold(
                 this->sm_->previous_->front(),
-                sample,
+                scv_delta.cons(),
                 1);
         if (single_sol.empty())
         {
@@ -226,9 +220,9 @@ void delta::evaluate_deltas()
             if (scv_delta == scv_deltas_->back() && this->attitude_)
             {
                 // Some debugging information
-                auto scv_cons = scv_delta->get_state_vector_copy().cons();
+                auto scv_cons = scv_delta.cons();
                 auto scv_cons_str = tools::vector::num2string<double>(scv_cons);
-                double scv_q_norm = scv_delta->get_state_vector_copy().cons().extract(0, 3).vnorm();
+                double scv_q_norm = scv_delta.cons().extract(0, 3).vnorm();
                 // INITIAL
                 std::fprintf(stdout, "DEBUG: Initial state: %s, quaternion norm: '%.2f'.\n",
                              scv_cons_str.c_str(), scv_q_norm);
@@ -282,11 +276,10 @@ void delta::insert_nominal(int n)
     }
 
     // The nominal is a bunch of zeros
-    DACE::AlgebraicVector<DACE::DA> zeroed(n);
-    auto scv_nominal = scv(zeroed);
+    DACE::AlgebraicVector<double> zeroed(n);
 
     // Insert nominal in the last position
-    this->scv_deltas_->push_back(std::make_shared<scv>(scv_nominal));
+    this->scv_deltas_->push_back(zeroed);
 
     // Set boolean to true
     this->nominal_inserted_ = true;

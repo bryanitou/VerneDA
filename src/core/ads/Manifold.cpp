@@ -564,7 +564,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
         SplittingHistory empty;
 
         // Check if the normalized point is within the limit box
-        if (!empty.contain(ptUnit, ALGORITHM::NONE))
+        if (!empty.contain(ptUnit, this->integrator_->get_algorithm()))
         {
             // If here, it means that point lies outside the initial domain, should check for the nearest patch
             double distance = INFINITY;
