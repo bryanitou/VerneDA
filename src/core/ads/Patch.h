@@ -14,7 +14,6 @@
 
 // Project libraries
 #include "SplittingHistory.h"
-#include "SplittingTimes.h"
 
 struct Observable;
 
@@ -25,7 +24,7 @@ public:
     /*MEMBER CLASS                                                                */
     ////////////////////////////////////////////////////////////////////////////////
     double t_ = 0.0;
-    double nli = -1;
+    double nli = 0.0;
     double t_split_ = -1;
     int id_ = 0;
     ALGORITHM algorithm_{ALGORITHM::NONE};
@@ -39,9 +38,9 @@ private: // Attributes
     // Stores the history of the patch by integer information (how every patch has been partitioned along the time)
     SplittingHistory history;
 
-
-    // Stores the history of the patch by its
-    SplittingTimes times;
+    // Stores the history of the patch by its time and NLI
+    std::vector<double> times;
+    std::vector<double> nlis;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +57,7 @@ public:
     Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s);  // >! Copy constructor of existing DAvector and SplittingHistory
 
 
-    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const SplittingTimes &t, ALGORITHM algorithm, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
+    Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const std::vector<double> &t, const std::vector<double> &nlis, ALGORITHM algorithm, double time, double nli = -1, double time_split = -1);  // >! Copy constructor of existing DAvector and SplittingHistory
 
     ////////////////////////////////////////////////////////////////////////////////
     /*OVERLOAD OPERATORS                                                          */
@@ -93,5 +92,6 @@ public:
     /*TIMES WRAPPER                                                             */
     ////////////////////////////////////////////////////////////////////////////////
     auto get_times_doubles() {return this->times;}
+    auto get_nlis_doubles() {return this->nlis;}
 };
 

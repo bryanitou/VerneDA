@@ -144,13 +144,10 @@ void delta::generate_gaussian_deltas(int n)
         }
         else
         {
-            new_delta = {
-                    stddevs_distr[0](generator),
-                    stddevs_distr[1](generator),
-                    stddevs_distr[2](generator),
-                    stddevs_distr[3](generator),
-                    stddevs_distr[4](generator),
-                    stddevs_distr[5](generator)};
+            for (int k = 0; k < stddevs_distr.size(); k++)
+            {
+                new_delta.push_back(stddevs_distr[k](generator));
+            }
         }
 
         // Append scv in the list

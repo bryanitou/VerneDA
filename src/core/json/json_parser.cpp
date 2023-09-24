@@ -157,7 +157,9 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
     std::transform(problem_str.begin(), problem_str.end(), problem_str.begin(), ::tolower);
     json_input_obj->problem =
             problem_str == "two_body_problem" ? PROBLEM::TWO_BODY :
-            problem_str == "free_torque_motion" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
+            problem_str == "free_torque_motion" ? PROBLEM::FREE_TORQUE_MOTION :
+            problem_str == "pol2cart" ? PROBLEM::POL2CART :
+            PROBLEM::NA;
 
     // Safety checks
     if (json_input_obj->problem == PROBLEM::NA)
@@ -180,9 +182,10 @@ void json_parser::parse_propagation_section(RSJresource& rsj_obj, json_input * j
     auto integrator_str = tools::string::clean_bars(rsj_obj["integrator"].as_str());
     std::transform(integrator_str.begin(), integrator_str.end(), integrator_str.begin(), ::tolower);
     json_input_obj->propagation.integrator =
-            integrator_str == "rk4"     ? INTEGRATOR::RK4   :
-            integrator_str == "euler"   ? INTEGRATOR::EULER :
-            integrator_str == "rk78"    ? INTEGRATOR::RK78  : INTEGRATOR::NA;
+            integrator_str == "rk4"     ? INTEGRATOR::RK4       :
+            integrator_str == "euler"   ? INTEGRATOR::EULER     :
+            integrator_str == "rk78"    ? INTEGRATOR::RK78      :
+            integrator_str == "static"  ? INTEGRATOR::STATIC    : INTEGRATOR::NA;
 
     json_input_obj->propagation.set = true;
 
@@ -369,35 +372,33 @@ void json_parser::set_betas(json_input * json_input_obj)
     json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
 
     // Do it for TWO_BODY problem for now.. TODO: To be Enhanced with other problems
-    if (json_input_obj->problem == PROBLEM::TWO_BODY)
+    switch (json_input_obj->algorithm)
     {
-        // Treat relying on the algorithm
-        switch (json_input_obj->algorithm)
+        case ALGORITHM::NONE:
         {
-            case ALGORITHM::NONE:
+            // Same as having ADS
+            break;
+        }
+        case ALGORITHM::ADS:
+        {
+            // Same as having LODS
+            break;
+        }
+        case ALGORITHM::LOADS:
+        {
+            // Loop into them
+            for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
             {
-                // Same as having ADS
+                // Push back computed beta
+                json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
             }
-            case ALGORITHM::ADS:
-            {
-                // Same as having LODS
-            }
-            case ALGORITHM::LOADS:
-            {
-                // Loop into them
-                for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
-                {
-                    // Push back computed beta
-                    json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
-                }
-                break;
-            }
-            default:
-            {
-                // Should never reach here
-                std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
-                std::exit(111);
-            }
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
+            std::exit(111);
         }
     }
 }

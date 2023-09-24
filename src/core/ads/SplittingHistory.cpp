@@ -80,7 +80,7 @@ unsigned int SplittingHistory::count(unsigned int n)
     else {
         unsigned int c = 0;
         for ( int i = 0; i < this -> size(); ++i) {
-            if ( abs(this -> at(i)) == n ) { c += 1;}
+            if ( abs(this -> at(i)) == n ) { c += 1;} // TODO: FIX THIS... IT DOESN'T WORK WITH LOADS
     }
 
       return c;

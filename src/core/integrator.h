@@ -189,4 +189,6 @@ private:
     bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
     bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
     bool check_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
+
+    DACE::AlgebraicVector<DACE::DA> static_transformation(DACE::AlgebraicVector<DACE::DA> x);
 };

@@ -86,6 +86,12 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Removes the one in front
         this->pop_front();
 
+        // TODO: DEBUG CODE
+        if (p.get_history_count() == 6 || i == 121)
+        {
+            bool a = true;
+        }
+
         // Set time for the integrator
         this->integrator_->t_ = p.t_;
 
@@ -93,7 +99,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         auto scv = this->integrator_->integrate(p, p.id_);
 
         // Builds patch from the resulting scv
-        Patch f(scv, p.get_history_int(), p.get_times_doubles(), algorithm, this->integrator_->t_, p.nli, p.t_split_);
+        Patch f(scv, p.get_history_int(), p.get_times_doubles(), p.get_nlis_doubles(), algorithm, this->integrator_->t_, p.nli, p.t_split_);
 
         if (f.get_history_count() == nSplitMax || this->integrator_->end_) // TODO: What about this case: (*max_error == 0.0) See old function
         {
@@ -118,6 +124,12 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
 
                 // Increase split count
                 split_count++;
+            }
+
+            // TODO: DEBUG CODE
+            if (s[0].get_history_count() == 6)
+            {
+                bool a = true;
             }
 
             // split_count += 3;

@@ -72,6 +72,19 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     return res;
 }
 
+DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::DA> pol)
+{
+    // Create position and resultant vector
+    DACE::AlgebraicVector<DACE::DA> cart(2);
+
+    // Make computations
+    cart[0] = pol[0] * DACE::cos(pol[1]);
+    cart[1] = pol[0] * DACE::sin(pol[1]);
+
+    // Return result
+    return cart;
+}
+
 DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t )
 {
     // Create position and resultant vector
@@ -294,6 +307,13 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
         {
             // Call to Free Fall Object problem
             res = this->FreeFallObject(scv, t);
+            break;
+        }
+        case PROBLEM::POL2CART:
+        {
+            // Call to Polar to Cartesian transformation
+            res = this->pol2cart(scv);
+            break;
         }
         default:
         {

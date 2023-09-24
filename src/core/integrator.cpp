@@ -87,9 +87,10 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     DACE::AlgebraicVector<DACE::DA> k2;
     DACE::AlgebraicVector<DACE::DA> k3;
     DACE::AlgebraicVector<DACE::DA> k4;
+    int i = 0;
 
     // Iterate
-    for(int i = 0; this->t_ < this->t1_; i++)
+    for(i = 0; this->t_ < this->t1_; i++)
     {
         // Print detailed info
         this->print_detailed_information(x_prev, i, this->t_);
@@ -120,7 +121,14 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     }
 
     // Check end condition
-    this->end_ = this->t_ > this->t1_;
+    this->end_ = this->t_ >= this->t1_;
+
+    // Print info
+    if (this->end_)
+    {
+        // Print detailed info
+        this->print_detailed_information(x_prev, i, this->t_);
+    }
 
     // Return state
     return x;
@@ -136,6 +144,42 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4_step(const DACE::AlgebraicVector
 
     // Compute the single step
     return x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
+}
+
+DACE::AlgebraicVector<DACE::DA> integrator::static_transformation(DACE::AlgebraicVector<DACE::DA> x)
+{
+    // Set not end
+    this->end_ = false;
+
+    // Auxiliary bool
+    bool flag_interruption_errToll;
+
+    // Save previous state
+    auto x_prev = x;
+
+    // Make step
+    x = this->problem_->solve(x, 0.0);
+
+    // Check if conditions are met
+    if (this->interrupt_)
+    {
+        // Check returned flag
+        flag_interruption_errToll = this->check_conditions(x, true);
+
+        // Break integration if needed
+        if (flag_interruption_errToll && this->interrupt_)
+        {
+            // Set result to the previous one
+            x = x_prev;
+        }
+        else
+        {
+            // Don't split and finish it
+            this->end_ = true;
+        }
+    }
+
+    return x;
 }
 
 void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA>& x, int i, double t)
@@ -241,6 +285,11 @@ DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVecto
             result = this->RK78(6, x);
             break;
         }
+        case INTEGRATOR::STATIC:
+        {
+            result = this->static_transformation(x);
+            break;
+        }
         default:
         {
             // TODO: Add any fallback here.
@@ -275,7 +324,8 @@ void integrator::set_problem_ptr(problems *problem)
     // Set the amount of variables needed
     this->nvar_ = problem_type == PROBLEM::FREE_TORQUE_MOTION ? 7 :
                   problem_type == PROBLEM::TWO_BODY ? 6 :
-                  problem_type == PROBLEM::FREE_FALL_OBJECT ? 6 : 0;
+                  problem_type == PROBLEM::FREE_FALL_OBJECT ? 6 :
+                  problem_type == PROBLEM::POL2CART ? 2 : 0;
 
     // Safety check
     if (this->nvar_ == 0)
@@ -470,7 +520,7 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
 
     if (this->nli_current_ > this->nli_threshold_ || this->patch_id_ == 0 && (this->nli_current_ > 0.004) && false)
     {
-        if (this->patch_id_ == 3)
+        if (this->patch_id_ == 121)
         {
             bool a = true;
         }

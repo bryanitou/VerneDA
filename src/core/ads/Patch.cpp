@@ -51,7 +51,7 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     history = s;
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const SplittingTimes &t, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const std::vector<double> &t,const std::vector<double> &nlis, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
 {
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
@@ -60,6 +60,7 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     this->times = t;
     this->t_ = time;
     this->nli = nli;
+    this->nlis = nlis;
     this->t_split_ = time_split;
     this->algorithm_ = algorithm;
 
@@ -197,6 +198,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
 
     // Save time
     temp.times.push_back(this->t_);
+    temp.nlis.push_back(this->nli);
 
     // Make copy
     output[0] = temp;
@@ -204,6 +206,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
     // Clear last position
     temp.history.pop_back();
     temp.times.pop_back();
+    temp.nlis.pop_back();
 
     temp.history.push_back( dir );
     obj[dir-1] = +this->center + this->scaling * DACE::DA(dir);
@@ -211,6 +214,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
 
     // Save time
     temp.times.push_back(this->t_);
+    temp.nlis.push_back(this->nli);
 
     // Make copy
     output[1] = temp;
@@ -218,6 +222,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
     // Clear last position
     temp.history.pop_back();
     temp.times.pop_back();
+    temp.nlis.pop_back();
 
     // In case of having loads, input the scaled centered patch
     if (ALGORITHM::LOADS == this->algorithm_)
@@ -229,6 +234,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
 
         // Save time
         temp.times.push_back(this->t_);
+        temp.nlis.push_back(this->nli);
 
         // Make copy
         output[2] = temp;
@@ -236,6 +242,7 @@ std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
         // Clear last position
         temp.history.pop_back();
         temp.times.pop_back();
+        temp.nlis.pop_back();
     }
 
     return output;

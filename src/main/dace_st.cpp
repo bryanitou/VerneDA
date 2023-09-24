@@ -1,7 +1,7 @@
 /**
- * DACE_VSOD (VERY SIMPLE ORBIT DETERMINATION): aims to solve a problem where the initial scv is known and we want to
- * compute the future scv of the spacecraft after a given time using DACE.
+ * Main to do static transformations
  */
+
 // DACE libraries
 #include "dace/dace.h"
 
@@ -45,10 +45,6 @@ int main(int argc, char* argv[])
     DACE::AlgebraicVector<DACE::DA> scv0 = {
             my_specs.initial_conditions.mean[0] + my_specs.scaling.beta[0] * DACE::DA(1),
             my_specs.initial_conditions.mean[1] + my_specs.scaling.beta[1] * DACE::DA(2),
-            my_specs.initial_conditions.mean[2] + my_specs.scaling.beta[2] * DACE::DA(3),
-            my_specs.initial_conditions.mean[3] + my_specs.scaling.beta[3] * DACE::DA(4),
-            my_specs.initial_conditions.mean[4] + my_specs.scaling.beta[4] * DACE::DA(5),
-            my_specs.initial_conditions.mean[5] + my_specs.scaling.beta[5] * DACE::DA(6)
     };
 
     std::cout << scv0 << std::endl;
@@ -157,7 +153,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);

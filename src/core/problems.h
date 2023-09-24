@@ -17,8 +17,13 @@
 
 class problems
 {
-public:
-    // Constructor
+public: // Constructor
+
+    /**
+     * Main constructor, saves problem type and mu constant
+     * @param type
+     * @param mu
+     */
     explicit problems(PROBLEM type, double mu = constants::earth::mu);
 
     // Destructor
@@ -33,6 +38,14 @@ private:
     DACE::AlgebraicVector<DACE::DA> TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t) const;
     static DACE::AlgebraicVector<DACE::DA> FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t);
     DACE::AlgebraicVector<DACE::DA> FreeTorqueMotion(DACE::AlgebraicVector<DACE::DA> scv, double t);
+
+    // Static transformations
+    /**
+     * Polar to cartesian coordinates in 2D
+     * @param pol [in] [DACE::AlgebraicVector<DACE::DA>]
+     * @return  DACE::AlgebraicVector<DACE::DA>
+    */
+    DACE::AlgebraicVector<DACE::DA> pol2cart(DACE::AlgebraicVector<DACE::DA> pol);
 
 public:
     // Setters

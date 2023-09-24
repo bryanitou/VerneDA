@@ -47,6 +47,7 @@ enum class INTEGRATOR
     EULER,
     RK4,
     RK78,
+    STATIC,
     NA
 };
 
@@ -88,6 +89,7 @@ enum class PROBLEM
     TWO_BODY,
     FREE_TORQUE_MOTION,
     FREE_FALL_OBJECT,
+    POL2CART,
     NA,
 };
 

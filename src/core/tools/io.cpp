@@ -353,6 +353,7 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
     // String containing the history
     std::string history{};
     std::string times{};
+    std::string nlis{};
     std::string line2write{};
 
     // Write the header
@@ -369,8 +370,9 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
         // Get the vector
         history = tools::vector::num2string(patch.get_history_int(), ", ", "%3d");
         times = tools::vector::num2string(patch.get_times_doubles(), ", ", "%3.16f");
-        line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f, %s",
-                                                  i, history.c_str(), patch.nli, patch.t_split_, times.c_str());
+        nlis = tools::vector::num2string(patch.get_nlis_doubles(), ", ", "%3.16f");
+        line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f, %s, %s",
+                                                  i, history.c_str(), patch.nli, patch.t_split_, times.c_str(), nlis.c_str());
 
         // Write line
         file2write << line2write << std::endl;
