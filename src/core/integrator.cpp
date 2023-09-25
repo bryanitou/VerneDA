@@ -475,13 +475,13 @@ bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& s
         for (int j = 0; j < n_cols; j++)
         {
             // Check for non-zero values in order to avoid nans
-            if (this->beta_[j] == 0.0)
+            if (this->betas_[j] == 0.0)
             {
                 continue;
             }
 
             // Make derivative
-            auto comp_ij = (1/this->beta_[j]) * scv[i].deriv(j + 1);
+            auto comp_ij = (1/this->betas_[j]) * scv[i].deriv(j + 1);
             jacobian.at(i, j) = comp_ij;
 
             // Take constant part

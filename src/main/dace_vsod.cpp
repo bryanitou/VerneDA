@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     writer writer{};
 
     // What to write
-    // writer.set_dump_nominal_results(true, true);
+    writer.set_dump_nominal_results(true, true);
     // writer.set_dump_frames_results(true, true);
 
     // Write files

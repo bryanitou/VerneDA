@@ -62,7 +62,7 @@ public:
 
     void set_beta(std::vector<double> &beta)
     {
-        this->beta_ = beta;
+        this->betas_ = beta;
     }
 
     void set_time_scaling(double time_scale)
@@ -105,7 +105,9 @@ private:
     // Step max
     double hmax_ = 0.1;
 
-    // Demanar cita: 915412530
+public:
+    // Betas vector
+    std::vector<double> betas_{};
 
 private:
 
@@ -146,7 +148,6 @@ private:
 
     // LOADS stuff
     double nli_threshold_;
-    std::vector<double> beta_;
     double t_scaling_;
 
 private:

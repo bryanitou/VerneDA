@@ -95,6 +95,13 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Set time for the integrator
         this->integrator_->t_ = p.t_;
 
+        // Set the beta from the patch to the integrator
+        if (i != 0)
+        {
+            this->integrator_->betas_ = p.betas;
+        }
+
+
         // Get the new state
         auto scv = this->integrator_->integrate(p, p.id_);
 
@@ -108,8 +115,11 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         }
         else
         {
+            // Get direction of the split
+            auto dir = this->integrator_->get_splitting_pos() + 1;
+
             // Split the patch
-            auto s = f.split(this->integrator_->get_splitting_pos() + 1);
+            auto s = f.split(dir);
 
             // Add new patches
             for (auto & p_new : s)
@@ -118,6 +128,8 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
                 p_new.id_ = split_count;
                 p_new.nli = this->integrator_->nli_current_;
                 p_new.t_split_ = this->integrator_->t_;
+                p_new.betas = this->integrator_->betas_;
+                p_new.betas[dir - 1] /= 3;
 
                 // TODO: push back of this object... copies are lost? Analyze what's happening in memory
                 this->push_back(p_new);

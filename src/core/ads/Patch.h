@@ -43,6 +43,10 @@ private: // Attributes
     std::vector<double> nlis;
 
 public:
+    // TODO: Make it private
+    std::vector<double> betas;
+
+public:
     ////////////////////////////////////////////////////////////////////////////////
     /*CONSTRUCTORS                                                                */
     ////////////////////////////////////////////////////////////////////////////////

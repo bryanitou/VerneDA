@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     writer writer{};
 
     // What to write
-    // writer.set_dump_nominal_results(true, true);
+    writer.set_dump_nominal_results(true, true);
     // writer.set_dump_frames_results(true, true);
 
     // Write files
