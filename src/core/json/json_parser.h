@@ -14,6 +14,7 @@
 // Include project libraries
 #include "tools/str.h"
 #include "specs/json_input.h"
+#include "quaternion.h"
 
 namespace json_parser
 {
@@ -56,5 +57,9 @@ namespace json_parser
     void parse_scaling_section(RSJresource &rsj_obj, json_input *json_input_obj);
 
     void set_betas(json_input *json_input_obj);
+
+    void set_betas_loads(json_input *json_input_obj);
+
+    void set_betas_as_ads(json_input *json_input_obj);
 };
 

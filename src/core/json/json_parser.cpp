@@ -381,10 +381,29 @@ void json_parser::set_betas(json_input * json_input_obj)
         }
         case ALGORITHM::ADS:
         {
-            // Same as having LODS
-            break;
+            // By-pass LOADS
+            // json_parser::set_betas_as_ads(json_input_obj);
+            // TODO: Go to LOADS
         }
         case ALGORITHM::LOADS:
+        {
+            json_parser::set_betas_loads(json_input_obj);
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
+            std::exit(111);
+        }
+    }
+}
+
+void json_parser::set_betas_loads(json_input *json_input_obj)
+{
+    switch (json_input_obj->problem)
+    {
+        case PROBLEM::TWO_BODY:
         {
             // Loop into them
             for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
@@ -394,11 +413,116 @@ void json_parser::set_betas(json_input * json_input_obj)
             }
             break;
         }
+        case PROBLEM::FREE_TORQUE_MOTION:
+        {
+            // Get initial quaternion
+            auto q_init = quaternion::euler2quaternion(
+                    json_input_obj->initial_conditions.mean[0],
+                    json_input_obj->initial_conditions.mean[1],
+                    json_input_obj->initial_conditions.mean[2]);
+
+            // Get the initial speed
+            std::vector<double> ini_speed = {json_input_obj->initial_conditions.mean[3],
+                              json_input_obj->initial_conditions.mean[4],
+                              json_input_obj->initial_conditions.mean[5]};
+
+            // Clear mean
+            json_input_obj->initial_conditions.mean.clear();
+            json_input_obj->initial_conditions.mean.push_back(q_init[0]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[1]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[2]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[3]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[0]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[1]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[2]);
+
+
+            // Get the quaternion associated to the error
+            auto q_err = quaternion::euler2quaternion(json_input_obj->initial_conditions.standard_deviation[0],
+                                                      json_input_obj->initial_conditions.standard_deviation[1],
+                                                      json_input_obj->initial_conditions.standard_deviation[2]);
+
+            // Enter q0 parameter
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[0]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[1]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[2]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[4]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[5]);
+
+
+            break;
+        }
         default:
         {
             // Should never reach here
-            std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
-            std::exit(111);
+            std::fprintf(stderr, "json_parser::set_betas_loads: Something went wrong when trying to set the beta vector.");
+            std::exit(112);
+        }
+    }
+}
+
+void json_parser::set_betas_as_ads(json_input *json_input_obj)
+{
+    switch (json_input_obj->problem)
+    {
+        case PROBLEM::TWO_BODY:
+        {
+            // Loop into them
+            for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
+            {
+                // Push back computed beta
+                json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
+            }
+            break;
+        }
+        case PROBLEM::FREE_TORQUE_MOTION:
+        {
+            // Get initial quaternion
+            auto q_init = quaternion::euler2quaternion(
+                    json_input_obj->initial_conditions.mean[0],
+                    json_input_obj->initial_conditions.mean[1],
+                    json_input_obj->initial_conditions.mean[2]);
+
+            // Get the initial speed
+            std::vector<double> ini_speed = {json_input_obj->initial_conditions.mean[3],
+                                             json_input_obj->initial_conditions.mean[4],
+                                             json_input_obj->initial_conditions.mean[5]};
+
+            // Clear mean
+            json_input_obj->initial_conditions.mean.clear();
+            json_input_obj->initial_conditions.mean.push_back(q_init[0]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[1]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[2]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[3]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[0]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[1]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[2]);
+
+
+            // Get the quaternion associated to the error
+            auto q_err = quaternion::euler2quaternion(json_input_obj->initial_conditions.standard_deviation[0],
+                                                      json_input_obj->initial_conditions.standard_deviation[1],
+                                                      json_input_obj->initial_conditions.standard_deviation[2]);
+
+            // Enter q0 parameter
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[0]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[1]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[2]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[4]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[5]);
+
+
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "json_parser::set_betas_loads: Something went wrong when trying to set the beta vector.");
+            std::exit(112);
         }
     }
 }

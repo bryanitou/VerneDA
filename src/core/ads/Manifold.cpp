@@ -66,7 +66,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Print status
         this->print_status();
 
-        // Remove this when problem solved
+        // TODO: Remove this when problem solved
         if (this->size() == 126)
         {
             bool a = true;
@@ -75,7 +75,7 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Debugging information
         if (domain_evolution)
         {
-            // Make a copy and store its pointer
+            // Make a copy and store its poin ter
             results->ini_domain_record->push_back(new Manifold(*this));
             results->fin_domain_record->push_back(new Manifold(*results));
         }
@@ -128,8 +128,15 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
                 p_new.id_ = split_count;
                 p_new.nli = this->integrator_->nli_current_;
                 p_new.t_split_ = this->integrator_->t_;
-                p_new.betas = this->integrator_->betas_;
-                p_new.betas[dir - 1] /= 3;
+
+                // TODO: Find a better logic... this scope shouldn't be dealing with LOADS/ADS stuff.
+                //  Must be agnostic...
+                if (this->integrator_->get_algorithm() == ALGORITHM::LOADS)
+                {
+                    p_new.betas = this->integrator_->betas_;
+                    p_new.betas[dir - 1] /= 3;
+                }
+
 
                 // TODO: push back of this object... copies are lost? Analyze what's happening in memory
                 this->push_back(p_new);

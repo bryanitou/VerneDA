@@ -595,13 +595,11 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
-        tools
-        datools
+        json
+        ads
+        file_processor
+        writer
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
