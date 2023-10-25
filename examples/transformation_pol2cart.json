@@ -1,0 +1,41 @@
+{
+  "input": {
+    "algorithm": "loads",
+    "problem": "pol2cart",
+    "algebra": {
+      "variables": 2
+    },
+    "propagation": {
+      "integrator": "static"
+    },
+    "scaling" : {
+      "length" : 1.0,
+      "time" : 1.0,
+      "velocity" : 1.0
+    },
+    "initial_conditions": {
+      "length_units": "-",
+      "confidence_interval": 3.0,
+      "mean" : [
+        1.0,
+        0.0
+      ],
+      "standard_deviation" : [
+        0.05,
+        0.3141592653589793
+      ]
+    },
+    "loads" : {
+      "nli_threshold" : 0.025,
+      "max_split" : [
+        10.0,
+        10.0
+      ]
+    }
+  },
+
+  "output":
+  {
+    "directory": "./out/2023-2024/translation/loads/static/pol2cart_ci3/"
+  }
+}
