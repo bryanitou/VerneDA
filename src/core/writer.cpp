@@ -4,12 +4,6 @@
 
 #include "writer.h"
 
-writer::writer()
-{
-    // Configure
-    basic_config();
-}
-
 void writer::write_files(delta* delta, const std::filesystem::path& output_dir)
 {
     // Debugging files

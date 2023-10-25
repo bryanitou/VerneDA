@@ -96,9 +96,19 @@ public: // Getters
      * Get not evaluated deltas polynomial.
      * @return not evaluated deltas scv
      */
-    auto get_non_eval_deltas_poly()
+    auto get_non_eval_deltas_poly(bool scale = false)
     {
-        return scv_deltas_;
+        // De-activated code
+        if (scale && false)
+        {
+            for (auto & s : *this->scv_deltas_)
+            {
+                s = s * 13356.27;
+            }
+        }
+
+        // Return initial deltas
+        return this->scv_deltas_;
     };
 
     /**

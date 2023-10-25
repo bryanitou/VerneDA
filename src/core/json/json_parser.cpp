@@ -404,6 +404,10 @@ void json_parser::set_betas_loads(json_input *json_input_obj)
 {
     switch (json_input_obj->problem)
     {
+        case PROBLEM::POL2CART:
+        {
+            // Same as TWO_BODY
+        }
         case PROBLEM::TWO_BODY:
         {
             // Loop into them

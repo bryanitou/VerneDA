@@ -66,8 +66,8 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Print status
         this->print_status();
 
-        // Debugging information
-        if (domain_evolution)
+        // Debugging information TODO: CODE DISABLED
+        if (domain_evolution && false)
         {
             // Make a copy and store its poin ter
             results->ini_domain_record->push_back(new Manifold(*this));
@@ -780,7 +780,7 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 40, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 2, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();

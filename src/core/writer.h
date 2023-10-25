@@ -16,7 +16,7 @@ public: // Constructor
     /**
      * Constructor
      */
-    writer();
+    writer() = default;
 
     /**
      * Default destructor
