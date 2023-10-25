@@ -76,6 +76,87 @@ def rotation_matrix(theta1, theta2, theta3, order='xyz', unit: str = "deg"):
     return matrix
 
 
+def rotation_angles(matrix, order):
+    """
+    input
+        matrix = 3x3 rotation matrix (numpy array)
+        oreder(str) = rotation order of x, y, z : e.g, rotation XZY -- 'xzy'
+    output
+        theta1, theta2, theta3 = rotation angles in rotation order
+    """
+
+    # Auxiliary variable
+    theta1 = None
+    theta2 = None
+    theta3 = None
+
+    r11, r12, r13 = matrix[0]
+    r21, r22, r23 = matrix[1]
+    r31, r32, r33 = matrix[2]
+
+    if order == 'xzx':
+        theta1 = np.arctan(r31 / r21)
+        theta2 = np.arctan(r21 / (r11 * np.cos(theta1)))
+        theta3 = np.arctan(-r13 / r12)
+
+    elif order == 'xyx':
+        theta1 = np.arctan(-r21 / r31)
+        theta2 = np.arctan(-r31 / (r11 * np.cos(theta1)))
+        theta3 = np.arctan(r12 / r13)
+
+    elif order == 'yxy':
+        theta1 = np.arctan(r12 / r32)
+        theta2 = np.arctan(r32 / (r22 * np.cos(theta1)))
+        theta3 = np.arctan(-r21 / r23)
+
+    elif order == 'yzy':
+        theta1 = np.arctan(-r32 / r12)
+        theta2 = np.arctan(-r12 / (r22 * np.cos(theta1)))
+        theta3 = np.arctan(r23 / r21)
+
+    elif order == 'zyz':
+        theta1 = np.arctan(r23 / r13)
+        theta2 = np.arctan(r13 / (r33 * np.cos(theta1)))
+        theta3 = np.arctan(-r32 / r31)
+
+    elif order == 'zxz':
+        theta1 = np.arctan(-r13 / r23)
+        theta2 = np.arctan(-r23 / (r33 * np.cos(theta1)))
+        theta3 = np.arctan(r31 / r32)
+
+    elif order == 'xzy':
+        theta1 = np.arctan(r32 / r22)
+        theta2 = np.arctan(-r12 * np.cos(theta1) / r22)
+        theta3 = np.arctan(r13 / r11)
+
+    elif order == 'xyz':
+        theta1 = np.arctan(-r23 / r33)
+        theta2 = np.arctan(r13 * np.cos(theta1) / r33)
+        theta3 = np.arctan(-r12 / r11)
+
+    elif order == 'yxz':
+        theta1 = np.arctan(r13 / r33)
+        theta2 = np.arctan(-r23 * np.cos(theta1) / r33)
+        theta3 = np.arctan(r21 / r22)
+
+    elif order == 'yzx':
+        theta1 = np.arctan(-r31 / r11)
+        theta2 = np.arctan(r21 * np.cos(theta1) / r11)
+        theta3 = np.arctan(-r23 / r22)
+
+    elif order == 'zyx':
+        theta1 = np.arctan(r21 / r11)
+        theta2 = np.arctan(-r31 * np.cos(theta1) / r11)
+        theta3 = np.arctan(r32 / r33)
+
+    elif order == 'zxy':
+        theta1 = np.arctan(-r12 / r22)
+        theta2 = np.arctan(r32 * np.cos(theta1) / r22)
+        theta3 = np.arctan(-r31 / r33)
+
+    return (theta1, theta2, theta3)
+
+
 def euler_from_quaternion(x, y, z, w):
     """
     Convert a quaternion into euler angles (roll, pitch, yaw)

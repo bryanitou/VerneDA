@@ -74,11 +74,37 @@ public:// Attributes
          bool set{false};
      };
 
+     // LOADS config
+     struct loads
+     {
+         std::vector<int> max_split{};
+
+         // NLI threshold
+         double nli_threshold{};
+
+         // LOADS config set?
+         bool set{false};
+     };
+
+     // Scaling
+     struct scaling
+     {
+         double length{};
+         double time{};
+         double speed{};
+         std::vector<double> beta;
+
+         // LOADS config set?
+         bool set{false};
+     };
+
      // Initialize them all
      algebra algebra;
      propagation propagation;
      initial_conditions initial_conditions;
      ads ads;
+     loads loads;
+     scaling scaling;
 
      // Auxiliary for this class attributes
      std::string filepath;
@@ -86,4 +112,6 @@ public:// Attributes
      // Single attributes
      std::string output_dir{};
      PROBLEM problem{PROBLEM::NA};
+     ALGORITHM algorithm{ALGORITHM::NA};
+     double mu{};
 };

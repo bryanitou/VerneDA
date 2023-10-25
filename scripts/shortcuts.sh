@@ -1,0 +1,1 @@
+./build/VerneDA-install-debug/bin/dace_vsad --config cfg/example/attitude/2023-2024/attitude_loads.json | grep -n 'Euler:' | sed -E 's/.*Euler:\s+\[([^]]+)\].*/\1/' > out/grepout.csv

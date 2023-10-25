@@ -7,6 +7,7 @@
 
 // System libraries
 #include <memory>
+#include <fstream>
 
 // Project libraries
 #include "base/enums.h"
@@ -17,6 +18,7 @@
 
 // DACE libraries
 #include "dace/dace.h"
+#include "dace/AlgebraicMatrix_t.h"
 
 class integrator {
 
@@ -25,7 +27,7 @@ public:
      * Class constructor.
      * @param integrator
      */
-    explicit integrator(INTEGRATOR integrator, double stepmax);
+    explicit integrator(INTEGRATOR integrator, ALGORITHM algorithm,  double stepmax);
 
     /**
      * Default destructor
@@ -33,6 +35,8 @@ public:
     ~integrator() = default;
 
     double t_{};
+    bool end_{false};
+    double nli_current_;
 private:
     std::vector<int> vector;
 
@@ -52,9 +56,19 @@ public:
     void set_integration_parameters(const DACE::AlgebraicVector<DACE::DA> &scv0, double t0, double t1,
                                     bool interrupt = false);
 
-    void set_interrupt_flag(bool* flag);
-
     void set_errToll(const std::vector<double>& errToll);
+
+    void set_nli_threshold(const double &nli_threshold);
+
+    void set_beta(std::vector<double> &beta)
+    {
+        this->betas_ = beta;
+    }
+
+    void set_time_scaling(double time_scale)
+    {
+        this->t_scaling_ = time_scale;
+    }
 
     void set_nSplitMax(int nSplitMax)
     {
@@ -70,6 +84,12 @@ public:
         return this->scv_;
     }
 
+    [[nodiscard]] int get_splitting_pos() const
+    {
+        return this->pos_;
+    }
+
+    auto get_algorithm() {return this->algorithm_;}
 private:
     // Private attributes
 
@@ -85,7 +105,9 @@ private:
     // Step max
     double hmax_ = 0.1;
 
-    // Demanar cita: 915412530
+public:
+    // Betas vector
+    std::vector<double> betas_{};
 
 private:
 
@@ -114,9 +136,19 @@ private:
     // Some control booleans
     std::vector<bool*> interrupt_flags_;
 
+    // ADS/LOADS common stuff
+    int nSplitMax_;
+    int pos_;
+
     // ADS constants
     std::vector<double> errToll_;
-    int nSplitMax_;
+
+    // ADS/LOADS algorithm
+    ALGORITHM algorithm_{ALGORITHM::NA};
+
+    // LOADS stuff
+    double nli_threshold_;
+    double t_scaling_;
 
 private:
     // Some auxilary class variables
@@ -156,4 +188,8 @@ private:
     bool check_interruption_flags();
 
     bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
+    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
+    bool check_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
+
+    DACE::AlgebraicVector<DACE::DA> static_transformation(DACE::AlgebraicVector<DACE::DA> x);
 };

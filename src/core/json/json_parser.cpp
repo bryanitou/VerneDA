@@ -79,11 +79,37 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     // Parse initial conditions
     json_parser::parse_initial_conditions_section(initial_conditions_rsj_obj, &my_specs);
 
-    // Read ads ---------------
-    auto ads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::ADS);
+    // Read ADS/LOADS ---------------
+    if (my_specs.algorithm == ALGORITHM::ADS)
+    {
+        // Get ADS
+        auto ads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::ADS);
 
-    // Parse ads
-    json_parser::parse_ads_section(ads_rsj_obj, &my_specs);
+        // Parse ADS
+        json_parser::parse_ads_section(ads_rsj_obj, &my_specs);
+    }
+    else if (my_specs.algorithm == ALGORITHM::LOADS)
+    {
+        // Get LOADS
+        auto loads_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::LOADS);
+
+        // Parse LOADS
+        json_parser::parse_loads_section(loads_rsj_obj, &my_specs);
+
+        // Get SCALING
+        auto scaling_rsj_obj = json_parser::get_subsection(input_rsj_obj, json_parser::subsections::SCALING);
+
+        // Parse SCALING
+        json_parser::parse_scaling_section(scaling_rsj_obj, &my_specs);
+    }
+    else
+    {
+        // No algorithm has been chosen
+        std::fprintf(stdout, "No algorithm (ADS / LOADS) has been chosen!");
+    }
+
+    // Set beta, relying on which algorithm was used
+    json_parser::set_betas(&my_specs);
 
     // Read output -----------
     std::string output_str = tools::string::clean_bars(my_resource_obj["output"].as_str());
@@ -94,6 +120,9 @@ json_input json_parser::parse_input_file(const std::string& filepath)
     // Read the output directory where the results will be dumped
     my_specs.output_dir = tools::string::clean_bars(output_rsj_obj["directory"].as_str());
 
+    // Check health of the inputs
+    json_parser::safety_checks(&my_specs);
+
     // Return the object
     return my_specs;
 }
@@ -102,21 +131,42 @@ json_input json_parser::parse_input_file(const std::string& filepath)
 void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_input_obj)
 {
     // TODO: Not used now but will be required later
-    double mu = rsj_obj["mu"].as<double>();
+    json_input_obj->mu = rsj_obj["mu"].as<double>();
+
+    // Parse the algorithm to be used: ADS or LOADS
+    std::string algorithm_str = tools::string::clean_bars(rsj_obj["algorithm"].as_str());
+    std::transform(algorithm_str.begin(), algorithm_str.end(), algorithm_str.begin(), ::tolower);
+    json_input_obj->algorithm =
+            algorithm_str == "ads" ? ALGORITHM::ADS :
+            algorithm_str == "loads" ? ALGORITHM::LOADS :
+            algorithm_str == "none" || algorithm_str == "-" || algorithm_str.empty() ? ALGORITHM::NONE : ALGORITHM::NA;
+
+    // Safety checks
+    if (json_input_obj->algorithm == ALGORITHM::NA)
+    {
+        // Info and exit program
+        std::fprintf(stdout, "Algorithm type should be: ADS, LOADS or NONE. JSON "
+                             "file: '%s'\n", json_input_obj->filepath.c_str());
+
+        // Exit program
+        std::exit(10);
+    }
 
     // Parse the problem str
     std::string problem_str = tools::string::clean_bars(rsj_obj["problem"].as_str());
     std::transform(problem_str.begin(), problem_str.end(), problem_str.begin(), ::tolower);
     json_input_obj->problem =
             problem_str == "two_body_problem" ? PROBLEM::TWO_BODY :
-            problem_str == "free_torque_motion" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
+            problem_str == "free_torque_motion" ? PROBLEM::FREE_TORQUE_MOTION :
+            problem_str == "pol2cart" ? PROBLEM::POL2CART :
+            PROBLEM::NA;
 
     // Safety checks
     if (json_input_obj->problem == PROBLEM::NA)
     {
         // Info and exit program
         std::fprintf(stdout, "Problem type should be: 'two_body_problem' and 'free_torque_motion'. JSON "
-                             "file: '%s'", json_input_obj->filepath.c_str());
+                             "file: '%s'\n", json_input_obj->filepath.c_str());
 
         // Exit program
         std::exit(10);
@@ -132,9 +182,10 @@ void json_parser::parse_propagation_section(RSJresource& rsj_obj, json_input * j
     auto integrator_str = tools::string::clean_bars(rsj_obj["integrator"].as_str());
     std::transform(integrator_str.begin(), integrator_str.end(), integrator_str.begin(), ::tolower);
     json_input_obj->propagation.integrator =
-            integrator_str == "rk4"     ? INTEGRATOR::RK4   :
-            integrator_str == "euler"   ? INTEGRATOR::EULER :
-            integrator_str == "rk78"    ? INTEGRATOR::RK78  : INTEGRATOR::NA;
+            integrator_str == "rk4"     ? INTEGRATOR::RK4       :
+            integrator_str == "euler"   ? INTEGRATOR::EULER     :
+            integrator_str == "rk78"    ? INTEGRATOR::RK78      :
+            integrator_str == "static"  ? INTEGRATOR::STATIC    : INTEGRATOR::NA;
 
     json_input_obj->propagation.set = true;
 
@@ -154,7 +205,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
-    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS)
+    if (json_input_obj->initial_conditions.length_units == LENGTH_UNITS::KILOMETERS  && false)
     {
         for (auto & val : json_input_obj->initial_conditions.mean)
         {
@@ -197,6 +248,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
             std::fprintf(stdout, "]\n");
         }
 
+        // Source of this piece of code: https://ompl.kavrakilab.org/SO3StateSpace_8cpp_source.html
         // The standard deviation of the individual components of the tangent
         // perturbation needs to be scaled so that the expected quaternion distance
         // between the sampled state and the mean state is stdDev. The factor 2 is
@@ -224,7 +276,7 @@ void json_parser::parse_ads_section(RSJresource& rsj_obj, json_input * json_inpu
     json_input_obj->ads.max_split = rsj_obj["max_split"].as_vector<int>();
     json_input_obj->ads.set = true;
 
-    if (json_input_obj->ads.length_units == LENGTH_UNITS::KILOMETERS)
+    if (json_input_obj->ads.length_units == LENGTH_UNITS::KILOMETERS && false)
     {
         for (auto & val : json_input_obj->ads.tolerance)
         {
@@ -235,6 +287,26 @@ void json_parser::parse_ads_section(RSJresource& rsj_obj, json_input * json_inpu
     // TODO: Add safety checks here
 }
 
+void json_parser::parse_loads_section(RSJresource& rsj_obj, json_input * json_input_obj)
+{
+    json_input_obj->loads.nli_threshold = rsj_obj["nli_threshold"].as<double>();
+    json_input_obj->loads.max_split = rsj_obj["max_split"].as_vector<int>();
+    json_input_obj->loads.set = true;
+}
+
+void json_parser::parse_scaling_section(RSJresource& rsj_obj, json_input * json_input_obj)
+{
+    // Parce standalone doubles
+    json_input_obj->scaling.length = rsj_obj["length"].as<double>();
+    json_input_obj->scaling.time = rsj_obj["time"].as<double>();
+    json_input_obj->scaling.speed = rsj_obj["velocity"].as<double>();
+
+    // TODO: Add some safety checks here... have neen they properly set?
+
+    // Scaling variables have been set
+    json_input_obj->scaling.set = true;
+}
+
 // Navigation functions here
 RSJresource json_parser::get_subsection(RSJresource& rsj_obj, const std::string & subsection_name)
 {
@@ -243,4 +315,221 @@ RSJresource json_parser::get_subsection(RSJresource& rsj_obj, const std::string 
 
     // Create object from pure plain text to 'RSJesource' object
     return {desired_section_str};
+}
+
+void json_parser::safety_checks(json_input * json_input_obj)
+{
+    // Should call this function when everything set
+    if (json_input_obj->algorithm == ALGORITHM::LOADS)
+    {
+        // Check we do have scaling
+        bool scaling_error = !json_input_obj->scaling.set || json_input_obj->scaling.length == 0.0 ||
+                json_input_obj->scaling.time == 0.0 || json_input_obj->scaling.speed == 0.0;
+
+        if (scaling_error)
+        {
+            // Info and exit program
+            std::fprintf(stderr, "There was a problem when parsing the scaling section, which is needed for LOADS. "
+                                 "Ensure it is not missing and scaling values are non-zero; 'length', 'time' and 'velocity'. "
+                                 "JSON file: '%s'\n", json_input_obj->filepath.c_str());
+
+            // Exit program
+            std::exit(10);
+        }
+
+        // Check the loads section
+        bool loads_error = !json_input_obj->loads.set ||  json_input_obj->loads.nli_threshold == 0.0 ||
+                json_input_obj->loads.max_split.empty();
+
+        if (loads_error)
+        {
+            // Info and exit program
+            std::fprintf(stderr, "There was a problem when parsing the LOADS section. Ensure any of these"
+                                 " are missing: 'nli_threshold', 'length_units' and 'max_split'. JSON file: '%s'\n", json_input_obj->filepath.c_str());
+
+            // Exit program
+            std::exit(10);
+        }
+
+        // Check order loads
+        if (json_input_obj->algebra.order > 2 || json_input_obj->algebra.order == 0)
+        {
+            // Info
+            std::fprintf(stdout, "LOADS has been configured. DA order parsed is '%d'. Nonetheless, "
+                                 "it will be overriden to 2, since LOADS algorithm is designed for that.\n",
+                                 json_input_obj->algebra.order);
+
+            // Set it
+            json_input_obj->algebra.order = 2;
+        }
+    }
+
+    // TODO: Do ADS safety checks
+}
+
+void json_parser::set_betas(json_input * json_input_obj)
+{
+    // Fill the beta scaling vector
+    json_input_obj->scaling.beta.reserve(json_input_obj->initial_conditions.mean.size());
+
+    // Do it for TWO_BODY problem for now.. TODO: To be Enhanced with other problems
+    switch (json_input_obj->algorithm)
+    {
+        case ALGORITHM::NONE:
+        {
+            // Same as having ADS
+            break;
+        }
+        case ALGORITHM::ADS:
+        {
+            // By-pass LOADS
+            // json_parser::set_betas_as_ads(json_input_obj);
+            // TODO: Go to LOADS
+        }
+        case ALGORITHM::LOADS:
+        {
+            json_parser::set_betas_loads(json_input_obj);
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "Something went wrong when trying to set the beta vector.");
+            std::exit(111);
+        }
+    }
+}
+
+void json_parser::set_betas_loads(json_input *json_input_obj)
+{
+    switch (json_input_obj->problem)
+    {
+        case PROBLEM::POL2CART:
+        {
+            // Same as TWO_BODY
+        }
+        case PROBLEM::TWO_BODY:
+        {
+            // Loop into them
+            for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
+            {
+                // Push back computed beta
+                json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
+            }
+            break;
+        }
+        case PROBLEM::FREE_TORQUE_MOTION:
+        {
+            // Get initial quaternion
+            auto q_init = quaternion::euler2quaternion(
+                    json_input_obj->initial_conditions.mean[0],
+                    json_input_obj->initial_conditions.mean[1],
+                    json_input_obj->initial_conditions.mean[2]);
+
+            // Get the initial speed
+            std::vector<double> ini_speed = {json_input_obj->initial_conditions.mean[3],
+                              json_input_obj->initial_conditions.mean[4],
+                              json_input_obj->initial_conditions.mean[5]};
+
+            // Clear mean
+            json_input_obj->initial_conditions.mean.clear();
+            json_input_obj->initial_conditions.mean.push_back(q_init[0]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[1]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[2]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[3]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[0]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[1]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[2]);
+
+
+            // Get the quaternion associated to the error
+            auto q_err = quaternion::euler2quaternion_fromGaussian(json_input_obj->initial_conditions.standard_deviation[0],
+                                                      json_input_obj->initial_conditions.standard_deviation[1],
+                                                      json_input_obj->initial_conditions.standard_deviation[2]);
+
+            q_err[0] -= q_init[0];
+
+            // Enter q0 parameter
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[0]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[1]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[2]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[4]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[5]);
+
+
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "json_parser::set_betas_loads: Something went wrong when trying to set the beta vector.");
+            std::exit(112);
+        }
+    }
+}
+
+void json_parser::set_betas_as_ads(json_input *json_input_obj)
+{
+    switch (json_input_obj->problem)
+    {
+        case PROBLEM::TWO_BODY:
+        {
+            // Loop into them
+            for (auto & stddev : json_input_obj->initial_conditions.standard_deviation)
+            {
+                // Push back computed beta
+                json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * stddev);
+            }
+            break;
+        }
+        case PROBLEM::FREE_TORQUE_MOTION:
+        {
+            // Get initial quaternion
+            auto q_init = quaternion::euler2quaternion(
+                    json_input_obj->initial_conditions.mean[0],
+                    json_input_obj->initial_conditions.mean[1],
+                    json_input_obj->initial_conditions.mean[2]);
+
+            // Get the initial speed
+            std::vector<double> ini_speed = {json_input_obj->initial_conditions.mean[3],
+                                             json_input_obj->initial_conditions.mean[4],
+                                             json_input_obj->initial_conditions.mean[5]};
+
+            // Clear mean
+            json_input_obj->initial_conditions.mean.clear();
+            json_input_obj->initial_conditions.mean.push_back(q_init[0]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[1]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[2]);
+            json_input_obj->initial_conditions.mean.push_back(q_init[3]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[0]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[1]);
+            json_input_obj->initial_conditions.mean.push_back(ini_speed[2]);
+
+
+            // Get the quaternion associated to the error
+            auto q_err = quaternion::euler2quaternion(json_input_obj->initial_conditions.standard_deviation[0],
+                                                      json_input_obj->initial_conditions.standard_deviation[1],
+                                                      json_input_obj->initial_conditions.standard_deviation[2]);
+
+            // Enter q0 parameter
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[0]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[1]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[2]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[3]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[4]);
+            json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * json_input_obj->initial_conditions.standard_deviation[5]);
+
+
+            break;
+        }
+        default:
+        {
+            // Should never reach here
+            std::fprintf(stderr, "json_parser::set_betas_loads: Something went wrong when trying to set the beta vector.");
+            std::exit(112);
+        }
+    }
 }

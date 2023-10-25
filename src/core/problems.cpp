@@ -5,7 +5,7 @@
 
 #include "problems.h"
 
-problems::problems(PROBLEM type)
+problems::problems(PROBLEM type, double mu)
 {
     // Set problem type
     this->type_ = type;
@@ -25,6 +25,9 @@ problems::problems(PROBLEM type)
         this->inertia_[i] = new double [m];
         this->inverse_[i] = new double [m];
     }
+
+    // Set mu
+    this->mu_ = mu;
 }
 
 problems::~problems() {
@@ -45,7 +48,7 @@ problems::~problems() {
 }
 
 
-DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t )
+DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t ) const
 {
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> pos(3), res(6);
@@ -61,12 +64,25 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[2] = scv[5]; // Pz_dot = Vz
 
     // Compute next Vx, Vy, Vz state from the current position
-    res[3] = -constants::earth::mu*pos[0]/(r*r*r); // Vx_dot
-    res[4] = -constants::earth::mu*pos[1]/(r*r*r); // Vy_dot
-    res[5] = -constants::earth::mu*pos[2]/(r*r*r); // Vz_dot
+    res[3] = -this->mu_*pos[0]/(r*r*r); // Vx_dot
+    res[4] = -this->mu_*pos[1]/(r*r*r); // Vy_dot
+    res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
     // Return result
     return res;
+}
+
+DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::DA> pol)
+{
+    // Create position and resultant vector
+    DACE::AlgebraicVector<DACE::DA> cart(2);
+
+    // Make computations
+    cart[0] = pol[0] * DACE::cos(pol[1]);
+    cart[1] = pol[0] * DACE::sin(pol[1]);
+
+    // Return result
+    return cart;
 }
 
 DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t )
@@ -120,7 +136,7 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
     // Normalize vector
     // TODO: Do this will work? It seems so..! Otherwise think of using algorithm in function quaternion::check_norm
     // TODO: Remove this, causes non linearity
-    q = q / q.vnorm().cons(); // This way doesn't brake linearity
+    // q = q / q.vnorm().cons(); // This way doesn't brake linearity
 
     omega[0] = scv[4];
     omega[1] = scv[5];
@@ -131,10 +147,10 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
 
     // Set result
     // TODO: Fix this equation from politecnico di torino paper
-    res[0] = 0.5 * (-omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]);
-    res[1] = 0.5 * ( omega[0] * q[0] + omega[2] * q[2] - omega[1] * q[3]);
-    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] + omega[0] * q[3]);
-    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[2] * q[2]);
+    res[0] = 0.5 * (       0.0       - omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]);
+    res[1] = 0.5 * ( omega[0] * q[0] +       0.0       + omega[2] * q[2] - omega[1] * q[3]);
+    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] +       0.0       + omega[0] * q[3]);
+    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[2] * q[2] +       0.0      );
     res[4] = this->inverse_[0][0] * c[0] + this->inverse_[0][1] * c[1] + this->inverse_[0][2] * c[2];; // omega_y_dot
     res[5] = this->inverse_[1][0] * c[0] + this->inverse_[1][1] * c[1] + this->inverse_[1][2] * c[2];; // omega_z_dot
     res[6] = this->inverse_[2][0] * c[0] + this->inverse_[2][1] * c[1] + this->inverse_[2][2] * c[2];; // omega_z_dot
@@ -291,6 +307,13 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
         {
             // Call to Free Fall Object problem
             res = this->FreeFallObject(scv, t);
+            break;
+        }
+        case PROBLEM::POL2CART:
+        {
+            // Call to Polar to Cartesian transformation
+            res = this->pol2cart(scv);
+            break;
         }
         default:
         {

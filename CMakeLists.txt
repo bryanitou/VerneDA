@@ -130,7 +130,6 @@ set(PYPLOT_TYPE_ATTITUDE "attitude")
 
 # Application version information
 # This is automatic; do not touch anything
-# TODO: No version for the while
 string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
 string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
@@ -152,7 +151,7 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # BUILD EXTERNAL PROJECTS
 ############################################
 # Note for cmake developers: this projects have their own CMakeLists, we have to build and install them
-# TODO: Do something like this if the project requires some kind of system library to be installed in the system.
+# TODO: Do something like this if the project requires some kind of system library to be installed, like boost.
 # find_package(Eigen3 REQUIRED)
 # IF( NOT EIGEN3_INCLUDE_DIR )
 #     MESSAGE( FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
@@ -301,6 +300,7 @@ add_library(base SHARED
         src/core/base/enums.h
         src/core/base/constants.h
         src/core/base/Header_Info.cpp
+        src/core/base/structs.h
         )
 
 set_target_properties(base
@@ -313,17 +313,39 @@ set_target_properties(base
 set(LIBRARY_TOOLS "tools")
 
 add_library(${LIBRARY_TOOLS} SHARED
-        src/core/tools/vo.cpp
         src/core/tools/str.cpp
-        src/core/tools/math.cpp)
+        src/core/tools/math.cpp
+        src/core/tools/ep.cpp)
 
 add_dependencies(tools
-        dace)
+        base)
 
 target_link_libraries(${LIBRARY_TOOLS}
-        ${LIBRARY_DACE})
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_TOOLS} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#
+#===========================================
+# LIBRARY: VerneDA DA_TOOLS
+#===========================================
+set(LIBRARY_DATOOLS "datools")
+
+add_library(${LIBRARY_DATOOLS} SHARED
+        src/core/tools/vo.cpp
+        src/core/tools/io.cpp)
+
+add_dependencies(datools
+        dacelib
+        tools)
+
+target_link_libraries(${LIBRARY_DATOOLS}
+        ${LIBRARY_DACE}
+        ${LIBRARY_TOOLS})
+
+set_target_properties(${LIBRARY_DATOOLS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
@@ -333,16 +355,14 @@ set_target_properties(${LIBRARY_TOOLS} PROPERTIES
 set(LIBRARY_SPECIFICATIONS "specs_input")
 
 add_library(${LIBRARY_SPECIFICATIONS} SHARED
-        src/core/specs/specs.cpp
         src/core/specs/args_input.cpp
         )
 
 add_dependencies(specs_input
-        base
-        core)
+        base)
 
 target_link_libraries(${LIBRARY_SPECIFICATIONS}
-        ${LIBRARY_CORE})
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_SPECIFICATIONS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -358,10 +378,12 @@ add_library(${LIBRARY_JSON_PARSER} SHARED
 
 add_dependencies(json
         rsjp
+        tools
         specs_input)
 
 target_link_libraries(json
         rsjp
+        tools
         specs_input)
 
 set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
@@ -374,10 +396,6 @@ set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
-        src/core/tools/ep.cpp
-        src/core/tools/io.cpp
-        src/core/tools/vo.cpp
-        src/core/tools/str.cpp
         src/core/conversions/angles.cpp
         src/core/geometry/point.cpp
         src/core/solids/solid.cpp
@@ -388,10 +406,12 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/quaternion.cpp)
 
 add_dependencies(core
-        dace)
+        datools
+        )
 
 target_link_libraries(${LIBRARY_CORE}
-        ${LIBRARY_DACE})
+        ${LIBRARY_DATOOLS}
+        )
 
 set_target_properties(${LIBRARY_CORE} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -407,19 +427,56 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/SuperManifold.cpp
         src/core/ads/Patch.cpp
         src/core/ads/SplittingHistory.cpp
-        src/core/ads/ads.h)
+        )
 
 add_dependencies(ads
-        dace)
+        core)
 
 target_link_libraries(${LIBRARY_ADS}
-        ${LIBRARY_DACE}
-        ${LIBRARY_TOLS})
+        ${LIBRARY_CORE}
+        )
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
+#===========================================
+# LIBRARY: VerneDA WRITER (Writer)
+#===========================================
+set(LIBRARY_WRITER "writer")
+
+add_library(${LIBRARY_WRITER} SHARED
+        src/core/writer.cpp)
+
+add_dependencies(writer
+        core)
+
+target_link_libraries(${LIBRARY_WRITER}
+        ${LIBRARY_CORE}
+)
+
+set_target_properties(${LIBRARY_WRITER} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
+# LIBRARY: VerneDA FILE PROCESSOR (File processor)
+#===========================================
+set(LIBRARY_FILE_PROCESSOR "file_processor")
+
+add_library(${LIBRARY_FILE_PROCESSOR} SHARED
+        src/core/FileProcessor.cpp)
+
+add_dependencies(file_processor
+        tools)
+
+target_link_libraries(${LIBRARY_FILE_PROCESSOR}
+        ${LIBRARY_TOOLS}
+)
+
+set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 ########################################################################################################################
 # EXECUTABLES: DACE mains
@@ -538,12 +595,11 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
-        tools
+        json
+        ads
+        file_processor
+        writer
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -566,13 +622,40 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
-        tools
+        json
+        ads
+        file_processor
+        writer
         )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+
+############################################
+# EXECUTABLES: DACE_STATIC_TRANSFORMATION
+############################################
+set(EXECUTABLE_NAME "dace_st")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/dace_st.cpp
+)
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        base
+        json
+        ads
+        file_processor
+        writer
+)
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags

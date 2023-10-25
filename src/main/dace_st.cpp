@@ -1,7 +1,7 @@
 /**
- * DACE_VSOD (VERY SIMPLE ORBIT DETERMINATION): aims to solve a problem where the initial scv is known and we want to
- * compute the future scv of the spacecraft after a given time using DACE.
+ * Main to do static transformations
  */
+
 // DACE libraries
 #include "dace/dace.h"
 
@@ -45,10 +45,6 @@ int main(int argc, char* argv[])
     DACE::AlgebraicVector<DACE::DA> scv0 = {
             my_specs.initial_conditions.mean[0] + my_specs.scaling.beta[0] * DACE::DA(1),
             my_specs.initial_conditions.mean[1] + my_specs.scaling.beta[1] * DACE::DA(2),
-            my_specs.initial_conditions.mean[2] + my_specs.scaling.beta[2] * DACE::DA(3),
-            my_specs.initial_conditions.mean[3] + my_specs.scaling.beta[3] * DACE::DA(4),
-            my_specs.initial_conditions.mean[4] + my_specs.scaling.beta[4] * DACE::DA(5),
-            my_specs.initial_conditions.mean[5] + my_specs.scaling.beta[5] * DACE::DA(6)
     };
 
     std::cout << scv0 << std::endl;
@@ -180,7 +176,7 @@ int main(int argc, char* argv[])
 
     // Create post-processing object
     FileProcessor fproc(writer.get_out_obj());
-    fproc.set_metrics(my_specs.initial_conditions.length_units);
+    fproc.set_metrics(LENGTH_UNITS::NA);
 
     // Set UCFLAGS
     fproc.set_ucflags(PYPLOT_TRANSLATION, PYPLOT_BANANA);

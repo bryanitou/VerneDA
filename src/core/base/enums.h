@@ -47,6 +47,7 @@ enum class INTEGRATOR
     EULER,
     RK4,
     RK78,
+    STATIC,
     NA
 };
 
@@ -88,6 +89,7 @@ enum class PROBLEM
     TWO_BODY,
     FREE_TORQUE_MOTION,
     FREE_FALL_OBJECT,
+    POL2CART,
     NA,
 };
 
@@ -107,15 +109,42 @@ enum class LENGTH_UNITS
 */
 enum class EVAL_TYPE
 {
-    DELTA,
-    WALLS,
-    CENTER
+    FINAL_DELTA,
+    INITIAL_DELTA,
+    FINAL_WALLS,
+    INITIAL_WALLS,
+    FINAL_CENTER,
+    INITIAL_CENTER,
 };
 
-enum class WALL_SIDE
+/**
+* Algorithm to be used
+*/
+enum class ALGORITHM
 {
-    UP,
-    DOWN,
+    ADS,
+    LOADS,
+    NONE,
+    NA
+};
+
+/**
+* Left, right or center split
+*/
+enum class SPLITTING_PLACE
+{
+    LEFT,
     RIGHT,
-    LEFT
+    MIDDLE,
+    NA
+};
+
+/**
+ * Type of film to be done
+ */
+enum class FILM
+{
+    INITIAL,
+    FINAL,
+    NA
 };

@@ -9,16 +9,8 @@
 #include <filesystem>
 #include <unordered_map>
 
-// DA library
-#include "dace/dace.h"
-#include "delta.h"
-
 // Project libraries
-#include "base/enums.h"
-
-// Imported tools
-#include "tools/vo.h"
-#include "tools/str.h"
+#include "delta.h"
 
 namespace tools::io
 {
@@ -47,7 +39,7 @@ namespace tools::io
          * @param delta [in] [delta]
          * @param file_path [in] [std::filesystem::path]
          */
-        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
+        void dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type = EVAL_TYPE::FINAL_DELTA);
 
         /**
          * Dump non evaluated deltas.
@@ -66,7 +58,40 @@ namespace tools::io
          * @param v [in] [int]
          */
         void print_each_monomial(std::ofstream& file2write, const DACE::DA &da_var, bool n_da_var, bool monomial_masked,
-                                 std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::DELTA);
+                                 std::vector<int> idx, EVAL_TYPE eval_type = EVAL_TYPE::FINAL_DELTA);
+
+        /**
+        * Dump evaluated deltas.
+        * @param delta [in] [delta]
+        * @param file_path [in] [std::filesystem::path]
+        */
+        void dump_splitting_history(delta* delta, const std::filesystem::path &file_path);
+
+        /**
+         * Print each evaluated sample
+         * @param deltas_poly [in] [std::vector<DACE::AlgebraicVector<double>>]
+         * @param file2write [in] [std::ofstream]
+         * @param eval_type [in] [EVAL_TYPE]
+         */
+        void print_each_delta(std::vector<DACE::AlgebraicVector<double>> deltas_poly, std::ofstream &file2write,
+                              EVAL_TYPE eval_type, bool print_header = true);
+
+        /**
+         * Print each patch wall
+         * @param patches [in] [std::vector<std::vector<DACE::AlgebraicVector<double>>>]
+         * @param file2write [in] [std::ofstream]
+         * @param eval_type [in] [EVAL_TYPE]
+         * @param print_header [in] [bool]
+         */
+        void print_each_patch_wall(std::vector<std::vector<DACE::AlgebraicVector<double>>> patches,
+                                   std::ofstream &file2write, EVAL_TYPE eval_type, bool print_header = true);
+
+        /**
+         * Print all the evolution (evolution of manifolds)
+         * @param delta [in] [delta*]
+         * @param dir_path [in] [std::filesystem::path]
+         */
+        void print_manifold_evolution(delta* delta, const std::filesystem::path &dir_path, EVAL_TYPE eval_type);
     }
 
     /**
@@ -78,4 +103,10 @@ namespace tools::io
     void plot_variables(const std::string &python_executable,
                         const std::unordered_map<std::string, std::string> &args, bool async = false);
 
+    /**
+     * Calls to python file, passes the output file and executes it.
+     * @param args_str [in] [std::string]
+     * @param async [in] [bool]
+     */
+    void make_film(const std::string& args_str, bool async);
 };
