@@ -28,17 +28,19 @@ void FileProcessor::make_python_plot(const structs::output::wdc_o& output_files)
 {
     // Prepare arguments
     std::unordered_map<std::string, std::string> py_args = {
-            {"file",          output_files.output_deltas},
-            {"plot_type",     this->pyploy_translation},
-            {"metrics",       "km"},
-            {"centers",       output_files.output_centers},
-            {"walls",         output_files.output_walls},
-            {"silent",        "false"},
-            {"output_prefix", output_files.output_prefix}
-    };
+            {"file",            output_files.output_deltas},
+            {"plot_type",       this->pyplot_type_},
+            {"metrics",         this->metrics_},
+            {"centers",         output_files.output_centers},
+            {"walls",           output_files.output_walls},
+            {"silent",          this->silent_},
+            {"output_prefix",   output_files.output_prefix},
+            {"sphere",          output_files.output_sphere},
+            {"distribution",    output_files.output_distribution}
+            };
 
     // Launch command
-    tools::io::plot_variables(this->pyploy_banana, py_args, false);
+    tools::io::plot_variables(this->pyploy_banana_, py_args, false);
 }
 
 
@@ -62,16 +64,16 @@ void FileProcessor::make_frames(const std::filesystem::path& output_dir, const s
 
         // Set arguments
         std::unordered_map<std::string, std::string> py_args = {
-                {"plot_type", pyploy_translation},
-                {"metrics", "km"},
-                {"walls", entry.path()},
-                {"silent", "false"},
+                {"plot_type",     this->pyplot_type_},
+                {"metrics",       "km"},
+                {"walls",         entry.path()},
+                {"silent",        "false"},
                 {"output_prefix", output_dir_film_frame},
                 {"output_format", "png"},
-                {"legend_fixed", "true"},
+                {"legend_fixed",  "true"},
                 {"axis_fixed", axis_fixed ? "true" : "false"}
         };
-        tools::io::plot_variables(pyploy_banana, py_args, false);
+        tools::io::plot_variables(pyploy_banana_, py_args, false);
     }
 }
 
@@ -129,15 +131,23 @@ void FileProcessor::set_film(const std::string& output_dir_frames, const std::st
     this->out_obj.films.push_back(film2add);
 }
 
-void FileProcessor::set_ucflags(const std::string& pyplot_translation, const std::string& pyplot_banana)
+void FileProcessor::set_ucflags(const std::string& pyplot_type, const std::string& pyplot_banana)
 {
     // Set values
-    this->pyploy_translation = pyplot_translation;
-    this->pyploy_banana = pyplot_banana;
+    this->pyplot_type_ = pyplot_type;
+    this->pyploy_banana_ = pyplot_banana;
 
     // Set UCFLAGS set
-    if (!this->pyploy_translation.empty() and !this->pyploy_banana.empty())
+    if (!this->pyplot_type_.empty() and !this->pyploy_banana_.empty())
     {
         this->uc_flags_set = true;
     }
+}
+
+void FileProcessor::set_metrics(LENGTH_UNITS metrics)
+{
+    this->metrics_ =
+            metrics == LENGTH_UNITS::KILOMETERS ? "km" :
+            metrics == LENGTH_UNITS::METERS ? "m" :
+            metrics == LENGTH_UNITS::NA ? "-" : "NA";
 }

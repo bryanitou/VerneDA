@@ -9,21 +9,21 @@
 template<typename T> std::vector<T> quaternion::euler2quaternion_temp(T roll, T pitch, T yaw)
 {
     // Pre-compute values for efficiency
-    auto sin_roll = sin(roll/2);
-    auto cos_roll = cos(roll/2);
-    auto sin_pitch = sin(pitch/2);
-    auto cos_pitch = cos(pitch/2);
-    auto sin_yaw = sin(yaw/2);
-    auto cos_yaw = cos(yaw/2);
+    auto sr = sin(roll * 0.5);
+    auto cr = cos(roll * 0.5);
+    auto sp = sin(pitch * 0.5);
+    auto cp = cos(pitch * 0.5);
+    auto sy = sin(yaw * 0.5);
+    auto cy = cos(yaw * 0.5);
 
     // Declare and initialize quaternion
     std::vector<T> q1(4);
 
     // Save the quaternion
-    q1[1] = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
-    q1[2] = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
-    q1[3] = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
-    q1[0] = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+    q1[0] = cr * cp * cy + sr * sp * sy;
+    q1[1] = sr * cp * cy - cr * sp * sy;
+    q1[2] = cr * sp * cy + sr * cp * sy;
+    q1[3] = cr * cp * sy - sr * sp * cy;
 
     // Return got quaternion
     return q1;
@@ -48,7 +48,7 @@ std::vector<double> quaternion::euler2quaternion_fromGaussian(double x, double y
     // Compute half theta
     double half_theta = theta / 2.0;
 
-    // Compute s: TODO: What is s? I think it is an scaling value.
+    // Compute "s"
     double s = std::sin(half_theta) / theta;
 
     // Declare and initialize quaternion
@@ -112,39 +112,37 @@ double quaternion::getnorm(std::vector<double> q)
     return norm;
 }
 
-
+/*
 std::vector<double> quaternion::quaternion2euler(double w, double x, double y, double z)
 {
-    // Declare quaternion
-    std::vector<double> euler_angles(3);
+    // Auxiliary variable
+    double num, den, token;
+    double roll, pitch, yaw;
 
     // Roll
-    double num = +2.0 * (w * x + y * z);
-    double den = +1.0 - 2.0 * (x * x + y * y);
-    double roll = atan2(num, den);
+    num = +2.0 * (w * x + y * z);
+    den = +1.0 - 2.0 * (x * x + y * y);
+    roll = atan2(num, den);
 
     // Pitch
-    num = +2.0 * (w * y - z * x);
-    // Python code translated below: // TODO: Re-check this translation
-    // double t2 = +1.0 if t2 > +1.0 else t2;
-    // double t2 = -1.0 if t2 < -1.0 else t2;
-    // Becomes:
-    num = num > +1.0 ? +1.0 : num < -1.0 ? -1.0 : num;
-    double pitch = asin(num);
+    num = std::sqrt(1 + 2 * (w * y - x * z));
+    token = (1 - 2 * (w * y - x * z));
+    den = std::sqrt(token > 0.0 ? token : 0.0);
+    pitch = 2 * std::atan2(num, den) - M_PI / 2;
 
     // Yaw
     num = +2.0 * (w * z + x * y);
     den = +1.0 - 2.0 * (y * y + z * z);
-    double yaw = atan2(num, den);
+    yaw = std::atan2(num, den);
 
 
     // Return Euler angles
     return std::vector<double> {roll, pitch, yaw};
-}
+}*/
 
 std::vector<double> quaternion::quaternion2euler(std::vector<double> nq)
 {
-    return quaternion2euler(nq[0], nq[1], nq[2], nq[3]);
+    return quaternion2euler_NORMAL(nq[0], nq[1], nq[2], nq[3]);
 }
 
 

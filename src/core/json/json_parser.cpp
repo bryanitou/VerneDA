@@ -248,6 +248,7 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
             std::fprintf(stdout, "]\n");
         }
 
+        // Source of this piece of code: https://ompl.kavrakilab.org/SO3StateSpace_8cpp_source.html
         // The standard deviation of the individual components of the tangent
         // perturbation needs to be scaled so that the expected quaternion distance
         // between the sampled state and the mean state is stdDev. The factor 2 is
@@ -438,9 +439,11 @@ void json_parser::set_betas_loads(json_input *json_input_obj)
 
 
             // Get the quaternion associated to the error
-            auto q_err = quaternion::euler2quaternion(json_input_obj->initial_conditions.standard_deviation[0],
+            auto q_err = quaternion::euler2quaternion_fromGaussian(json_input_obj->initial_conditions.standard_deviation[0],
                                                       json_input_obj->initial_conditions.standard_deviation[1],
                                                       json_input_obj->initial_conditions.standard_deviation[2]);
+
+            q_err[0] -= q_init[0];
 
             // Enter q0 parameter
             json_input_obj->scaling.beta.push_back(json_input_obj->initial_conditions.confidence_interval * q_err[0]);

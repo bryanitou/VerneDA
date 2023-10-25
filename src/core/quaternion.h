@@ -78,7 +78,8 @@ namespace quaternion {
 
     void check_norm(DACE::AlgebraicVector<DACE::DA> *q);
 
-    std::vector<double> quaternion2euler(double w, double x, double y, double z);
+    template <typename T> std::vector<T> quaternion2euler_DACE(T w, T x, T y, T z);
+    template <typename T> std::vector<T> quaternion2euler_NORMAL(T w, T x, T y, T z);
 
     std::vector<double> quaternion2euler(std::vector<double> q);
 
@@ -86,3 +87,7 @@ namespace quaternion {
 
     double *r8vec_uniform_01_new(int n, int &seed);
 };
+
+
+// Include templates implementation
+#include "quaternion_temp.cpp"

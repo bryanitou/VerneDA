@@ -27,12 +27,16 @@ public: // Constructor
 private: // Private attributes
 
     // Constants that must be set by user
-    std::string pyploy_translation;
-    std::string pyploy_banana;
+    std::string pyplot_type_;
+    std::string pyploy_banana_;
     bool uc_flags_set{false};
 
     // Output object storing all info to be launched
     structs::out_obj out_obj{};
+
+    // Set options
+    std::string metrics_{};
+    std::string silent_{"true"};
 
 private: // Private methods
 
@@ -56,10 +60,10 @@ public: // Public setters
 
     /**
      * Set UCFLAGS
-     * @param pyplot_translation [in] [std::string]
+     * @param pyplot_type [in] [std::string]
      * @param pyplot_banana [in] [std::string]
      */
-    void set_ucflags(const std::string& pyplot_translation, const std::string& pyplot_banana);
+    void set_ucflags(const std::string& pyplot_type, const std::string& pyplot_banana);
 
     /**
      * Set one output to be processed
@@ -77,6 +81,9 @@ public: // Public setters
      * @param film_type [in] [std::string]
     */
     void set_film(const std::string& output_dir_frames, const std::string& output_dir_source, FILM film_type);
+
+    void set_metrics(LENGTH_UNITS metrics);
+    void set_silent(std::string silent) { this->silent_ = std::move(silent); };
 
 public: // Public methods
 

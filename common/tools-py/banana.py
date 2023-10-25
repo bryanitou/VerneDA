@@ -1,6 +1,7 @@
 #!env/python
 # System imports
 import enum
+import math
 import os
 import sys
 
@@ -286,12 +287,23 @@ def rotate(roll, pitch, yaw, unit_str):
 
     for i in range(0, len(roll)):
         # Get rotation matrix
-        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="zyx", unit=unit_str)
+        rot_matrix = euler.rotation_matrix(roll[i], pitch[i], yaw[i], order="xyz", unit=unit_str)
+
+        # Get rotation angles
+        # rot_angles = euler.rotation_angles(rot_matrix, order="zyx")
+        # Test zone
+        # rot_matrix_rot1 = euler.rotation_matrix(0.0, 0.0, math.pi, order="xyz", unit=unit_str)
+        # rot_matrix_rot2 = euler.rotation_matrix(0.0, math.pi, 0.0, order="xyz", unit=unit_str)
+        # rot_matrix_rot3 = euler.rotation_matrix(math.pi, 0.0,0.0, order="xyz", unit=unit_str)
+#
+        # final_vector_x1 = np.matmul(rot_matrix_rot1, initial_vector_x)
+        # final_vector_x2 = np.matmul(rot_matrix_rot2, initial_vector_x)
+        # final_vector_x3 = np.matmul(rot_matrix_rot3, initial_vector_x)
 
         # Final vector
-        final_vector_x = np.matmul(rot_matrix, initial_vector_x)  # Rotated vector: x = [1, 0, 0]
-        final_vector_y = np.matmul(rot_matrix, initial_vector_y)  # Rotated vector: y = [0, 1, 0]
-        final_vector_z = np.matmul(rot_matrix, initial_vector_z)  # Rotated vector: z = [0, 0, 1]
+        final_vector_x = np.matmul(rot_matrix, initial_vector_x)  # Rotated vector: x = [1, 0, 0]' (3x1)
+        final_vector_y = np.matmul(rot_matrix, initial_vector_y)  # Rotated vector: y = [0, 1, 0]' (3x1)
+        final_vector_z = np.matmul(rot_matrix, initial_vector_z)  # Rotated vector: z = [0, 0, 1]' (3x1)
 
         # Append result
         final_attitude_x.append(final_vector_x)
@@ -365,6 +377,7 @@ def plot_3d_scatter(x: [float], y: [float], z: [float], unit_str: str, output: o
 
     # Change gimbal
     ax.view_init(10, -10)
+    # plt.show()
 
     # Save plot
     plt.savefig(output.replace(".pdf", "-scatter.pdf"), format="pdf", bbox_inches="tight")

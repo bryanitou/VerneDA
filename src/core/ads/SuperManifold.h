@@ -31,6 +31,8 @@ public:// Attributes
     Manifold* previous_ = nullptr;
     Manifold* current_ = nullptr;
     Manifold* splitbox_ = nullptr;
+    Manifold* att_6dof_fin = nullptr;
+    Manifold* att_6dof_ini = nullptr;
 
 private:
     // Tolerance error vector
@@ -53,7 +55,12 @@ public:
 
 public:
     // Getters
-    [[nodiscard]] Manifold* get_final_manifold() const {return this->current_; };
+    [[nodiscard]] Manifold* get_manifold_fin() const {return this->current_; };
 
-    [[nodiscard]] Manifold* get_box_manifold() const;
+    [[nodiscard]] Manifold* get_manifold_ini() const;
+
+    [[nodiscard]] Manifold* get_att6dof_fin() const {return this->att_6dof_fin; };
+    [[nodiscard]] Manifold* get_att6dof_ini() const {return this->att_6dof_ini; };
+
+    void set_6dof_domain();
 };

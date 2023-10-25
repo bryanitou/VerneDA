@@ -180,6 +180,7 @@ int main(int argc, char* argv[])
 
     // Create post-processing object
     FileProcessor fproc(writer.get_out_obj());
+    fproc.set_metrics(my_specs.initial_conditions.length_units);
 
     // Set UCFLAGS
     fproc.set_ucflags(PYPLOT_TRANSLATION, PYPLOT_BANANA);

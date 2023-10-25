@@ -98,6 +98,17 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
         // Compute the single step
         x = this->RK4_step(x_prev, this->t_, this->h_);
 
+        // Normalize quaternion if attitude
+        if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            auto q = x.extract(0, 3);
+            q = q / q.vnorm().cons();
+            x[0] = q[0];
+            x[1] = q[1];
+            x[2] = q[2];
+            x[3] = q[3];
+        }
+
         // Check ADS conditions to continue integration
         if (this->interrupt_)
         {
@@ -206,17 +217,25 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         // Extract the quaternion from here if attitude
         auto q_cons = x.cons().extract(0, 3);
 
+        if (i == 4110)
+        {
+            bool a = true;
+        }
         // Measure the norm
         auto q_norm = q_cons.vnorm();
 
         // Extract the Euler angles if attitude
-        auto euler2debug = quaternion::quaternion2euler(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
+        auto euler2debug = quaternion::quaternion2euler_NORMAL(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
 
         // Euler to string
         auto str4euler = tools::vector::num2string<double>(euler2debug, ", ", "%2.2f", false);
 
         str2print += tools::string::print2string(" | q_norm: %.2f | Euler: [%s]", q_norm, str4euler.c_str());
 
+        if (!( -10 < euler2debug[1] && euler2debug[1] < 10) )
+        {
+            bool a = true;
+        }
         // outfile << str4euler << std::endl;
 
         // if (q_cons.vnorm() < 0.9)

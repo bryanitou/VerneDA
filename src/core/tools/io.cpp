@@ -134,13 +134,26 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     std::ofstream file2write;
     file2write.open(file_path);
 
+    // Get problem statement
+    auto problem_type = delta->get_SuperManifold()->get_manifold_fin()->get_integrator_ptr()->get_problem_ptr()->get_type();
+
     // Iterate through the deltas
     if (eval_type == EVAL_TYPE::FINAL_WALLS || eval_type == EVAL_TYPE::INITIAL_WALLS)
     {
         // Compute wall points
         auto patches = eval_type == EVAL_TYPE::FINAL_WALLS ?
-                delta->get_SuperManifold()->get_final_manifold()->wallsPointEvaluationManifold() :
-                       delta->get_SuperManifold()->get_box_manifold()->wallsPointEvaluationManifold();
+                       (
+                               problem_type == PROBLEM::FREE_TORQUE_MOTION ?
+                               delta->get_SuperManifold()->get_att6dof_fin()->wallsPointEvaluationManifold() :
+                               delta->get_SuperManifold()->get_manifold_fin()->wallsPointEvaluationManifold()
+                       )
+                       :
+                       (
+                               problem_type == PROBLEM::FREE_TORQUE_MOTION ?
+                               delta->get_SuperManifold()->get_att6dof_ini()->wallsPointEvaluationManifold() :
+                               delta->get_SuperManifold()->get_manifold_ini()->wallsPointEvaluationManifold()
+                               )
+                       ;
 
         // Print them all
         tools::io::dace::print_each_patch_wall(patches, file2write, eval_type);
@@ -149,10 +162,19 @@ void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path
     {
         // Get the pointer where all the evaluations are
         auto deltas_poly = eval_type == EVAL_TYPE::FINAL_CENTER ?
-                delta->get_SuperManifold()->get_final_manifold()->centerPointEvaluationManifold() :
+                           (
+                                   problem_type == PROBLEM::FREE_TORQUE_MOTION ?
+                                   delta->get_SuperManifold()->get_att6dof_fin()->centerPointEvaluationManifold() :
+                                   delta->get_SuperManifold()->get_manifold_fin()->centerPointEvaluationManifold()
+                           )
+                           :
                            eval_type == EVAL_TYPE::INITIAL_CENTER ?
-                           delta->get_SuperManifold()->get_box_manifold()->centerPointEvaluationManifold() :
-                           eval_type == EVAL_TYPE::FINAL_DELTA ?
+                           (
+                                   problem_type == PROBLEM::FREE_TORQUE_MOTION ?
+                                   delta->get_SuperManifold()->get_att6dof_ini()->centerPointEvaluationManifold() :
+                                   delta->get_SuperManifold()->get_manifold_ini()->centerPointEvaluationManifold()
+                            ):
+                eval_type == EVAL_TYPE::FINAL_DELTA ?
                 *delta->get_eval_deltas_poly() : *delta->get_non_eval_deltas_poly();
 
         // Print the evaluated points
@@ -392,8 +414,8 @@ void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesyst
     std::filesystem::path file_path{};
 
     // From each manifold, print centers, walls and deltas if available
-    auto domain_record =  eval_type == EVAL_TYPE::INITIAL_WALLS ?  delta->get_SuperManifold()->get_final_manifold()->get_ini_domain_record() :
-                          delta->get_SuperManifold()->get_final_manifold()->get_fin_domain_record();
+    auto domain_record =  eval_type == EVAL_TYPE::INITIAL_WALLS ? delta->get_SuperManifold()->get_manifold_fin()->get_ini_domain_record() :
+                          delta->get_SuperManifold()->get_manifold_fin()->get_fin_domain_record();
 
     // Check directory exists
     if (!std::filesystem::is_directory(dir_path))
@@ -448,11 +470,14 @@ void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesyst
         // Now, write all the arguments from the map
         for(const auto& [arg, value] : args)
         {
-            cmd += "--";
-            cmd += arg;
-            cmd += " ";
-            cmd += value;
-            cmd += " ";
+            if (!value.empty())
+            {
+                cmd += "--";
+                cmd += arg;
+                cmd += " ";
+                cmd += value;
+                cmd += " ";
+            }
         }
 
         // Is it an asynchronous process?
@@ -470,7 +495,7 @@ void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesyst
     }
 }
 
-void tools::io::make_film(std::string args_str, bool async)
+void tools::io::make_film(const std::string& args_str, bool async)
 {
     // Ensure system() is available
     if (std::system(nullptr))

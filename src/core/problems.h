@@ -45,7 +45,7 @@ private:
      * @param pol [in] [DACE::AlgebraicVector<DACE::DA>]
      * @return  DACE::AlgebraicVector<DACE::DA>
     */
-    DACE::AlgebraicVector<DACE::DA> pol2cart(DACE::AlgebraicVector<DACE::DA> pol);
+    static DACE::AlgebraicVector<DACE::DA> pol2cart(DACE::AlgebraicVector<DACE::DA> pol);
 
 public:
     // Setters

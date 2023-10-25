@@ -4,6 +4,8 @@
 
 #include "delta.h"
 
+#include <utility>
+
 void delta::generate_deltas(DISTRIBUTION type, int n)
 {
     // Place for the all safety checks before computing HERE BELOW:
@@ -28,7 +30,7 @@ void delta::generate_deltas(DISTRIBUTION type, int n)
     // Safety checks if it is attitude, since its more complex...
     if (this->attitude_)
     {
-        // Call function checker
+        // Call function checker TODO: this check is useless since mean_quaternion is never used
         this->attitude_safety_checks();
     }
 
@@ -57,6 +59,9 @@ void delta::generate_deltas(DISTRIBUTION type, int n)
 
 void delta::generate_gaussian_deltas(int n)
 {
+    // Auxiliary variable for quaternion
+    std::vector<double> nq;
+
     // Stack results here: no need to initialize!
     std::vector<DACE::AlgebraicVector<double>> deltas;
 
@@ -87,8 +92,8 @@ void delta::generate_gaussian_deltas(int n)
         if (this->attitude_)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
-            // Declare new quaternion
-            std::vector<double> nq;
+            // Clean quaternion before assigning
+            nq.clear();
 
             // Get the quaternion
             switch (this->q_sampling_)
@@ -120,33 +125,21 @@ void delta::generate_gaussian_deltas(int n)
 
             }
 
-            // Safety check for norm
-            double nq_norm = quaternion::getnorm(nq);
-
-            // TODO: What should be the trigger for the norm?
-            bool is1norm = nq_norm == 1.0;
-            if (!is1norm)
-            {
-                // TODO: Do something here
-            }
-
-            // Reconvert to Euler angles
-            auto eu = quaternion::quaternion2euler(nq);
-
+            // Generate new delta
             new_delta = {
-                    nq[0] - this->mean_quaternion_[0],
-                    nq[1] - this->mean_quaternion_[1],
-                    nq[2] - this->mean_quaternion_[2],
-                    nq[3] - this->mean_quaternion_[3],
+                    nq[0] - 1, // I still don't like this...
+                    nq[1] - 0, // I still don't like this...
+                    nq[2] - 0, // I still don't like this...
+                    nq[3] - 0, // I still don't like this...
                     stddevs_distr[3](generator),
                     stddevs_distr[4](generator),
                     stddevs_distr[5](generator)};
         }
         else
         {
-            for (int k = 0; k < stddevs_distr.size(); k++)
+            for (auto & k : stddevs_distr)
             {
-                new_delta.push_back(stddevs_distr[k](generator));
+                new_delta.push_back(k(generator));
             }
         }
 
@@ -155,17 +148,13 @@ void delta::generate_gaussian_deltas(int n)
     }
 
     // Make shared and save
-    this->scv_deltas_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(deltas) ;
-
-    // Print first one
-    // std::cout << this->scv_deltas_->front()->get_state_vector_copy().front().toString() << std::endl;
-    // TODO: Info message
+    this->scv_deltas_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(deltas);
 }
 
 void delta::evaluate_deltas()
 {
     // Safety check
-    if (!this->nominal_inserted_)
+    if (!this->zeroed_inserted_)
     {
         std::fprintf(stderr, "FATAL: Cannot evaluate deltas!, Must insert the nominal first. Exiting program.");
         std::exit(-1);
@@ -181,7 +170,7 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *this->scv_deltas_)
     {
         // Evaluate and save
-        auto single_sol = this->sm_->get_final_manifold()->pointEvaluationManifold(
+        auto single_sol = this->sm_->get_manifold_fin()->pointEvaluationManifold(
                 this->sm_->previous_->front(),
                 scv_delta.cons(),
                 1);
@@ -208,8 +197,11 @@ void delta::evaluate_deltas()
             // Get the constants
             auto quaternion = single_sol.cons().extract(0, 3);
 
+            // Normalize quaternion
+            // quaternion = quaternion / quaternion.vnorm();
+
             // Convert to Euler
-            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+            auto euler_angles = quaternion::quaternion2euler_NORMAL(quaternion[0],
                                                              quaternion[1],
                                                              quaternion[2],
                                                              quaternion[3]);
@@ -276,10 +268,16 @@ void delta::insert_nominal(int n)
     DACE::AlgebraicVector<double> zeroed(n);
 
     // Insert nominal in the last position
-    this->scv_deltas_->push_back(zeroed);
+    this->insert_nominal(zeroed);
+}
+
+void delta::insert_nominal(const DACE::AlgebraicVector<double>& n)
+{
+    // Insert nominal in the last position
+    this->scv_deltas_->push_back(n);
 
     // Set boolean to true
-    this->nominal_inserted_ = true;
+    this->zeroed_inserted_ = true;
 }
 
 void delta::set_bool_option(DELTA_GENERATOR_OPTION option, bool value)
@@ -309,4 +307,39 @@ void delta::attitude_safety_checks()
         // Exit program
         std::exit(-1);
     }
+}
+
+void delta::convert_non_eval_deltas_to_euler()
+{
+    // Auxiliary variable
+    DACE::AlgebraicVector<double> q;
+    DACE::AlgebraicVector<double> euler;
+
+    for (auto & delta : *this->scv_deltas_)
+    {
+        // Get quaternion
+        q = delta.extract(0, 3);
+
+        // Sum up first position
+        q[0] += 1;
+
+        // Compute euler angle
+        euler = quaternion::quaternion2euler(q);
+
+        // Set new delta
+        delta = {euler[0] + this->mean_euler_[0],
+                euler[1] + this->mean_euler_[1],
+                euler[2] + this->mean_euler_[2],
+                delta[4], delta[5], delta[6]};
+    }
+}
+
+void delta::set_mean_quaternion_option(std::vector<double> mean_q)
+{
+    // Mean quaternion
+    this->mean_quaternion_ = std::move(mean_q);
+
+    // From there, compute euler angles
+    this->mean_euler_ = quaternion::quaternion2euler(this->mean_quaternion_);
+
 }

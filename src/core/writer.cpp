@@ -99,15 +99,42 @@ void writer::write_files(delta* delta, const std::filesystem::path& output_dir)
 void writer::set_dump_nominal_results(bool final, bool initial)
 {
     // Set bools
-    this->dump_fin_center = final;
+    if (!this->walls_bool_set)
+    {
+        this->dump_fin_walls = final;
+        this->dump_ini_walls = initial;
+        this->walls_bool_set = true;
+    }
+    if(!this->centers_bool_set)
+    {
+        this->dump_fin_center = final;
+        this->dump_ini_center = initial;
+        this->centers_bool_set = true;
+    }
+
+    // Set final / initial deltas
     this->dump_fin_deltas = final;
-    this->dump_fin_walls = final;
-    this->dump_ini_center = initial;
     this->dump_ini_deltas = initial;
-    this->dump_ini_walls = initial;
 
     // Usually we will always print
     this->dump_raw_deltas = true;
+}
+
+void writer::set_dump_walls_results(bool walls)
+{
+    // Set bools
+    this->dump_fin_walls = walls;
+    this->dump_ini_walls = walls;
+    this->walls_bool_set = true;
+
+}
+
+void writer::set_dump_centers_results(bool centers)
+{
+    // Set bools
+    this->dump_fin_center = centers;
+    this->dump_ini_center = centers;
+    this->centers_bool_set = true;
 }
 
 void writer::set_dump_frames_results(bool final, bool initial)

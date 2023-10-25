@@ -134,7 +134,8 @@ int main(int argc, char* argv[]) {
             // Exit switch case
             break;
         }
-        default: {
+        default:
+        {
             // TODO: Show some errors here
             std::exit(20);
         }
@@ -162,6 +163,12 @@ int main(int argc, char* argv[]) {
     // ADS and integration algorithm
     super_manifold->split_domain();
 
+    // Convert resulting manifold to 6 variable
+    super_manifold->set_6dof_domain();
+
+    std::cout << (*super_manifold->get_att6dof_fin())[0].toString() << std::endl;
+    std::cout << (*super_manifold->get_att6dof_ini())[0].toString() << std::endl;
+
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>();
 
@@ -169,7 +176,7 @@ int main(int argc, char* argv[]) {
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
     deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
     deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
-    deltas_engine->set_mean_quaternion_option(quaternion::euler2quaternion(0.0, 0.0, 0.0));
+    deltas_engine->set_mean_quaternion_option(scv0.extract(0, 3).cons());
 
     // Set distribution
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
@@ -178,28 +185,34 @@ int main(int argc, char* argv[]) {
     deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
-    deltas_engine->insert_nominal(my_specs.algebra.variables);
+    deltas_engine->insert_nominal(static_cast<int>(scv0_DA.size()));
 
     // Set super manifold in deltas engine
     deltas_engine->set_superManifold(super_manifold);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
+
+    // Once evaluated, convert initial domain to euler angles, just for plotting stuff
+    deltas_engine->convert_non_eval_deltas_to_euler();
+
     // Create writer object to write files
     writer writer{};
 
     // What to write
     writer.set_dump_nominal_results(true, true);
-    // writer.set_dump_frames_results(true, true);
+    writer.set_dump_centers_results(false);
+    writer.set_dump_walls_results(false);
 
     // Write files
     writer.write_files(deltas_engine.get(), my_specs.output_dir);
 
     // Create post-processing object
     FileProcessor fproc(writer.get_out_obj());
+    fproc.set_metrics(my_specs.initial_conditions.length_units);
 
     // Set UCFLAGS
-    fproc.set_ucflags(PYPLOT_TRANSLATION, PYPLOT_BANANA);
+    fproc.set_ucflags(PYPLOT_ATTITUDE, PYPLOT_BANANA);
 
     // Process files
     fproc.process_files();

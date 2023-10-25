@@ -22,11 +22,15 @@ namespace structs
         };
 
         // Output files
-        struct wdc_o {
+        struct wdc_o { // Walls Deltas Centers (+ others)
             std::string output_walls{};
             std::string output_deltas{};
             std::string output_centers{};
             std::string output_prefix{};
+
+            // For attitude
+            std::string output_sphere{};
+            std::string output_distribution{};
         };
     }
 

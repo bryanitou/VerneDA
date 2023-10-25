@@ -66,12 +66,6 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Print status
         this->print_status();
 
-        // TODO: Remove this when problem solved
-        if (this->size() == 126)
-        {
-            bool a = true;
-        }
-
         // Debugging information
         if (domain_evolution)
         {
@@ -86,21 +80,11 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
         // Removes the one in front
         this->pop_front();
 
-        // TODO: DEBUG CODE
-        if (p.get_history_count() == 6 || i == 121)
-        {
-            bool a = true;
-        }
-
         // Set time for the integrator
         this->integrator_->t_ = p.t_;
 
         // Set the beta from the patch to the integrator
-        if (i != 0)
-        {
-            this->integrator_->betas_ = p.betas;
-        }
-
+        this->integrator_->betas_ = p.betas;
 
         // Get the new state
         auto scv = this->integrator_->integrate(p, p.id_);
@@ -122,47 +106,38 @@ Manifold* Manifold::getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool doma
             auto s = f.split(dir);
 
             // Add new patches
-            for (auto & p_new : s)
-            {
-                // To cunt this we have to do several trials
-                p_new.id_ = split_count;
-                p_new.nli = this->integrator_->nli_current_;
-                p_new.t_split_ = this->integrator_->t_;
-
-                // TODO: Find a better logic... this scope shouldn't be dealing with LOADS/ADS stuff.
-                //  Must be agnostic...
-                if (this->integrator_->get_algorithm() == ALGORITHM::LOADS)
-                {
-                    p_new.betas = this->integrator_->betas_;
-                    p_new.betas[dir - 1] /= 3;
-                }
-
-
-                // TODO: push back of this object... copies are lost? Analyze what's happening in memory
-                this->push_back(p_new);
-
-                // Increase split count
-                split_count++;
-            }
-
-            // TODO: DEBUG CODE
-            if (s[0].get_history_count() == 6)
-            {
-                bool a = true;
-            }
-
-            // split_count += 3;
-            // std::ofstream file2write;
-            // file2write.open("/home/bryan/CLionProjects/ISAE/research_project/VerneDA/out/example/loads/n_split_vs_time.csv", std::ios_base::app);
-            // file2write  << std::to_string(this->integrator_->t_ / (M_PI * 2)) << "," << std::to_string(split_count) << std::endl;
-            // // // Close the stream
-            // file2write.close();
+            this->add_new_patches(s, split_count, dir);
         }
 
         i++;
     }
 
     return results;
+}
+
+void Manifold::add_new_patches(std::vector<Patch> & new_patches, int & split_count, int dir)
+{
+    // Add new patches
+    for (auto & p_new : new_patches)
+    {
+        // To cunt this we have to do several trials
+        p_new.id_ = split_count;
+        p_new.nli = this->integrator_->nli_current_;
+        p_new.t_split_ = this->integrator_->t_;
+
+        // CRITICAL: collect betas from last patch and scale in the split direction
+        if (this->integrator_->get_algorithm() == ALGORITHM::LOADS)
+        {
+            p_new.betas = this->integrator_->betas_;
+            p_new.betas[dir - 1] /= 3;
+        }
+
+        // TODO: push back of this object... copies are lost? Analyze what's happening in memory
+        this->push_back(p_new);
+
+        // Increase the splitting count
+        split_count++;
+    }
 }
 
 /*
@@ -507,7 +482,8 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
              VarDom: number of variable actually used as domain variable
    !<< return AlgebraicVector<DA> of the expansion of the Patch(the sub-domain after the ADS elaboration) which contain the point assigned  */
     //std::cout << pt << std::endl;
-    if ( pt.size() != DACE::DA::getMaxVariables())
+    const unsigned int dim = DACE::DA::getMaxVariables();
+    if ( pt.size() != dim)
     {
         throw std::runtime_error ("error in 'Manifold::pointEvaluationManifold': The dimension of selected point is wrong, the dimension must be the same of Patch variables");
     }
@@ -548,7 +524,7 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
     if ( flag == 1 )
     {
         // Get amount of variables
-        const unsigned int comp = DACE::DA::getMaxVariables();
+        const unsigned int comp = dim;
 
         // Create vectors:
         // ptUnit: dimension ['comp']
@@ -707,6 +683,29 @@ void Manifold::set_integrator_ptr(integrator* integrator)
     // Replace problem pointer
     this->integrator_ = integrator;
 
+    // CRITICAL operation: from integrator, set the betas inside to the first patch
+    if (this->integrator_->get_algorithm() == ALGORITHM::LOADS)
+    {
+        if (!this->integrator_->betas_.empty())
+        {
+            // Pass betas to patch
+            (*this)[0].betas = this->integrator_->betas_;
+
+            //  Clean from integrator
+            this->integrator_->betas_.clear();
+        }
+        else
+        {
+            // Throw err
+            std::fprintf(stderr, "Tried to set betas into the first patch (for LOADS), however no betas were"
+                                 " found in integrator obejct (%p)", this->integrator_);
+            // Exit program
+            std::exit(112);
+
+        }
+    }
+
+
     // Info
     std::fprintf(stdout, "Manifold: Integrator object pointer ('%p') successfully set in Manifold ('%p').\n",
                  this->integrator_, this);
@@ -733,13 +732,14 @@ std::vector<DACE::AlgebraicVector<double>> Manifold::centerPointEvaluationManifo
         // Get the translated result fo this patch
         auto center_i_transposed = this->at(i).eval(zeroed);
 
-        if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+        // TODO: REMOVE THIS CODE
+        if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION && false)
         {
             // Get the constants
             auto quaternion = center_i_transposed.cons().extract(0, 3);
 
-            // Convert to Euler
-            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+            // Convert to Euler TODO: HCANGE THIS
+            auto euler_angles = quaternion::quaternion2euler_NORMAL(quaternion[0],
                                                              quaternion[1],
                                                              quaternion[2],
                                                              quaternion[3]);
@@ -774,13 +774,13 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
     const unsigned int n_var = DACE::DA::getMaxVariables();
 
     // We always will be only projecting the X-Y variable
-    std::vector<int> sweep (n_var, 0); sweep[0] = 1; sweep[1] = 1;
+    std::vector<int> sweep (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION ? n_var - 1 : n_var, 0); sweep[0] = 1; sweep[1] = 1;
 
     // We want to draw the path in a coherent order: X right, Y down, X left, Y up
     std::vector<bool> path = {true, false, false, true};
 
     // Get all the points to be evaluated
-    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 2, sweep, path);
+    auto wall_points2eval = tools::math::hypercubeEdges((int) n_var, 40, sweep, path);
 
     // Get size of wall
     unsigned int n_size_wall = wall_points2eval.size();
@@ -800,10 +800,11 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
             auto image_wall_point = this->at(i).eval(wall_points2eval[k]);
 
             // Convert to euler angles if required
-            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+            // TODO: REMOVE THIS CODE
+            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION && false)
             {
                 // Convert to Euler
-                auto euler_angles = quaternion::quaternion2euler(
+                auto euler_angles = quaternion::quaternion2euler_NORMAL(
                         image_wall_point[0],
                         image_wall_point[1],
                         image_wall_point[2],
@@ -891,13 +892,14 @@ std::vector<std::vector<DACE::AlgebraicVector<double>>> Manifold::wallsPointEval
             auto image_wall_point = this->at(i).eval(point_wall);
 
             // Convert to euler angles if required
-            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+            // TODO: REMOVE THIS CODE
+            if (this->integrator_->get_problem_ptr()->get_type() == PROBLEM::FREE_TORQUE_MOTION && false)
             {
                 // Get the constants
                 auto quaternion = image_wall_point.cons().extract(0, 3);
 
                 // Convert to Euler
-                auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+                auto euler_angles = quaternion::quaternion2euler_NORMAL(quaternion[0],
                                                                  quaternion[1],
                                                                  quaternion[2],
                                                                  quaternion[3]);

@@ -38,6 +38,10 @@ private: // Private attributes
     bool dump_ini_frames{false};
     bool dump_fin_frames{false};
 
+    // Bools to know if it has been set
+    bool walls_bool_set{false};
+    bool centers_bool_set{false};
+
 private: // Private attributes
 
     structs::out_obj out_obj{};
@@ -57,6 +61,18 @@ public: // Setters
      * @param initial [in] [bool]
      */
     void set_dump_frames_results(bool final = false, bool initial = false);
+
+    /**
+     * Set whether to print walls or not
+     * @param walls
+     */
+    void set_dump_walls_results(bool walls = true);
+
+    /**
+     * Set whether to print centers or not
+     * @param centers
+     */
+    void set_dump_centers_results(bool centers = true);
 
 public: // Getters
 
@@ -79,6 +95,5 @@ public: // Public methods
      * @param output_dir [in] [std::filesystem::path]
      */
     void write_files(delta* delta, const std::filesystem::path& output_dir);
-
 };
 

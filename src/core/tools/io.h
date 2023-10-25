@@ -108,5 +108,5 @@ namespace tools::io
      * @param args_str [in] [std::string]
      * @param async [in] [bool]
      */
-    void make_film(std::string args_str, bool async);
+    void make_film(const std::string& args_str, bool async);
 };
