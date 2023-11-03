@@ -128,6 +128,24 @@ TODO
 ```
 TBD: Add description of each place.
 
+## MATLAB interface: MEX files
+
+MEX files are used in order to call the C++ program from MATLAB. Hence, the C++ project can be used as a propagation engine, embedded in a GNC (Guidance, Navigation and Control) feedback loop, or other engineering purposes.
+
+From MATLAB, in order to build the MEX file:
+
+```shell
+mex -setup c++
+```
+
+```shell
+mex -v CXXFLAGS='$CXXFLAGS -std=c++20' -Ibuild/VerneDA-install-debug/lib/dace/include/ -Isrc/core src/main/mex_vsod.cpp
+```
+
+Some links which the developer may find useful:
+- libstdc linking error: https://es.mathworks.com/matlabcentral/answers/1907290-how-to-manually-select-the-libstdc-library-to-use-to-resolve-a-version-glibcxx_-not-found
+- mex files examples: https://es.mathworks.com/help/matlab/matlab_external/c-mex-source-file.html#responsive_offcanvas
+
 ## Programming guidelines
 
 TODO

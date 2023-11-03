@@ -180,7 +180,7 @@ if (BUILD_DACE_MASTER_LIBS)
             INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
             INSTALL_COMMAND make install
             )
-elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to downlooad this from the internet directly instead of having it as a submodule
+elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to download this from the internet directly instead of having it as a submodule
     ExternalProject_Add(dace
             SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
             PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
@@ -260,6 +260,13 @@ include_directories(
         ${daceinclude}
         src/core
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+
+# TODO: Modularize this hard path
+# Include MATLAB stuff (optional) for MEX files
+include_directories(
+        /home/bryan/MATLAB/R2021a/extern/include
+        /home/bryan/MATLAB/R2021a/simulink/include
+)
 
 #===========================================
 # LIBRARY: DACE (IMPORTED LIBRARY)
@@ -580,7 +587,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
-# EXECUTABLES: DACE_VSA (DACE VERY SIMPLE ATTITUDE DETERMINATION)
+# EXECUTABLES: DACE_VSAD (DACE VERY SIMPLE ATTITUDE DETERMINATION)
 ############################################
 set(EXECUTABLE_NAME "dace_vsad")
 
@@ -632,6 +639,32 @@ target_link_libraries(${EXECUTABLE_NAME}
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+############################################
+# EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+set(EXECUTABLE_NAME "mex_vsod")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/mex_vsod.cpp
+)
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        base
+        ads
+
+)
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
 
 
 ############################################
