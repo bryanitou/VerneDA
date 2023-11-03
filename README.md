@@ -132,6 +132,14 @@ TBD: Add description of each place.
 
 MEX files are used in order to call the C++ program from MATLAB. Hence, the C++ project can be used as a propagation engine, embedded in a GNC (Guidance, Navigation and Control) feedback loop, or other engineering purposes.
 
+Before launching MATLAB, some libraries have to be preload (libstdc and dacelib):
+TODO: Modularize this hard set path
+```shell
+export LD_PRELOAD=/lib/x86_64-linux-gnu/libstdc++.so.6 matlab
+export LD_PRELOAD=$LD_PRELOAD:/home/bryan/CLionProjects/ISAE/research_project/VerneDA/build/VerneDA-install-debug/lib/dace/lib/libdace.so matlab
+```
+
+
 From MATLAB, in order to build the MEX file:
 
 ```shell
