@@ -53,12 +53,6 @@ int main(int argc, char* argv[])
 
     std::cout << scv0 << std::endl;
 
-    // Declare and initialize class
-    auto s0 = std::make_unique<scv>(scv0);
-
-    // Now, should initialize all the dace variables from the initial conditions
-    auto scv0_DA = s0->get_state_vector_copy();
-
     // Initial and final time and time step
     double const t0 = my_specs.propagation.initial_time;
     double const tf = my_specs.propagation.final_time;
@@ -135,7 +129,7 @@ int main(int argc, char* argv[])
     objIntegrator->set_problem_ptr(prob);
 
     // Setting integrator parameters
-    objIntegrator->set_integration_parameters(scv0_DA, t0, tf,interruption);
+    objIntegrator->set_integration_parameters(scv0, t0, tf,interruption);
 
     // Set integrator in the super manifold
     super_manifold->set_integrator_ptr(objIntegrator.get());
