@@ -81,7 +81,7 @@ public:
             {
                 if (inputs[i].getType() != matlab::data::ArrayType::DOUBLE ||
                     inputs[i].getType() == matlab::data::ArrayType::COMPLEX_DOUBLE ||
-                    inputs[i].getNumberOfElements() != 6) {
+                        (inputs[i].getNumberOfElements() != 6 && inputs[i].getNumberOfElements() != 7)) {
                     print_error = true;
                 }
             }
@@ -279,15 +279,29 @@ public:
         return std::string(str2convert[0]);
     }
 
-    static double* convertMatlab3x3Array2Normal3x3Array(const matlab::data::TypedArray<double>& arr2convert)
+    double* convertMatlab3x3Array2Normal3x3Array(const matlab::data::TypedArray<double>& arr2convert)
     {
         double* result = (double*) malloc(sizeof (double ) * 3 * 3);
 
+        // Get pointer to engine
+        std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
+
+        // Get array factory
+        matlab::data::ArrayFactory factory;
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                result[i*j + j] = arr2convert[i][j];
+                result[i*3 + j] = arr2convert[i][j];
+
+                // Prepare string
+                auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*j + j]);
+
+                // Show error
+                matlabPtr->feval(u"fprintf",
+                                 0,
+                                 std::vector<matlab::data::Array>(
+                                         {factory.createScalar(err2print)}));
             }
         }
         // Return result
@@ -374,7 +388,17 @@ public:
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    inertia3x3[i][j] = *(inertia + i * j + j);
+                    // Pass values
+                    inertia3x3[i][j] = inertia[i*3 + j];
+
+                    // Prepare string
+                    auto err2print = tools::string::print2string("i: %d, j: %d --> %f\n", i, j, inertia3x3[i][j]);
+
+                    // Show error
+                    matlabPtr->feval(u"fprintf",
+                                     0,
+                                     std::vector<matlab::data::Array>(
+                                             {factory.createScalar(err2print)}));
                 }
             }
 
@@ -419,7 +443,18 @@ public:
         }
 
         // Set distribution
-        deltas_engine->set_stddevs(stddev);
+        if (prob == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            // deltas_engine->set_stddevs_q(stddev);
+        }
+        else if (prob == PROBLEM::TWO_BODY)
+        {
+            deltas_engine->set_stddevs(stddev);
+        }
+        else
+        {
+            // Throw err
+        }
 
         // Compute deltas
         deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, n_samples);

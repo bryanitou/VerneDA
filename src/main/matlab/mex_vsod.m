@@ -8,7 +8,7 @@ orbit_period_sec = 15361.68181049502; % seconds
 % Scaling
 mex_scaling;
 
-% Set initial state: ALREADY ADMINETIONAL
+% Set initial state: ALREADY ADIMENTIONAL
 state_ini = [0.5, 0.0, 0.0, 0.0,1.7320508075688774, 0.003];
 
 % Stddev

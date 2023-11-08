@@ -3,11 +3,13 @@ close all;
 clear all;
 
 % Inertia
-inertia = [ 2040.0, 130.0, 25.0;
-        130.0, 1670.0, -55.0;
-        25.0, -55.0, 2570.0];
+inertia = [
+    2040.0, 130.0, 25.0;
+    130.0, 1670.0, -55.0;
+    25.0, -55.0, 2570.0
+    ];
 
-% Set initial state: ALREADY ADMINETIONAL
+% Set initial state: ALREADY ADIMENTIONAL
 euler = [0.0, 0.0, 0.0];
 qZYX = eul2quat(euler);
 state_ini = [qZYX, 0.01, 0.0, 0.0];

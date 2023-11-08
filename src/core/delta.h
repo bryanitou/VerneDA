@@ -36,6 +36,7 @@ public: // Set constants
      * @param stddevs [in] [std::vector<double>]
      */
     void set_stddevs(const std::vector<double>& stddevs);
+    // void set_stddevs_q(const std::vector<double>& stddevs);
 
 public: // Set options
     /**

@@ -244,13 +244,27 @@ void delta::evaluate_deltas()
 
 void delta::set_stddevs(const std::vector<double>& stddevs)
 {
-    // Set constants
+    // If we convert quaterion to euler...
     this->stddevs_ = stddevs;
 
     // Notice
     this->stddevs_set_ = true;
-
 }
+
+/*
+void delta::set_stddevs_q(const std::vector<double>& stddevs)
+{
+    auto stddevs_local = stddevs;
+
+    // If we convert quaterion to euler...
+    auto q = std::vector<double>(stddevs_local.begin(), stddevs_local.begin() + 3);
+    auto eul = quaternion::quaternion2euler(q);
+    this->stddevs_ = std::vector<double>(eul.begin(), eul.end());
+    this->stddevs_.insert(this->stddevs_.end(), stddevs_local.begin() + 3, stddevs_local.end());
+
+    // Notice
+    this->stddevs_set_ = true;
+}*/
 
 void delta::insert_nominal(int n)
 {

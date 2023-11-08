@@ -643,7 +643,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 ############################################
 # EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
 ############################################
-set(EXECUTABLE_NAME "mex_vsod")
+set(EXECUTABLE_NAME "mex_vsaod")
 
 add_executable(${EXECUTABLE_NAME}
         src/main/mex_vsaod.cpp
