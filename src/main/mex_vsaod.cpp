@@ -30,9 +30,21 @@ public:
         auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
         auto n_max = convertMatlabInt2NormalInt(inputs[5]);
         auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
+        auto str_alg = convertMatlabStr2NormalStr(inputs[7]);
+        auto str_enum =
+                str_alg == "tbp" ? PROBLEM::TWO_BODY :
+                str_alg == "ftmp" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
+
+        double* inertia = nullptr;
+
+        // If FTMP
+        if (str_enum == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            inertia = convertMatlab3x3Array2Normal3x3Array(inputs[8]);
+        }
 
         // Perform operation
-        auto fin_state = propagate_loads(ini_state, stddev, t, ci, nli, n_max, n_samples);
+        auto fin_state = propagate_orbit_loads(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
 
         // Convert all states to matlab array
         outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
@@ -54,6 +66,7 @@ public:
         std::vector<int> vectors2check3 = {2};
         std::vector<int> doubles2check = {3, 4};
         std::vector<int> int2check = {5, 6};
+        std::vector<int> str2check = {7};
 
         // Check arguments
         for (auto & i : vectors2check6)
@@ -189,6 +202,40 @@ public:
             }
         }
 
+        // Check arguments
+        for (auto & i : str2check)
+        {
+            // Safety check
+            if (i >= inputs.size())
+            {
+                print_error = true;
+            }
+
+            if (!print_error)
+            {
+                if (inputs[i].getType() != matlab::data::ArrayType::MATLAB_STRING ||
+                    inputs[i].getNumberOfElements() != 1) {
+                    print_error = true;
+                }
+            }
+
+
+            if (print_error)
+            {
+                // Prepare string
+                err2print = tools::string::print2string("Input %d must be of type MATLAB_STRING", i + 1);
+
+                // Show error
+                matlabPtr->feval(u"error",
+                                 0,
+                                 std::vector<matlab::data::Array>(
+                                         {factory.createScalar(err2print)}));
+
+                // Reset print error
+                print_error = false;
+            }
+        }
+
         // Check number of outputs
         if (outputs.size() > 1) {
             matlabPtr->feval(u"error",
@@ -201,7 +248,8 @@ public:
     static std::vector<double> convertMatlabTypedArray2NormalVector(const matlab::data::TypedArray<double>& array2convert)
     {
         // Set result
-        std::vector<double> result{};
+        // TODO: std::vector<double> result(array2convert.begin(), array2convert.end());
+        std::vector<double> result;
 
         // Pass to vector
         for (auto &in : array2convert)
@@ -223,6 +271,27 @@ public:
     {
         // Return result
         return int2convert[0];
+    }
+
+    static std::string convertMatlabStr2NormalStr(const matlab::data::TypedArray<matlab::data::MATLABString>& str2convert)
+    {
+        // Return result
+        return std::string(str2convert[0]);
+    }
+
+    static double* convertMatlab3x3Array2Normal3x3Array(const matlab::data::TypedArray<double>& arr2convert)
+    {
+        double* result = (double*) malloc(sizeof (double ) * 3 * 3);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result[i*j + j] = arr2convert[i][j];
+            }
+        }
+        // Return result
+        return result;
     }
 
 
@@ -247,7 +316,7 @@ public:
         return result;
     }
 
-    std::shared_ptr<dace_array> propagate_loads(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max, int& n_samples)
+    std::shared_ptr<dace_array> propagate_orbit_loads(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max, int& n_samples, PROBLEM prob, const double* inertia = nullptr)
     {
         // Get pointer to engine
         std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
@@ -256,28 +325,17 @@ public:
         matlab::data::ArrayFactory factory;
 
         // Initialize DACE with 6 variables
-        DACE::DA::init(2, 6);
+        DACE::DA::init(2, ini_state.size());
 
         // Initialize beta
-        std::vector<double> betas =
-                {
-                        ci * stddev[0],
-                        ci * stddev[1],
-                        ci * stddev[2],
-                        ci * stddev[3],
-                        ci * stddev[4],
-                        ci * stddev[5]
-                };
+        std::vector<double> betas(stddev.size());
+        for (int i = 0; i < stddev.size(); i++)
+            betas[i] = ci * stddev[i];
 
         // Initialize state DA vector
-        DACE::AlgebraicVector<DACE::DA> scv0 = {
-                ini_state[0] + betas[0] * DACE::DA(1),
-                ini_state[1] + betas[1] * DACE::DA(2),
-                ini_state[2] + betas[2] * DACE::DA(3),
-                ini_state[3] + betas[3] * DACE::DA(4),
-                ini_state[4] + betas[4] * DACE::DA(5),
-                ini_state[5] + betas[5] * DACE::DA(6)
-        };
+        DACE::AlgebraicVector<DACE::DA> scv0(ini_state.size());
+        for (int i = 0; i < ini_state.size(); i++)
+            scv0[i] = ini_state[i] + betas[i] * DACE::DA(i + 1);
 
         matlabPtr->feval(u"fprintf",
                          0,
@@ -298,13 +356,41 @@ public:
         objIntegrator->set_beta(const_cast<std::vector<double> &>(betas));
 
         // Initialize problem
-        auto prob = new problems(PROBLEM::TWO_BODY, 1.0);
+        problems * problem;
+
+        if (prob == PROBLEM::TWO_BODY)
+        {
+            problem = new problems(prob, 1);
+        }
+        else if (prob == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            // Free Torque Motion problem
+            problem = new problems(prob);
+
+            // Create double[3][3]
+            double inertia3x3[3][3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    inertia3x3[i][j] = *(inertia + i * j + j);
+                }
+            }
+
+            // Set the inertia matrix in problem object
+            problem->set_inertia_matrix(inertia3x3);
+        }
+        else
+        {
+            // Throw error
+        }
 
         // Deduce whether interruption should be made or not
         auto interruption = true;
 
         // Set problem ptr in the integrator
-        objIntegrator->set_problem_ptr(prob);
+        objIntegrator->set_problem_ptr(problem);
 
         // Setting integrator parameters
         objIntegrator->set_integration_parameters(scv0, t0, tf,interruption);
@@ -321,6 +407,16 @@ public:
 
         // Build deltas class
         auto deltas_engine = std::make_shared<delta>();
+
+        // Set quaternion distribution stuff in case of FTMP
+        if (prob == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            // Set some options
+            deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::ATTITUDE, true);
+            deltas_engine->set_bool_option(DELTA_GENERATOR_OPTION::QUAT2EULER, true);
+            deltas_engine->set_sampling_option(QUATERNION_SAMPLING::OMPL_GAUSSIAN);
+            deltas_engine->set_mean_quaternion_option(scv0.extract(0, 3).cons());
+        }
 
         // Set distribution
         deltas_engine->set_stddevs(stddev);

@@ -646,7 +646,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 set(EXECUTABLE_NAME "mex_vsod")
 
 add_executable(${EXECUTABLE_NAME}
-        src/main/mex_vsod.cpp
+        src/main/mex_vsaod.cpp
 )
 
 # add_dependencies(${EXECUTABLE_NAME}

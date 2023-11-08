@@ -40,7 +40,7 @@ for i = 1:length(orbits_period_sec_vec)
     t = [t0, tf, dt];
     
     % Test MEX executable
-    b(:,:,i) = mex_vsod(state_ini, stddev, t, ci, nli, n_split_max, n_samples);
+    b(:,:,i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
 end
 
 figure(1);
