@@ -95,9 +95,6 @@ int main(int argc, char* argv[])
             // Set beta constant in integrator
             objIntegrator->set_beta(my_specs.scaling.beta);
 
-            // Set time scaling
-            objIntegrator->set_time_scaling(my_specs.scaling.time);
-
             // Initialize problem
             prob = new problems(my_specs.problem, my_specs.mu);
 

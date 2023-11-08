@@ -29,9 +29,10 @@ public:
         auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
         auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
         auto n_max = convertMatlabInt2NormalInt(inputs[5]);
+        auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
 
         // Perform operation
-        auto fin_state = propagate_loads(ini_state, stddev, t, ci, nli, n_max);
+        auto fin_state = propagate_loads(ini_state, stddev, t, ci, nli, n_max, n_samples);
 
         // Convert all states to matlab array
         outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
@@ -52,7 +53,7 @@ public:
         std::vector<int> vectors2check6 = {0, 1};
         std::vector<int> vectors2check3 = {2};
         std::vector<int> doubles2check = {3, 4};
-        std::vector<int> int2check = {5};
+        std::vector<int> int2check = {5, 6};
 
         // Check arguments
         for (auto & i : vectors2check6)
@@ -164,8 +165,8 @@ public:
 
             if (!print_error)
             {
-                if (inputs[i].getType() != matlab::data::ArrayType::INT8 ||
-                    inputs[i].getType() == matlab::data::ArrayType::COMPLEX_INT8 ||
+                if (inputs[i].getType() != matlab::data::ArrayType::INT16 ||
+                    inputs[i].getType() == matlab::data::ArrayType::COMPLEX_INT16 ||
                     inputs[i].getNumberOfElements() != 1) {
                     print_error = true;
                 }
@@ -175,7 +176,7 @@ public:
             if (print_error)
             {
                 // Prepare string
-                err2print = tools::string::print2string("Input %d must be of type int8", i + 1);
+                err2print = tools::string::print2string("Input %d must be of type int16", i + 1);
 
                 // Show error
                 matlabPtr->feval(u"error",
@@ -218,7 +219,7 @@ public:
         return double2convert[0];
     }
 
-    static int convertMatlabInt2NormalInt(const matlab::data::TypedArray<int_fast8_t >& int2convert)
+    static int convertMatlabInt2NormalInt(const matlab::data::TypedArray<int_least16_t >& int2convert)
     {
         // Return result
         return int2convert[0];
@@ -246,7 +247,7 @@ public:
         return result;
     }
 
-    std::shared_ptr<dace_array> propagate_loads(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max)
+    std::shared_ptr<dace_array> propagate_loads(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max, int& n_samples)
     {
         // Get pointer to engine
         std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
@@ -296,9 +297,6 @@ public:
         // Set beta constant in integrator
         objIntegrator->set_beta(const_cast<std::vector<double> &>(betas));
 
-        // Set time scaling
-        objIntegrator->set_time_scaling(2444.887594345139);
-
         // Initialize problem
         auto prob = new problems(PROBLEM::TWO_BODY, 1.0);
 
@@ -328,7 +326,7 @@ public:
         deltas_engine->set_stddevs(stddev);
 
         // Compute deltas
-        deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
+        deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, n_samples);
 
         // Insert nominal delta
         deltas_engine->insert_nominal(static_cast<int>(ini_state.size()));

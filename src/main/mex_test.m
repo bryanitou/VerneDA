@@ -2,39 +2,63 @@
 close all;
 clear all;
 
-% Set initial state
-state_ini = [0.5, 0.0, 0.0, 0.0,1.7320508075688774, 0.003];
+% Orbit Period
+orbit_period_sec = 15361.68181049502; % seconds
 
-% Set time constraints
-t0 = 0.0;
-tf = 9.42477796076938 / 2 * 1.3;
-dt = 0.004090167590170333;
-t = [t0, tf, dt];
+% Scaling
+mex_scaling;
+
+% Set initial state: ALREADY ADMINETIONAL
+state_ini = [0.5, 0.0, 0.0, 0.0,1.7320508075688774, 0.003];
 
 % Stddev
 stddev = [7.487120281336031E-4, 0.007487120281336032, 0.0, 0.0, 0.0, 0.008];
+
+% Confidence interval
 ci = 3;
 
 % LOADS configuration
 nli = 0.02;
-n_split_max = int8(10);
+n_split_max = int16(10);
+n_samples = int16(10000);
 
-% Test MEX executable
-b = mex_vsod(state_ini, stddev, t, ci, nli, n_split_max);
+% Periods to simulate
+orbits_period_sec_vec = [0.5, 0.75, 1] * orbit_period_sec;
 
-% Earth data
-r_earth = 6378;
-r_earth = r_earth / 13356.27;
+% Set time constraints
+t0 = 0.0;
 
+% Save the results here
+N = length(orbits_period_sec_vec);
+b = zeros(6, n_samples + 1, N);
+
+for i = 1:length(orbits_period_sec_vec)
+    orbit_period_sec =  orbits_period_sec_vec(i);
+    orbit_period_und = orbit_period_sec * 1 / scaling_time;
+    tf = orbit_period_und * 0.75;
+    dt = 10 / scaling_time;
+    t = [t0, tf, dt];
+    
+    % Test MEX executable
+    b(:,:,i) = mex_vsod(state_ini, stddev, t, ci, nli, n_split_max, n_samples);
+end
+
+figure(1);
 % Plot the result
-plot3(b(1,:), b(2,:), b(3,:), '*')
-[x ,y , z ] = sphere ;
-x = x * r_earth ;
-y = y * r_earth ;
-z = z * r_earth ;
+for i = 1:length(orbits_period_sec_vec)
+    r = b(:,:,i);
+    plot3(r(1,:), r(2,:), r(3,:), '*');
+    hold on;
+end
+r_earth = 6378 / scaling_length;
+[x ,y , z ] = sphere;
+x = x * r_earth;
+y = y * r_earth;
+z = z * r_earth;
 hold on;
 surf (x ,y , z ) ;
 axis equal ;
 xlabel (" x [ km ]") ;
 ylabel (" y [ km ]") ;
 zlabel (" z [ km ]") ;
+grid on;

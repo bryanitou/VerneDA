@@ -65,11 +65,6 @@ public:
         this->betas_ = beta;
     }
 
-    void set_time_scaling(double time_scale)
-    {
-        this->t_scaling_ = time_scale;
-    }
-
     void set_nSplitMax(int nSplitMax)
     {
         this->nSplitMax_ = nSplitMax;
@@ -148,7 +143,6 @@ private:
 
     // LOADS stuff
     double nli_threshold_;
-    double t_scaling_;
 
 private:
     // Some auxilary class variables
