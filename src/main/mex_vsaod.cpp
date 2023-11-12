@@ -295,7 +295,7 @@ public:
                 result[i*3 + j] = arr2convert[i][j];
 
                 // Prepare string
-                auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*j + j]);
+                auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*3 + j]);
 
                 // Show error
                 matlabPtr->feval(u"fprintf",
@@ -445,7 +445,7 @@ public:
         // Set distribution
         if (prob == PROBLEM::FREE_TORQUE_MOTION)
         {
-            // deltas_engine->set_stddevs_q(stddev);
+            deltas_engine->set_stddevs_q(stddev);
         }
         else if (prob == PROBLEM::TWO_BODY)
         {
@@ -453,7 +453,7 @@ public:
         }
         else
         {
-            // Throw err
+            return {};
         }
 
         // Compute deltas

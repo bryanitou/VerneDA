@@ -24,17 +24,11 @@ void SuperManifold::set_integrator_ptr(integrator* integrator)
     {
         // Set error tolerances
         integrator->set_errToll(this->errToll_);
-
-        // Set the NSPLIT max
-        integrator->set_nSplitMax(this->nSplitMax_);
     }
     else if (this->algorithm_ == ALGORITHM::LOADS)
     {
         // Set the NLI threshold
         integrator->set_nli_threshold(this->nli_threshold_);
-
-        // Set the NSPLIT max
-        integrator->set_nSplitMax(this->nSplitMax_);
     }
     else if (this->algorithm_ == ALGORITHM::NONE)
     {
@@ -72,8 +66,15 @@ void SuperManifold::split_domain()
     // Current passes to be previous in a new pointer
     this->previous_ =  new Manifold(*this->current_);
 
+    // Summary check before launching algorithm
+    std::string summary{};
+    this->summary(&summary, true);
+
+    // Print summary before launching
+    fprintf(stdout, "SUMMARY BEFORE SPLITTING ------------------------------------\n%s", summary.c_str());
+
     // Split domain: get current domain
-    if (this->algorithm_ != ALGORITHM::NA)
+    if (this->algorithm_ != ALGORITHM::NA && false)
     {
         // Integrate and/or split
         this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
@@ -81,7 +82,7 @@ void SuperManifold::split_domain()
     else
     {
         // No algorithm has been chosen...
-        std::fprintf(stderr, "Error to be written. SuperManifold.cpp line 84.\n");
+        std::fprintf(stderr, "Error to be written. SuperManifold.cpp line 85.\n");
     }
 
 }
@@ -141,5 +142,50 @@ void SuperManifold::set_6dof_domain()
                     p[6],
             };
         }
+    }
+}
+
+void SuperManifold::summary(std::string * summary2return, bool recursive)
+{
+    // Make safety checks
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("SuperManifold (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("SuperManifold (%p): current flag set to '%p'\n",
+                                                   this, this->current_);
+    *summary2return += tools::string::print2string("SuperManifold (%p): previous flag set to '%p'\n",
+                                                   this, this->previous_);
+    *summary2return += tools::string::print2string("SuperManifold (%p): att_6dof_ini flag set to '%p'\n",
+                                                   this, this->att_6dof_ini);
+    *summary2return += tools::string::print2string("SuperManifold (%p): att_6dof_fin flag set to '%p'\n",
+                                                   this, this->att_6dof_fin);
+    *summary2return += tools::string::print2string("SuperManifold (%p): splitbox flag set to '%p'\n",
+                                                   this, this->splitbox_);
+
+    // INTEGERS
+    *summary2return += tools::string::print2string("SuperManifold (%p): nSplitMax flag set to '%d'\n",
+                                                   this, this->nSplitMax_);
+
+    // DOUBLES
+    *summary2return += tools::string::print2string("SuperManifold (%p): nSplitMax flag set to '%.2f'\n",
+                                                   this, this->nli_threshold_);
+
+    *summary2return += tools::string::print2string("SuperManifold (%p): errToll flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->errToll_).c_str());
+
+    // ENUMS
+    *summary2return += tools::string::print2string("SuperManifold (%p): algorithm flag set to '%s'\n",
+                                                   this, tools::enums::ALGORITHM2str(this->algorithm_).c_str());
+
+    // If recursive, call the guys inside
+    if (recursive)
+    {
+        this->current_->summary(summary2return, recursive);
     }
 }

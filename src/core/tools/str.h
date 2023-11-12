@@ -35,4 +35,4 @@ namespace tools::string
      * @return std::string
      */
     std::string clean_bars(const std::string &str2clean);
-};
+}

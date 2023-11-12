@@ -61,7 +61,77 @@ std::string tools::enums::DISTRIBUTION2str(DISTRIBUTION distribution)
     // Check returned value
     if (result == "UNK")
     {
-        printf("WARNING: Could not parse DISTRIBUTION enum. Returning '%s'", result.c_str());
+        printf("WARNING: Could not parse DISTRIBUTION enum. Returning '%s'\n", result.c_str());
+    }
+
+    // Return found value
+    return result;
+
+}
+
+std::string tools::enums::INTEGRATOR2str(INTEGRATOR integrator)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            INTEGRATOR::RK4 == integrator ? "RK4" :
+            INTEGRATOR::STATIC == integrator ? "STATIC" :
+            INTEGRATOR::EULER == integrator ? "EULER" :
+            INTEGRATOR::RK78 == integrator ? "RK78" :
+            INTEGRATOR::NA == integrator ? "NA" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse INTEGRATOR enum. Returning '%s'\n", result.c_str());
+    }
+
+    // Return found value
+    return result;
+}
+
+std::string tools::enums::PROBLEM2str(PROBLEM problem)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            PROBLEM::TWO_BODY == problem ? "TWO_BODY" :
+            PROBLEM::FREE_TORQUE_MOTION == problem ? "FREE_TORQUE_MOTION" :
+            PROBLEM::POL2CART == problem ? "POL2CART" :
+            PROBLEM::FREE_FALL_OBJECT == problem ? "FREE_FALL_OBJECT" :
+            PROBLEM::NA == problem ? "NA" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse PROBLEM enum. Returning '%s'\n", result.c_str());
+    }
+
+    // Return found value
+    return result;
+
+}
+
+std::string tools::enums::ALGORITHM2str(ALGORITHM algorithm)
+{
+    // Value to be returned
+    std::string result;
+
+    // Fill the value...
+    result =
+            ALGORITHM::LOADS    == algorithm ? "LOADS" :
+            ALGORITHM::ADS      == algorithm ? "ADS" :
+            ALGORITHM::NONE     == algorithm ? "NONE" :
+            ALGORITHM::NA       == algorithm ? "NA" : "UNK";
+
+    // Check returned value
+    if (result == "UNK")
+    {
+        printf("WARNING: Could not parse ALGORITHM enum. Returning '%s'\n", result.c_str());
     }
 
     // Return found value

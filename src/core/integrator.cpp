@@ -920,3 +920,91 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
     return Y1;
 
 }
+
+
+void integrator::summary(std::string *summary2return, bool recursive)
+{
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("Integrator (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("Integrator (%p): problem flag set to '%p'\n",
+                                                   this, this->problem_);
+
+    // BOOLS
+    *summary2return += tools::string::print2string("Integrator (%p): interrupt flag set to '%s'\n",
+                                                   this, this->interrupt_ ? "true" : "false");
+
+    *summary2return += tools::string::print2string("Integrator (%p): end flag set to '%s'\n",
+                                                   this, this->end_ ? "true" : "false");
+
+    *summary2return += tools::string::print2string("Integrator (%p): params_set flag set to '%s'\n",
+                                                   this, this->params_set_ ? "true" : "false");
+
+    // INTEGERS
+    *summary2return += tools::string::print2string("Integrator (%p): patch_id flag set to '%d'\n",
+                                                   this, this->patch_id_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nvar flag set to '%d'\n",
+                                                   this, this->nvar_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): steps flag set to '%d'\n",
+                                                   this, this->steps_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): pos flag set to '%d'\n",
+                                                   this, this->pos_);
+
+    // DOUBLES
+    *summary2return += tools::string::print2string("Integrator (%p): t0 flag set to '%.2f'\n",
+                                                   this, this->t0_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): t1 flag set to '%.2f'\n",
+                                                   this, this->t1_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): t flag set to '%.2f'\n",
+                                                   this, this->t_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): h flag set to '%.2f'\n",
+                                                   this, this->h_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): hmax flag set to '%.2f'\n",
+                                                   this, this->hmax_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nli_current flag set to '%.2f'\n",
+                                                   this, this->nli_current_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nli_threshold flag set to '%.2f'\n",
+                                                   this, this->nli_threshold_);
+
+    // ENUMS
+    *summary2return += tools::string::print2string("Integrator (%p): type flag set to '%s'\n",
+                                                   this, tools::enums::INTEGRATOR2str(this->type).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): algorithm flag set to '%s'\n",
+                                                   this, tools::enums::ALGORITHM2str(this->algorithm_).c_str());
+    // VECTORS
+    *summary2return += tools::string::print2string("Integrator (%p): errToll flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->errToll_).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): betas flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->betas_).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): vector flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->vector).c_str());
+
+    // DA vectors
+    *summary2return += tools::string::print2string("Integrator (%p): scv flag set to '%s'\n",
+                                                   this, tools::vector::da_cons2string(this->scv_).c_str());
+
+    // If recursive, summarize internal pointers
+    if (recursive)
+    {
+        this->problem_->summary(summary2return, recursive);
+    }
+
+}

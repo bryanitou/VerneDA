@@ -13,6 +13,8 @@
 #include "base/constants.h"
 #include "base/enums.h"
 #include "tools/str.h"
+#include "tools/ep.h"
+#include "tools/vo.h"
 #include "quaternion.h"
 
 class problems
@@ -73,4 +75,7 @@ private:
     static void memory_frees(double **a);
 
     DACE::AlgebraicVector<DACE::DA> get_cross_product(DACE::AlgebraicVector<DACE::DA> omega);
+
+public:
+    void summary(std::string *summary2return, bool recursive);
 };

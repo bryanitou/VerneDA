@@ -36,6 +36,17 @@ namespace tools::vector
      */
      std::string da_cons2string(const DACE::AlgebraicVector<DACE::DA>& v, const std::string& separator = ",",
                                 const std::string& precision = "", bool close = true);
+
+    /**
+    * Unwrap T double pointer.
+    * @tparam T [in] [template]
+    * @param M [in] [int]
+    * @param N [in] [int]
+    * @return
+    */
+    template<typename T>
+    std::string unwrapMxN(int M, int N, T** matrix, const std::string& separator = ",",
+                          const std::string& precision = "", bool close = true);
 }
 
 // Include templates implementation
