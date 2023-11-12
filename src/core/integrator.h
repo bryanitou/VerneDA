@@ -15,6 +15,7 @@
 
 // Project tools
 #include "tools/vo.h"
+#include "tools/ep.h"
 
 // DACE libraries
 #include "dace/dace.h"
@@ -34,10 +35,10 @@ public:
      */
     ~integrator() = default;
 
+public:
     double t_{};
     bool end_{false};
     double nli_current_;
-private:
     std::vector<int> vector;
 
 public:
@@ -63,16 +64,9 @@ public:
     void set_beta(std::vector<double> &beta)
     {
         this->betas_ = beta;
-    }
 
-    void set_time_scaling(double time_scale)
-    {
-        this->t_scaling_ = time_scale;
-    }
-
-    void set_nSplitMax(int nSplitMax)
-    {
-        this->nSplitMax_ = nSplitMax;
+        auto betas_str = tools::vector::num2string(this->betas_);
+        std::fprintf(stdout, "Set betas in Integrator: %s\n", betas_str.c_str());
     }
 
 public:
@@ -90,6 +84,10 @@ public:
     }
 
     auto get_algorithm() {return this->algorithm_;}
+
+public: // SAFETY CHECK FUNCTIONS
+    void summary(std::string * summary2return, bool recursive);
+
 private:
     // Private attributes
 
@@ -133,11 +131,7 @@ private:
     // Parameters set?
     bool params_set_ = false;
 
-    // Some control booleans
-    std::vector<bool*> interrupt_flags_;
-
     // ADS/LOADS common stuff
-    int nSplitMax_;
     int pos_;
 
     // ADS constants
@@ -148,7 +142,6 @@ private:
 
     // LOADS stuff
     double nli_threshold_;
-    double t_scaling_;
 
 private:
     // Some auxilary class variables
@@ -184,12 +177,34 @@ private:
     [[nodiscard]] DACE::AlgebraicVector<DACE::DA> Euler_step(const DACE::AlgebraicVector<DACE::DA> &x, double t, double h) const;
 
 private:
-    // Auxiliary functions
-    bool check_interruption_flags();
 
-    bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
-    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
+    /**
+    * Check conditons: ADS or LOADS, switch case.
+    * @param x
+    * @param debug
+    * @return
+    */
     bool check_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
 
+    /**
+     * Check ADS conditions
+     * @param x
+     * @return
+     */
+    bool check_ads_conditions(const DACE::AlgebraicVector<DACE::DA> &x);
+
+    /**
+     * Check LOADS conditions
+     * @param x
+     * @param debug
+     * @return
+     */
+    bool check_loads_conditions(const DACE::AlgebraicVector<DACE::DA> &x, bool debug = false);
+
+    /**
+     * Static transformation
+     * @param x
+     * @return
+     */
     DACE::AlgebraicVector<DACE::DA> static_transformation(DACE::AlgebraicVector<DACE::DA> x);
 };

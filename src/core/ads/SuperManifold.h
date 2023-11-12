@@ -63,4 +63,6 @@ public:
     [[nodiscard]] Manifold* get_att6dof_ini() const {return this->att_6dof_ini; };
 
     void set_6dof_domain();
+
+    void summary(std::string *summary2return, bool recursive);
 };

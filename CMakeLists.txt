@@ -2,12 +2,12 @@
 # VerneDA COMPILATION CMAKE SCRIPT
 ############################################
 
+# CMAKE MINIMUM REQUIRED VERSION
+cmake_minimum_required(VERSION 3.21)
+
 # PROJECT: VerneDA
 # Create project, load parameters (flags & default values)
 project(VerneDA)
-
-# CMAKE MINIMUM REQUIRED VERSION
-cmake_minimum_required(VERSION 3.21)
 
 # CXX Standard to be used by the compiler
 set(CMAKE_CXX_STANDARD 17)
@@ -58,20 +58,20 @@ set(CTEST_BUILD_FLAGS -j${N_CORES})
 option(BUILD_DACE_MASTER_LIBS "Build DACE library from MASTER" OFF)
 option(BUILD_DACE_AFOSSA_LIBS "Build DACE library from AFOSSA fork" OFF)
 
+# Message
+MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
+MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
+
 # Options safety checks
 if (BUILD_DACE_MASTER_LIBS EQUAL BUILD_DACE_AFOSSA_LIBS OR (NOT BUILD_DACE_MASTER_LIBS) EQUAL (NOT BUILD_DACE_AFOSSA_LIBS))
-    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
-    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
     MESSAGE( FATAL_ERROR "Please choose at least one: BUILD_DACE_MASTER_LIBS or BUILD_DACE_AFOSSA_LIBS. Not both.")
 endif ()
 
 if (BUILD_DACE_MASTER_LIBS)
-    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
     MESSAGE( STATUS "DACE will be built from git MASTER branch tared file: version on Oct 22, 2022. <- Frozen version.")
 endif ()
 
 if (BUILD_DACE_AFOSSA_LIBS)
-    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
     MESSAGE( STATUS "DACE will be built from git AFOSSA (Alberto Fossa) fork. <- Version of this fork and updates are totally user responsible.")
 endif ()
 
@@ -167,68 +167,30 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # Load ExternalProject module
 include(ExternalProject)
 
-## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
 ## TODO: Let the user choose between CMAKE_3RDPARTY_DIR_DACE_MASTER or CMAKE_3RDPARTY_DIR_DACE_AFOSSA
 if (BUILD_DACE_MASTER_LIBS)
-    ExternalProject_Add(dace
-            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
-            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
-            CMAKE_COMMAND cmake ..
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            BUILD_COMMAND make -j${N_CORES}
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            INSTALL_COMMAND make install
-            )
-elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to downlooad this from the internet directly instead of having it as a submodule
-    ExternalProject_Add(dace
-            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-            CMAKE_COMMAND cmake ..
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            BUILD_COMMAND make -j${N_CORES}
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            INSTALL_COMMAND make install
-            )
+    set(CMAKE_3RDPARTY_DIR_DACE "${CMAKE_3RDPARTY_DIR_DACE_MASTER}")
+elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to download this from the internet directly instead of having it as a submodule
+    set(CMAKE_3RDPARTY_DIR_DACE "${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}")
 endif ()
 
+## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
+ExternalProject_Add(dace
+        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE}/
+        PREFIX ${CMAKE_3RDPARTY_DIR_DACE}/
+        CMAKE_COMMAND cmake ..
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+        BUILD_COMMAND make -j${N_CORES}
+        INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+        INSTALL_COMMAND make install
+)
+
 # Build RJSP: Ridiculously JSON Parser: https://github.com/subh83/RSJp-cpp
-#ExternalProject_Add(rsjplib
-#        #SOURCE_DIR ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#        ## BUILD_IN_SOURCE ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#        #PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        ## CMAKE_COMMAND cmake ..
-#        ## -DCMAKE_BUILD_TYPE=Release
-#        ## -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/
-#        ## INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
-#        #BUILD_COMMAND COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        ## INSTALL_COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        #INSTALL_COMMAND ""
-#        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/    # This is not likely to be CMAKE_CURRENT_LIST_DIR
-#        # INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp   # Just an example
-#        # CONFIGURE_COMMAND ""
-#        # BUILD_COMMAND ${CMAKE_COMMAND} -E env
-#        #     HOST_CC=...   # See below
-#        #     CC=${CMAKE_C_COMPILER}
-#        #     make -C <SOURCE_DIR>
-#        #--Configure step-------------
-#        CONFIGURE_COMMAND ""
-#        # CMAKE_COMMAND cmake -E echo "Skipping cmake step..."
-#        #--Build step-----------------
-#        BUILD_COMMAND cmake -E echo "Skipping build step..."
-#        #--Install step---------------
-#        INSTALL_COMMAND make install "PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp"
-#        )
-
-# install(TARGETS rsjp
-#         LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#         PUBLIC_HEADER DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
-
-# add_custom_target(rjsp
-#         WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#         COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/ install
-#         )
+add_custom_command(OUTPUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+        COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+        WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}
+)
 
 #ExternalProject_Add_StepTargets(rsjplib install)
 file(GLOB MY_PUBLIC_HEADERS
@@ -247,6 +209,7 @@ file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
 ############################################
 # Get info from external dace library
 ExternalProject_Get_Property(dace install_dir)
+MESSAGE( STATUS "Getting DACE libraries from the installed directory...: '${install_dir}'")
 set(daceinclude "${install_dir}/include")
 set(dacelib_dir "${install_dir}/lib")
 set(dacelib_file "${CMAKE_SHARED_LIBRARY_PREFIX}dace${CMAKE_SHARED_LIBRARY_SUFFIX}")
@@ -255,11 +218,33 @@ set(dacelib_path "${dacelib_dir}/${dacelib_file}")
 ############################################
 # FILES LOCATION
 ############################################
-# Location of header files and libraries (inside source dir, except the includes)
-include_directories(
-        ${daceinclude}
-        src/core
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+# TODO: Modularize this hard path
+# Include MATLAB stuff (optional) for MEX files
+option(BUILD_WITH_MATLAB "Build with matlab libraries" OFF)
+MESSAGE( STATUS "BUILD_WITH_MATLAB: ${BUILD_WITH_MATLAB}")
+if (BUILD_WITH_MATLAB)
+    # TODO: Usually matlab is built in home: ATTENTION HERE!
+    set(CMD_WHO whoami)
+    execute_process(
+            COMMAND ${CMD_WHO}
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE WHO
+            RESULT_VARIABLE ENV_RES
+            ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    MESSAGE( STATUS "Including MATLAB MEX files includes from '${WHO}'s home...")
+    include_directories(
+            ${daceinclude}
+            src/core
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+            /home/${WHO}/MATLAB/R2021a/extern/include
+            /home/${WHO}/MATLAB/R2021a/simulink/include
+            )
+else ()
+    include_directories(
+            ${daceinclude}
+            src/core
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+endif ()
 
 #===========================================
 # LIBRARY: DACE (IMPORTED LIBRARY)
@@ -335,7 +320,7 @@ set(LIBRARY_DATOOLS "datools")
 
 add_library(${LIBRARY_DATOOLS} SHARED
         src/core/tools/vo.cpp
-        src/core/tools/io.cpp)
+        src/core/tools/io_dace.cpp)
 
 add_dependencies(datools
         dacelib
@@ -403,7 +388,8 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/integrator.cpp
         src/core/problems.cpp
         src/core/delta.cpp
-        src/core/quaternion.cpp)
+        src/core/quaternion.cpp
+        src/core/tools/io.cpp)
 
 add_dependencies(core
         datools
@@ -580,7 +566,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
-# EXECUTABLES: DACE_VSA (DACE VERY SIMPLE ATTITUDE DETERMINATION)
+# EXECUTABLES: DACE_VSAD (DACE VERY SIMPLE ATTITUDE DETERMINATION)
 ############################################
 set(EXECUTABLE_NAME "dace_vsad")
 
@@ -633,6 +619,32 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
+############################################
+# EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+if (BUILD_WITH_MATLAB)
+    set(EXECUTABLE_NAME "mex_vsaod")
+
+    add_executable(${EXECUTABLE_NAME}
+            src/main/mex_vsaod.cpp
+    )
+
+    # add_dependencies(${EXECUTABLE_NAME}
+    #                   dependency1
+    #                   dependency2
+    #                   ....
+    #                   )
+
+    target_link_libraries(${EXECUTABLE_NAME}
+            base
+            ads
+
+    )
+
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+            LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+endif ()
 
 ############################################
 # EXECUTABLES: DACE_STATIC_TRANSFORMATION

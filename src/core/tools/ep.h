@@ -47,4 +47,10 @@ namespace tools::enums
     * @return POSITION enum
     */
     POSITION STATE2POSITION(STATE state);
+
+    std::string PROBLEM2str(PROBLEM problem);
+
+    std::string INTEGRATOR2str(INTEGRATOR integrator);
+
+    std::string ALGORITHM2str(ALGORITHM algorithm);
 };

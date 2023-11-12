@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "PRELOAD LIBSTDC++ SCRIPT"
+
+# STD library problem from LINUX users only
+export LD_PRELOAD=$LD_PRELOAD:/lib/x86_64-linux-gnu/libstdc++.so.6 matlab
+
+matlab

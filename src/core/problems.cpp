@@ -324,3 +324,40 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
     }
     return res;
 }
+
+
+void problems::summary(std::string * summary2return, bool recursive)
+{
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("Problems (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("Problems (%p): inertia flag set to '%p'\n",
+                                                   this, this->inertia_);
+
+    *summary2return += tools::string::print2string("Problems (%p): inverse flag set to '%p'\n",
+                                                   this, this->inverse_);
+
+    // DOUBLE
+    *summary2return += tools::string::print2string("Problems (%p): mu flag set to '%.2f'\n",
+                                                   this, this->mu_);
+
+    // ENUMS
+    *summary2return += tools::string::print2string("Problems (%p): type flag set to '%s'\n",
+                                                   this, tools::enums::PROBLEM2str(this->type_).c_str());
+
+    // Recursive...
+    if (recursive)
+    {
+        auto inertia_str = tools::vector::unwrapMxN(3, 3, this->inertia_);
+        auto inverse_str = tools::vector::unwrapMxN(3, 3, this->inverse_);
+        *summary2return += tools::string::print2string("Problems (%p): inertia matrix: \n%s\n", this, inertia_str.c_str());
+        *summary2return += tools::string::print2string("Problems (%p): inverse matrix: \n%s\n", this, inverse_str.c_str());
+    }
+
+}

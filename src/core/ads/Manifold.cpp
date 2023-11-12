@@ -971,3 +971,28 @@ Manifold* Manifold::get_initial_split_domain()
 
     return splitbox;
 }
+
+void Manifold::summary(std::string * summary2return, bool recursive)
+{
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("Manifold (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("Manifold (%p): integrator flag set to '%p'\n",
+                                                   this, this->integrator_);
+    *summary2return += tools::string::print2string("Manifold (%p): ini_domain_record flag set to '%p'\n",
+                                                   this, this->ini_domain_record);
+    *summary2return += tools::string::print2string("Manifold (%p): fin_domain_record flag set to '%p'\n",
+                                                   this, this->fin_domain_record);
+    // Recursive?
+    if (recursive)
+    {
+        this->integrator_->summary(summary2return, recursive);
+    }
+
+}

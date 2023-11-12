@@ -133,6 +133,9 @@ public: // Methods
 
     Manifold *get_initial_split_domain();
 
+    void summary(std::string *summary2return, bool recursive);
+
+
     /*
      * GRAVEYARD
      */

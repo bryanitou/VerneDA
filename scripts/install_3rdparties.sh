@@ -133,7 +133,7 @@ for file_3rdparty in "${list_3rdparty[@]}"; do
       tar -xzf "${file_3rdparty}" -C "${dir_3rdparty}/"
 
     else # Now that we know that no files are missing, we can compare
-      ignore='!/Mode/ && !/Uid/ && !/Gid/ && !/time/ && !/build/ && !/cmake/ && !/tmp/ && !/grib_api_config.h/'
+      ignore='!/Mode/ && !/Uid/ && !/Gid/ && !/time/ && !/build/ && !/cmake/ && !/tmp/'
       different_files=$(tar --compare --file="${file_3rdparty}" -C "${dir_3rdparty}" 2>&1 | awk "${ignore}" | wc -l)
 
       # If files are different, overwrite

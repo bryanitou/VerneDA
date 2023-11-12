@@ -9,3 +9,9 @@ out
 
 # Configuration files
 cfg
+
+# Ignore MEX files
+mex
+
+# Ignore .asv files
+*.asv
