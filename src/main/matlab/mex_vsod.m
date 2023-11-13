@@ -20,7 +20,7 @@ ci = 3;
 % LOADS configuration
 nli = 0.02;
 n_split_max = int16(10);
-n_samples = int16(10);
+n_samples = int16(10000);
 
 % Periods to simulate
 orbits_period_sec_vec = [0.5, 0.75, 1] * orbit_period_sec;
