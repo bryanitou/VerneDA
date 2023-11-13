@@ -16,7 +16,7 @@
       "final_time_DONT_REV_1.5" : 9.42477796076938,
       "final_time_DONT_REV_0.75" : 4.71238898038469,
       "final_time_DONT_REV_0.375" : 2.356194490192345,
-      "final_time" : 9.42477796076938,
+      "final_time" : 2.356194490192345,
       "time_step" : 0.004090167590170333,
       "integrator": "RK4"
     },
