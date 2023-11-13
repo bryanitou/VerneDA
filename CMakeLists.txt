@@ -236,8 +236,8 @@ if (BUILD_WITH_MATLAB)
             ${daceinclude}
             src/core
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
-            /home/${WHO}/MATLAB/R2021a/extern/include
-            /home/${WHO}/MATLAB/R2021a/simulink/include
+            /home/${WHO}/MATLAB/R2023b/extern/include
+            /home/${WHO}/MATLAB/R2023b/simulink/include
             )
 else ()
     include_directories(
