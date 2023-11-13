@@ -187,16 +187,16 @@ ExternalProject_Add(dace
 )
 
 # Build RJSP: Ridiculously JSON Parser: https://github.com/subh83/RSJp-cpp
-add_custom_command(OUTPUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+add_custom_command(OUTPUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include/RSJparser.tcc
         COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
         WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}
 )
 
 #ExternalProject_Add_StepTargets(rsjplib install)
-file(GLOB MY_PUBLIC_HEADERS
-        "${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/*.tcc"
-        )
-file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+#file(GLOB MY_PUBLIC_HEADERS
+        #"${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/*.tcc"
+#)
+#file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
 
 # TODO: OPTION TO EXPLORE! -> https://stackoverflow.com/questions/10487256/cmake-how-to-properly-copy-static-librarys-header-file-into-usr-include
 # INSTALL(TARGETS mylib
@@ -235,7 +235,7 @@ if (BUILD_WITH_MATLAB)
     include_directories(
             ${daceinclude}
             src/core
-            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
             /home/${WHO}/MATLAB/R2021a/extern/include
             /home/${WHO}/MATLAB/R2021a/simulink/include
             )
@@ -243,7 +243,7 @@ else ()
     include_directories(
             ${daceinclude}
             src/core
-            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
 endif ()
 
 #===========================================
@@ -264,7 +264,7 @@ set_target_properties(${LIBRARY_DACE} PROPERTIES
 set(LIBRARY_RSJP_LIB "rsjp")
 
 add_library(${LIBRARY_RSJP_LIB} SHARED
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/RSJparser.tcc)
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include/RSJparser.tcc)
 
 # Provide the full path to the library, so CMake knows where to find it
 set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
