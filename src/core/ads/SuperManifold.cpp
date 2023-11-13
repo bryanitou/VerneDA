@@ -74,7 +74,7 @@ void SuperManifold::split_domain()
     fprintf(stdout, "SUMMARY BEFORE SPLITTING ------------------------------------\n%s", summary.c_str());
 
     // Split domain: get current domain
-    if (this->algorithm_ != ALGORITHM::NA && false)
+    if (this->algorithm_ != ALGORITHM::NA)
     {
         // Integrate and/or split
         this->current_ = this->current_->getSplitDomain(this->algorithm_, this->nSplitMax_);
