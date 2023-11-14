@@ -19,35 +19,43 @@ class MexFunction : public matlab::mex::Function {
 public:
     void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override
     {
-        // Check the health of the passed inputs
-        checkArguments(outputs, inputs);
-
-        // Extract inputs
-        auto ini_state = convertMatlabTypedArray2NormalVector(inputs[0]);
-        auto stddev = convertMatlabTypedArray2NormalVector(inputs[1]);
-        auto t = convertMatlabTypedArray2NormalVector(inputs[2]);
-        auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
-        auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
-        auto n_max = convertMatlabInt2NormalInt(inputs[5]);
-        auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
-        auto str_alg = convertMatlabStr2NormalStr(inputs[7]);
-        auto str_enum =
-                str_alg == "tbp" ? PROBLEM::TWO_BODY :
-                str_alg == "ftmp" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
-
-        double* inertia = nullptr;
-
-        // If FTMP
-        if (str_enum == PROBLEM::FREE_TORQUE_MOTION)
+        try
         {
-            inertia = convertMatlab3x3Array2Normal3x3Array(inputs[8]);
+            // Check the health of the passed inputs
+            checkArguments(outputs, inputs);
+
+            // Extract inputs
+            auto ini_state = convertMatlabTypedArray2NormalVector(inputs[0]);
+            auto stddev = convertMatlabTypedArray2NormalVector(inputs[1]);
+            auto t = convertMatlabTypedArray2NormalVector(inputs[2]);
+            auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
+            auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
+            auto n_max = convertMatlabInt2NormalInt(inputs[5]);
+            auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
+            auto str_alg = convertMatlabStr2NormalStr(inputs[7]);
+            auto str_enum =
+                    str_alg == "tbp" ? PROBLEM::TWO_BODY :
+                    str_alg == "ftmp" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
+
+            double* inertia = nullptr;
+
+            // If FTMP
+            if (str_enum == PROBLEM::FREE_TORQUE_MOTION)
+            {
+                inertia = convertMatlab3x3Array2Normal3x3Array(inputs[8]);
+            }
+
+            // Perform operation
+            auto fin_state = propagate_orbit_loads(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
+
+            // Convert all states to matlab array
+            outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
         }
+        catch (int )
+        {
+            std::fprintf(stdout, "ERROR: Something unexpected happened...");
 
-        // Perform operation
-        auto fin_state = propagate_orbit_loads(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
-
-        // Convert all states to matlab array
-        outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
+        }
     }
 
     void checkArguments(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) {
