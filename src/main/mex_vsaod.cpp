@@ -1,16 +1,17 @@
 /**
 * Main to be embedded in matlab
 */
+
+// MEX thingy
+#include "mex.hpp"
+#include "mexAdapter.hpp"
+
 // DACE libraries
 #include "dace/dace.h"
 
 // Project libraries
 #include "ads/SuperManifold.h"
 #include "delta.h"
-
-// MEX thingy
-#include "mex.hpp"
-#include "mexAdapter.hpp"
 
 // Some definitions
 # define dace_array std::vector<DACE::AlgebraicVector<double>>
