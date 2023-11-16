@@ -47,7 +47,7 @@ private:
 
 public:
     // Manifold operations
-    void split_domain();
+    void split_domain(std::string * propagation_summary = nullptr);
 
 public:
     // Setters

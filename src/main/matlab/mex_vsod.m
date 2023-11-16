@@ -23,7 +23,7 @@ n_split_max = int16(10);
 n_samples = int16(10000);
 
 % Periods to simulate
-orbits_period_sec_vec = [0.5, 0.75, 1] * orbit_period_sec;
+orbits_period_sec_vec = [1] * orbit_period_sec;
 
 % Set time constraints
 t0 = 0.0;

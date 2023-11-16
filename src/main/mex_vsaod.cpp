@@ -55,7 +55,6 @@ public:
         catch (int )
         {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");
-
         }
     }
 
@@ -436,7 +435,8 @@ public:
         DACE::DA::setEps(new_eps);
 
         // Apply main algorithm: ADS / LOADS. And integration algorithm
-        super_manifold->split_domain();
+        std::string prop_summary{};
+        super_manifold->split_domain(&prop_summary);
 
         // Build deltas class
         auto deltas_engine = std::make_shared<delta>();
@@ -476,6 +476,10 @@ public:
 
         // Evaluate deltas
         deltas_engine->evaluate_deltas();
+
+        // Print summary
+        std::fprintf(stdout, "%s\n", prop_summary.c_str());
+        matlabPtr->feval(u"fprintf", 0, std::vector<matlab::data::Array>({factory.createScalar(prop_summary)}));
 
         // Get result
         return deltas_engine->get_eval_deltas_poly();

@@ -139,7 +139,8 @@ int main(int argc, char* argv[])
     std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
 
     // Apply main algorithm: ADS / LOADS. And integration algorithm
-    super_manifold->split_domain();
+    std::string prop_summary{};
+    super_manifold->split_domain(&prop_summary);
 
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>();
@@ -178,6 +179,9 @@ int main(int argc, char* argv[])
 
     // Process files
     fproc.process_files();
+
+    // Print summary
+    std::fprintf(stdout, "%s\n", prop_summary.c_str());
 
     // TODO: Destroy here all the stuff to avoid mem-leaks
 }

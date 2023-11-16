@@ -51,7 +51,7 @@ void SuperManifold::set_integrator_ptr(integrator* integrator)
 
 }
 
-void SuperManifold::split_domain()
+void SuperManifold::split_domain(std::string * propagation_summary)
 {
     // Safety check that current manifold is available
     if (this->current_ == nullptr)
@@ -66,12 +66,12 @@ void SuperManifold::split_domain()
     // Current passes to be previous in a new pointer
     this->previous_ =  new Manifold(*this->current_);
 
-    // Summary check before launching algorithm
-    std::string summary{};
-    this->summary(&summary, true);
-
-    // Print summary before launching
-    fprintf(stdout, "SUMMARY BEFORE SPLITTING ------------------------------------\n%s", summary.c_str());
+    // Summary check before launching algorithm, if not nullptr
+    if (propagation_summary != nullptr)
+    {
+        // Fill summary
+        this->summary(propagation_summary, true);
+    }
 
     // Split domain: get current domain
     if (this->algorithm_ != ALGORITHM::NA)
@@ -149,7 +149,7 @@ void SuperManifold::summary(std::string * summary2return, bool recursive)
 {
     // Make safety checks
     // Check if this module is summary to be launched
-    if (!this) {
+    if (this == nullptr) {
         *summary2return += tools::string::print2string("SuperManifold (%p): is nullptr.\n", this);
 
         // Return
@@ -173,7 +173,7 @@ void SuperManifold::summary(std::string * summary2return, bool recursive)
                                                    this, this->nSplitMax_);
 
     // DOUBLES
-    *summary2return += tools::string::print2string("SuperManifold (%p): nSplitMax flag set to '%.2f'\n",
+    *summary2return += tools::string::print2string("SuperManifold (%p): nli_threshold flag set to '%.2f'\n",
                                                    this, this->nli_threshold_);
 
     *summary2return += tools::string::print2string("SuperManifold (%p): errToll flag set to '%s'\n",
