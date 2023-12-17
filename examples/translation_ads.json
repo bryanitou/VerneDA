@@ -1,0 +1,61 @@
+{
+  "input": {
+    "algorithm": "ads",
+    "problem": "two_body_problem",
+    "mu": 398600.4418,
+    "algebra": {
+      "order": 4,
+      "variables": 6
+    },
+    "propagation": {
+      "initial_time": 0.0,
+      "final_time": 23042.522715742532,
+      "time_step": 10.0,
+      "integrator": "RK4"
+    },
+    "initial_conditions": {
+      "length_units": "km",
+      "mean": [
+        6678.135,
+        0.0,
+        0.0,
+        0.0,
+        9.462086638712861,
+        0.0
+      ],
+      "confidence_interval": 3,
+      "standard_deviation": [
+        10.0,
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "ads": {
+      "length_units": "km",
+      "tolerance": [
+        0.1,
+        0.1,
+        0.1,
+        1.0E-4,
+        1.0E-4,
+        1.0E-4
+      ],
+      "max_split": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ]
+    }
+  },
+
+  "output":
+  {
+    "directory": "./out/2023-2024/translation/ads/rev_1.50"
+  }
+}

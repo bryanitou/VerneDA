@@ -1,0 +1,26 @@
+#!/bin/bash
+echo "PRELOAD LIBSTDC++ SCRIPT"
+
+# STD library problem from LINUX users only
+export LD_PRELOAD=$LD_PRELOAD:/lib/x86_64-linux-gnu/libstdc++.so.6
+
+# Get current user
+username=$(whoami)
+
+# Path were MATLAB is expected to be found
+matlab_release="R2023b" # R2021a
+matlab_dir="/home/${username}/MATLAB"
+matlab_bin_dir="${matlab_dir}/${matlab_release}/bin"
+matlab_shell_launch="${matlab_bin_dir}/matlab"
+
+
+if [ -d "$matlab_dir" ]; then
+  ### Take action if $DIR exists ###
+  echo "Opening MATLAB release ${matlab_release}..."
+  bash "${matlab_shell_launch}"
+else
+  ###  Control will jump here if $DIR does NOT exists ###
+  echo "Error: ${DIR} not found. Can not continue."
+  echo "Error: Ensure you have release ${matlab_release} installed in folder: ${matlab_dir}"
+  exit 1
+fi

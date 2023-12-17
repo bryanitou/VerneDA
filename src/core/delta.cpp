@@ -4,6 +4,8 @@
 
 #include "delta.h"
 
+#include <utility>
+
 void delta::generate_deltas(DISTRIBUTION type, int n)
 {
     // Place for the all safety checks before computing HERE BELOW:
@@ -28,7 +30,7 @@ void delta::generate_deltas(DISTRIBUTION type, int n)
     // Safety checks if it is attitude, since its more complex...
     if (this->attitude_)
     {
-        // Call function checker
+        // Call function checker TODO: this check is useless since mean_quaternion is never used
         this->attitude_safety_checks();
     }
 
@@ -57,8 +59,11 @@ void delta::generate_deltas(DISTRIBUTION type, int n)
 
 void delta::generate_gaussian_deltas(int n)
 {
+    // Auxiliary variable for quaternion
+    std::vector<double> nq;
+
     // Stack results here: no need to initialize!
-    std::vector<std::shared_ptr<scv>> deltas;
+    std::vector<DACE::AlgebraicVector<double>> deltas;
 
     // Compute deltas: by hard set values
     // n: experiments
@@ -83,12 +88,12 @@ void delta::generate_gaussian_deltas(int n)
     for (int i=0; i<n; ++i)
     {
         // TODO: Discuss this logic, leave this demonstration for the while
-        std::vector<DACE::DA> new_delta;
+        DACE::AlgebraicVector<double> new_delta;
         if (this->attitude_)
         {
             // TODO: To check: KENT DISTRIBUTION OR THE LINK IN quaternions.cpp
-            // Declare new quaternion
-            std::vector<double> nq;
+            // Clean quaternion before assigning
+            nq.clear();
 
             // Get the quaternion
             switch (this->q_sampling_)
@@ -120,56 +125,36 @@ void delta::generate_gaussian_deltas(int n)
 
             }
 
-            // Safety check for norm
-            double nq_norm = quaternion::getnorm(nq);
-
-            // TODO: What should be the trigger for the norm?
-            bool is1norm = nq_norm == 1.0;
-            if (!is1norm)
-            {
-                // TODO: Do something here
-            }
-
+            // Generate new delta
             new_delta = {
-                    nq[0] - this->mean_quaternion_[0],
-                    nq[1] - this->mean_quaternion_[1],
-                    nq[2] - this->mean_quaternion_[2],
-                    nq[3] - this->mean_quaternion_[3],
+                    nq[0] - 1, // I still don't like this...
+                    nq[1] - 0, // I still don't like this...
+                    nq[2] - 0, // I still don't like this...
+                    nq[3] - 0, // I still don't like this...
                     stddevs_distr[3](generator),
                     stddevs_distr[4](generator),
                     stddevs_distr[5](generator)};
         }
         else
         {
-            new_delta = {
-                    stddevs_distr[0](generator),
-                    stddevs_distr[1](generator),
-                    stddevs_distr[2](generator),
-                    stddevs_distr[3](generator),
-                    stddevs_distr[4](generator),
-                    stddevs_distr[5](generator)};
+            for (auto & k : stddevs_distr)
+            {
+                new_delta.push_back(k(generator));
+            }
         }
 
-
-        // Generate the scv from the base csv
-        auto scv_delta = std::make_shared<scv>(new_delta);
-
         // Append scv in the list
-        deltas.emplace_back(scv_delta);
+        deltas.push_back(new_delta);
     }
 
     // Make shared and save
-    this->scv_deltas_ = std::make_shared<std::vector<std::shared_ptr<scv>>>(deltas);
-
-    // Print first one
-    // std::cout << this->scv_deltas_->front()->get_state_vector_copy().front().toString() << std::endl;
-    // TODO: Info message
+    this->scv_deltas_ = std::make_shared<std::vector<DACE::AlgebraicVector<double>>>(deltas);
 }
 
 void delta::evaluate_deltas()
 {
     // Safety check
-    if (!this->nominal_inserted_)
+    if (!this->zeroed_inserted_)
     {
         std::fprintf(stderr, "FATAL: Cannot evaluate deltas!, Must insert the nominal first. Exiting program.");
         std::exit(-1);
@@ -185,12 +170,14 @@ void delta::evaluate_deltas()
     for (const auto& scv_delta : *this->scv_deltas_)
     {
         // Evaluate and save
-        // single_sol = this->base_poly_->eval(scv_delta->get_state_vector_copy());
-        auto sample = scv_delta->get_state_vector_copy().cons();
-        auto single_sol = this->sm_->get_final_manifold()->pointEvaluationManifold(
+        auto single_sol = this->sm_->get_manifold_fin()->pointEvaluationManifold(
                 this->sm_->previous_->front(),
-                sample,
+                scv_delta.cons(),
                 1);
+        if (single_sol.empty())
+        {
+            continue;
+        }
 
         // Check the norm for DEBUG PURPOSES
         if (this->attitude_)
@@ -210,8 +197,11 @@ void delta::evaluate_deltas()
             // Get the constants
             auto quaternion = single_sol.cons().extract(0, 3);
 
+            // Normalize quaternion
+            // quaternion = quaternion / quaternion.vnorm();
+
             // Convert to Euler
-            auto euler_angles = quaternion::quaternion2euler(quaternion[0],
+            auto euler_angles = quaternion::quaternion2euler_NORMAL(quaternion[0],
                                                              quaternion[1],
                                                              quaternion[2],
                                                              quaternion[3]);
@@ -219,9 +209,9 @@ void delta::evaluate_deltas()
             if (scv_delta == scv_deltas_->back() && this->attitude_)
             {
                 // Some debugging information
-                auto scv_cons = scv_delta->get_state_vector_copy().cons();
+                auto scv_cons = scv_delta.cons();
                 auto scv_cons_str = tools::vector::num2string<double>(scv_cons);
-                double scv_q_norm = scv_delta->get_state_vector_copy().cons().extract(0, 3).vnorm();
+                double scv_q_norm = scv_delta.cons().extract(0, 3).vnorm();
                 // INITIAL
                 std::fprintf(stdout, "DEBUG: Initial state: %s, quaternion norm: '%.2f'.\n",
                              scv_cons_str.c_str(), scv_q_norm);
@@ -254,12 +244,29 @@ void delta::evaluate_deltas()
 
 void delta::set_stddevs(const std::vector<double>& stddevs)
 {
-    // Set constants
+    // If we convert quaterion to euler...
     this->stddevs_ = stddevs;
 
     // Notice
     this->stddevs_set_ = true;
+}
 
+
+void delta::set_stddevs_q(const std::vector<double>& stddevs)
+{
+    auto stddevs_local = stddevs;
+
+    // If we convert quaterion to euler...
+    auto q = std::vector<double>(stddevs_local.begin(), stddevs_local.begin() + 3);
+    auto eul = quaternion::quaternion2euler(q);
+    this->stddevs_ = std::vector<double>(eul.begin(), eul.end());
+    this->stddevs_.insert(this->stddevs_.end(), stddevs_local.begin() + 4, stddevs_local.end());
+
+    auto str2print = tools::vector::num2string(this->stddevs_);
+    fprintf(stdout, "Set stddevs: %s\n", str2print.c_str());
+
+    // Notice
+    this->stddevs_set_ = true;
 }
 
 void delta::insert_nominal(int n)
@@ -275,14 +282,19 @@ void delta::insert_nominal(int n)
     }
 
     // The nominal is a bunch of zeros
-    DACE::AlgebraicVector<DACE::DA> zeroed(n);
-    auto scv_nominal = scv(zeroed);
+    DACE::AlgebraicVector<double> zeroed(n);
 
     // Insert nominal in the last position
-    this->scv_deltas_->push_back(std::make_shared<scv>(scv_nominal));
+    this->insert_nominal(zeroed);
+}
+
+void delta::insert_nominal(const DACE::AlgebraicVector<double>& n)
+{
+    // Insert nominal in the last position
+    this->scv_deltas_->push_back(n);
 
     // Set boolean to true
-    this->nominal_inserted_ = true;
+    this->zeroed_inserted_ = true;
 }
 
 void delta::set_bool_option(DELTA_GENERATOR_OPTION option, bool value)
@@ -312,4 +324,39 @@ void delta::attitude_safety_checks()
         // Exit program
         std::exit(-1);
     }
+}
+
+void delta::convert_non_eval_deltas_to_euler()
+{
+    // Auxiliary variable
+    DACE::AlgebraicVector<double> q;
+    DACE::AlgebraicVector<double> euler;
+
+    for (auto & delta : *this->scv_deltas_)
+    {
+        // Get quaternion
+        q = delta.extract(0, 3);
+
+        // Sum up first position
+        q[0] += 1;
+
+        // Compute euler angle
+        euler = quaternion::quaternion2euler(q);
+
+        // Set new delta
+        delta = {euler[0] + this->mean_euler_[0],
+                euler[1] + this->mean_euler_[1],
+                euler[2] + this->mean_euler_[2],
+                delta[4], delta[5], delta[6]};
+    }
+}
+
+void delta::set_mean_quaternion_option(std::vector<double> mean_q)
+{
+    // Mean quaternion
+    this->mean_quaternion_ = std::move(mean_q);
+
+    // From there, compute euler angles
+    this->mean_euler_ = quaternion::quaternion2euler(this->mean_quaternion_);
+
 }

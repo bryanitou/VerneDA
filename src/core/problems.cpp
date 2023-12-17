@@ -5,7 +5,7 @@
 
 #include "problems.h"
 
-problems::problems(PROBLEM type)
+problems::problems(PROBLEM type, double mu)
 {
     // Set problem type
     this->type_ = type;
@@ -25,6 +25,9 @@ problems::problems(PROBLEM type)
         this->inertia_[i] = new double [m];
         this->inverse_[i] = new double [m];
     }
+
+    // Set mu
+    this->mu_ = mu;
 }
 
 problems::~problems() {
@@ -45,7 +48,7 @@ problems::~problems() {
 }
 
 
-DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t )
+DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t ) const
 {
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> pos(3), res(6);
@@ -61,12 +64,25 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[2] = scv[5]; // Pz_dot = Vz
 
     // Compute next Vx, Vy, Vz state from the current position
-    res[3] = -constants::earth::mu*pos[0]/(r*r*r); // Vx_dot
-    res[4] = -constants::earth::mu*pos[1]/(r*r*r); // Vy_dot
-    res[5] = -constants::earth::mu*pos[2]/(r*r*r); // Vz_dot
+    res[3] = -this->mu_*pos[0]/(r*r*r); // Vx_dot
+    res[4] = -this->mu_*pos[1]/(r*r*r); // Vy_dot
+    res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
     // Return result
     return res;
+}
+
+DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::DA> pol)
+{
+    // Create position and resultant vector
+    DACE::AlgebraicVector<DACE::DA> cart(2);
+
+    // Make computations
+    cart[0] = pol[0] * DACE::cos(pol[1]);
+    cart[1] = pol[0] * DACE::sin(pol[1]);
+
+    // Return result
+    return cart;
 }
 
 DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t )
@@ -119,7 +135,8 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
 
     // Normalize vector
     // TODO: Do this will work? It seems so..! Otherwise think of using algorithm in function quaternion::check_norm
-    q = q.normalize();
+    // TODO: Remove this, causes non linearity
+    // q = q / q.vnorm().cons(); // This way doesn't brake linearity
 
     omega[0] = scv[4];
     omega[1] = scv[5];
@@ -129,10 +146,11 @@ DACE::AlgebraicVector<DACE::DA> problems::FreeTorqueMotion(DACE::AlgebraicVector
     auto c = this->get_cross_product(omega);
 
     // Set result
-    res[0] = 0.5 * ( omega[2] * q[1] - omega[1] * q[2] + omega[0] * q[3]); // theta_x_dot
-    res[1] = 0.5 * (-omega[2] * q[0] + omega[0] * q[2] + omega[1] * q[3]); // theta_x_dot
-    res[2] = 0.5 * ( omega[1] * q[0] - omega[0] * q[1] + omega[2] * q[3]); // theta_x_dot
-    res[3] = 0.5 * (-omega[0] * q[0] - omega[1] * q[1] - omega[2] * q[2]); // theta_x_dot
+    // TODO: Fix this equation from politecnico di torino paper
+    res[0] = 0.5 * (       0.0       - omega[0] * q[1] - omega[1] * q[2] - omega[2] * q[3]);
+    res[1] = 0.5 * ( omega[0] * q[0] +       0.0       + omega[2] * q[2] - omega[1] * q[3]);
+    res[2] = 0.5 * ( omega[1] * q[0] - omega[2] * q[1] +       0.0       + omega[0] * q[3]);
+    res[3] = 0.5 * ( omega[2] * q[0] + omega[1] * q[1] - omega[2] * q[2] +       0.0      );
     res[4] = this->inverse_[0][0] * c[0] + this->inverse_[0][1] * c[1] + this->inverse_[0][2] * c[2];; // omega_y_dot
     res[5] = this->inverse_[1][0] * c[0] + this->inverse_[1][1] * c[1] + this->inverse_[1][2] * c[2];; // omega_z_dot
     res[6] = this->inverse_[2][0] * c[0] + this->inverse_[2][1] * c[1] + this->inverse_[2][2] * c[2];; // omega_z_dot
@@ -164,11 +182,17 @@ void problems::set_inertia_matrix(double inertia[3][3])
     // Show info to the user
     for (int i = 0; i < 3; i++)
     {
+        // Info
+        std::fprintf(stdout, "DEBUG: Inertia matrix I[%d][j]: ", i);
+
         for (int j = 0; j < 3; j++)
         {
             this->inertia_[i][j] = inertia[i][j];
-            std::fprintf(stdout, "DEBUG: Inertia matrix I['%d']['%d'] = '%.5f'\n", i, j, this->inertia_[i][j]);
+            std::fprintf(stdout, " %10.2f", this->inertia_[i][j]);
         }
+
+        // Go next row
+        std::fprintf(stdout, "\n");
     }
 
     // Now, compute the inverse and set it
@@ -179,10 +203,16 @@ void problems::set_inertia_matrix(double inertia[3][3])
     // Once done, print result as info
     for (int i = 0; i < 3; i++)
     {
+        // Info
+        std::fprintf(stdout, "DEBUG: Inverse inertia matrix I^-1[%d][j]: ", i);
+
         for (int j = 0; j < 3; j++)
         {
-            std::fprintf(stdout, "DEBUG: Inertia inverse matrix I^-1['%d']['%d'] = '%.5f'\n", i, j, this->inverse_[i][j]);
+            std::fprintf(stdout, " %12.8f", this->inverse_[i][j]);
         }
+
+        // Go next row
+        std::fprintf(stdout, "\n");
     }
 }
 
@@ -277,6 +307,13 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
         {
             // Call to Free Fall Object problem
             res = this->FreeFallObject(scv, t);
+            break;
+        }
+        case PROBLEM::POL2CART:
+        {
+            // Call to Polar to Cartesian transformation
+            res = this->pol2cart(scv);
+            break;
         }
         default:
         {
@@ -286,4 +323,41 @@ DACE::AlgebraicVector<DACE::DA> problems::solve(const DACE::AlgebraicVector<DACE
         }
     }
     return res;
+}
+
+
+void problems::summary(std::string * summary2return, bool recursive)
+{
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("Problems (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("Problems (%p): inertia flag set to '%p'\n",
+                                                   this, this->inertia_);
+
+    *summary2return += tools::string::print2string("Problems (%p): inverse flag set to '%p'\n",
+                                                   this, this->inverse_);
+
+    // DOUBLE
+    *summary2return += tools::string::print2string("Problems (%p): mu flag set to '%.2f'\n",
+                                                   this, this->mu_);
+
+    // ENUMS
+    *summary2return += tools::string::print2string("Problems (%p): type flag set to '%s'\n",
+                                                   this, tools::enums::PROBLEM2str(this->type_).c_str());
+
+    // Recursive...
+    if (recursive)
+    {
+        auto inertia_str = tools::vector::unwrapMxN(3, 3, this->inertia_);
+        auto inverse_str = tools::vector::unwrapMxN(3, 3, this->inverse_);
+        *summary2return += tools::string::print2string("Problems (%p): inertia matrix: \n%s\n", this, inertia_str.c_str());
+        *summary2return += tools::string::print2string("Problems (%p): inverse matrix: \n%s\n", this, inverse_str.c_str());
+    }
+
 }

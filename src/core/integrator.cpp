@@ -3,21 +3,28 @@
  */
 
 #include "integrator.h"
+#include "ads/Patch.h"
 
-integrator::integrator(INTEGRATOR integrator, double stepmax)
+integrator::integrator(INTEGRATOR integrator, ALGORITHM algorithm, double stepmax)
 {
     // Set type
     this->type = integrator;
 
     // Set step max
     this->hmax_ = stepmax;
+
+    // Set the algorithm
+    this->algorithm_ = algorithm;
 }
 
 
 DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Auxiliary previous state
+    auto x_prev = x;
+
     // Auxiliary bool
-    bool flag_interruption_errToll = false;
+    bool flag_interruption_errToll;
 
     // Iterate
     for(int i = 0; i < this->steps_; i++ )
@@ -25,21 +32,29 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler(DACE::AlgebraicVector<DACE::DA
         // Print detailed info
         this->print_detailed_information(x, i, this->t_);
 
+        // Get new polynomial
         x = this->Euler_step(x, this->t_, this->h_);
-        this->t_ += this->h_;
 
         // Check ADS conditions to continue integration
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = !this->check_ads_conditions(x);
+            flag_interruption_errToll = this->check_conditions(x);
 
             // Break integration if needed
             if (flag_interruption_errToll)
             {
+                // Set result to the previous one
+                x = x_prev;
                 break;
             }
         }
+
+        // Increase step time
+        this->t_ += this->h_;
+
+        // Update previous
+        x_prev = x;
     }
 
     return x;
@@ -52,8 +67,14 @@ DACE::AlgebraicVector<DACE::DA> integrator::Euler_step(const DACE::AlgebraicVect
 
 DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> x)
 {
+    // Set not end
+    this->end_ = false;
+
+    // Auxiliary previous state
+    auto x_prev = x;
+
     // Auxiliary bool
-    bool flag_interruption_errToll = false;
+    bool flag_interruption_errToll;
 
     // Auxiliary variable for debug
     std::string str2debug;
@@ -66,33 +87,61 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4(DACE::AlgebraicVector<DACE::DA> 
     DACE::AlgebraicVector<DACE::DA> k2;
     DACE::AlgebraicVector<DACE::DA> k3;
     DACE::AlgebraicVector<DACE::DA> k4;
+    int i = 0;
 
     // Iterate
-    for(int i = 0; i < this->steps_; i++ )
+    for(i = 0; this->t_ < this->t1_; i++)
     {
         // Print detailed info
-        this->print_detailed_information(x, i, this->t_);
+        this->print_detailed_information(x_prev, i, this->t_);
 
         // Compute the single step
-        x = this->RK4_step(x, this->t_, this->h_);
+        x = this->RK4_step(x_prev, this->t_, this->h_);
 
-        // Increase step time
-        this->t_ += this->h_;
+        // Normalize quaternion if attitude
+        if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
+        {
+            auto q = x.extract(0, 3);
+            q = q / q.vnorm().cons();
+            x[0] = q[0];
+            x[1] = q[1];
+            x[2] = q[2];
+            x[3] = q[3];
+        }
 
         // Check ADS conditions to continue integration
         if (this->interrupt_)
         {
             // Check returned flag
-            flag_interruption_errToll = this->check_ads_conditions(x);
+            flag_interruption_errToll = this->check_conditions(x, true);
 
             // Break integration if needed
-            if (flag_interruption_errToll)
+            if (flag_interruption_errToll && this->interrupt_)
             {
+                // Set result to the previous one
+                x = x_prev;
                 break;
             }
         }
+
+        // Increase step time
+        this->t_ += this->h_;
+
+        // Update previous for next iteration
+        x_prev = x;
     }
 
+    // Check end condition
+    this->end_ = this->t_ >= this->t1_;
+
+    // Print info
+    if (this->end_)
+    {
+        // Print detailed info
+        this->print_detailed_information(x_prev, i, this->t_);
+    }
+
+    // Return state
     return x;
 }
 
@@ -108,6 +157,42 @@ DACE::AlgebraicVector<DACE::DA> integrator::RK4_step(const DACE::AlgebraicVector
     return x + h * (k1 + 3*k2 + 3*k3 + k4)/8;
 }
 
+DACE::AlgebraicVector<DACE::DA> integrator::static_transformation(DACE::AlgebraicVector<DACE::DA> x)
+{
+    // Set not end
+    this->end_ = false;
+
+    // Auxiliary bool
+    bool flag_interruption_errToll;
+
+    // Save previous state
+    auto x_prev = x;
+
+    // Make step
+    x = this->problem_->solve(x, 0.0);
+
+    // Check if conditions are met
+    if (this->interrupt_)
+    {
+        // Check returned flag
+        flag_interruption_errToll = this->check_conditions(x, true);
+
+        // Break integration if needed
+        if (flag_interruption_errToll && this->interrupt_)
+        {
+            // Set result to the previous one
+            x = x_prev;
+        }
+        else
+        {
+            // Don't split and finish it
+            this->end_ = true;
+        }
+    }
+
+    return x;
+}
+
 void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA>& x, int i, double t)
 {
     // Get the information of x
@@ -117,10 +202,14 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
     auto str2print = this->patch_id_ > -1 ? tools::string::print2string("p: %6d | ", this->patch_id_) : "";
 
     // Common info shared on bot attitude and orbit determination
-    str2print += tools::string::print2string("i: %6d | t: %10.2f | v: %s", i, t, str2debug.c_str());
+    str2print += tools::string::print2string("i: %6d | t: %10.6f | v: %s", i, t, str2debug.c_str());
 
     // Add 'TRACE' in front
     str2print = "TRACE: " + str2print;
+
+    // std::ofstream outfile;
+//
+    // outfile.open("out/example/attitude_test_RK4/att_integration/test_"+std::to_string(this->patch_id_)+".csv", std::ios_base::app); // append instead of overwrite
 
     // If it is attitude, go this way...
     if (this->problem_->get_type() == PROBLEM::FREE_TORQUE_MOTION)
@@ -128,13 +217,31 @@ void integrator::print_detailed_information(const DACE::AlgebraicVector<DACE::DA
         // Extract the quaternion from here if attitude
         auto q_cons = x.cons().extract(0, 3);
 
+        if (i == 4110)
+        {
+            bool a = true;
+        }
+        // Measure the norm
+        auto q_norm = q_cons.vnorm();
+
         // Extract the Euler angles if attitude
-        auto euler2debug = quaternion::quaternion2euler(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
+        auto euler2debug = quaternion::quaternion2euler_NORMAL(q_cons[0], q_cons[1], q_cons[2], q_cons[3]);
 
         // Euler to string
-        auto str4euler = tools::vector::num2string<double>(euler2debug, ", ");
+        auto str4euler = tools::vector::num2string<double>(euler2debug, ", ", "%2.2f", false);
 
-        str2print += tools::string::print2string(" | Euler: %s", str4euler.c_str());
+        str2print += tools::string::print2string(" | q_norm: %.2f | Euler: [%s]", q_norm, str4euler.c_str());
+
+        if (!( -10 < euler2debug[1] && euler2debug[1] < 10) )
+        {
+            bool a = true;
+        }
+        // outfile << str4euler << std::endl;
+
+        // if (q_cons.vnorm() < 0.9)
+        // {
+        //     bool stop = 21;
+        // }
     }
 
     // Debug information
@@ -197,6 +304,11 @@ DACE::AlgebraicVector<DACE::DA> integrator::integrate(const DACE::AlgebraicVecto
             result = this->RK78(6, x);
             break;
         }
+        case INTEGRATOR::STATIC:
+        {
+            result = this->static_transformation(x);
+            break;
+        }
         default:
         {
             // TODO: Add any fallback here.
@@ -231,7 +343,8 @@ void integrator::set_problem_ptr(problems *problem)
     // Set the amount of variables needed
     this->nvar_ = problem_type == PROBLEM::FREE_TORQUE_MOTION ? 7 :
                   problem_type == PROBLEM::TWO_BODY ? 6 :
-                  problem_type == PROBLEM::FREE_FALL_OBJECT ? 6 : 0;
+                  problem_type == PROBLEM::FREE_FALL_OBJECT ? 6 :
+                  problem_type == PROBLEM::POL2CART ? 2 : 0;
 
     // Safety check
     if (this->nvar_ == 0)
@@ -241,28 +354,32 @@ void integrator::set_problem_ptr(problems *problem)
     }
 }
 
-void integrator::set_interrupt_flag(bool* flag)
+bool integrator::check_conditions(const DACE::AlgebraicVector<DACE::DA>& scv, bool debug)
 {
-    this->interrupt_flags_.push_back(flag);
-}
-
-bool integrator::check_interruption_flags()
-{
-    // Result flag
-    bool result = false;
-
-    // Iterate through all the flags
-    for (auto flag : this->interrupt_flags_)
+    // Check the proper conditions to be checked in case ADS or LOADS
+    switch (this->algorithm_)
     {
-        // Check the bool
-        if (*flag)
+        case ALGORITHM::ADS:
         {
-            result = false;
-            break;
+            // Check ADS conditions
+            return this->check_ads_conditions(scv);
+        }
+        case ALGORITHM::LOADS:
+        {
+            // Check LOADS conditions
+            return this->check_loads_conditions(scv, debug);
+        }
+        default:
+        {
+            // Show errs...
+            std::fprintf(stderr, "You have not chosen the conditions to be checked... Whether ADS or LOADS.");
+
+            // Exit code
+            std::exit(50);
         }
     }
 
-    return result;
+    return false;
 }
 
 bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv)
@@ -271,36 +388,227 @@ bool integrator::check_ads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv
     bool result{false};
 
     // Auxiliary variables
-    std::vector<double> Errors{};
+    std::vector<double> truncation_errors(scv.size());
 
+    // Iterate through every polynomial of the SCV
     for (unsigned int i = 0; i < scv.size(); ++i)
     {
-        // Get error
-        auto err = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
+        // Safety check
+        if (scv[i].size() == 0) { continue; }
 
-        // TODO: What exactly is this
-        auto err2compare = err[err.size()-1];
+        // Get error
+        auto errors = scv[i].estimNorm(0, 0, DACE::DA::getMaxOrder() + 1);
+
+       //std::cout << tools::vector::num2string(err) << std::endl;
+
+        // Get approximation error
+        auto trunc_err2check = errors.back();
+
+        // Save truncation errors for future treatment
+        truncation_errors[i] = trunc_err2check;
+
+        // Safety check
+        if (std::isnan(trunc_err2check))
+        {
+            continue;
+            // auto errmsg = tools::string::print2string("%s", scv[i].toString().c_str());
+            // errmsg += "Got some nans in the error esimNorm computation. ";
+            // std::fprintf(stderr, "TRACE: %s\n", errmsg.c_str());
+        }
 
         // Compare error
-        if (err2compare > this->errToll_[i])
+        if (trunc_err2check > this->errToll_[i])
         {
             result = true;
             break;
         }
     }
 
+    // Compute the splitting direction right now
+    if (result)
+    {
+        // Compute relative error from truncation errors
+        std::vector<double> relativErr(truncation_errors.size());
+
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            relativErr[k] = truncation_errors[k] - this->errToll_[k];
+        }
+        for ( unsigned int k = 0; k < relativErr.size(); ++k )
+        {
+            if (truncation_errors[k] > this->errToll_[k])
+            {
+                relativErr[k] = DACE::abs(relativErr[k]);
+            }
+            else
+            {
+                relativErr[k] = 0.0;
+            }
+        }
+
+        // Find maximum relative truncation error
+        auto max_error = std::max_element(relativErr.begin(), relativErr.end());
+
+        // TODO: Are we interested in this?
+        // If position override is different than zero, set max error to that position
+        // if ( posOverride != 0)
+        // {
+        //     max_error = (relativErr.begin() + posOverride);
+        // }
+
+        if (*max_error == 0.0)
+        {
+            bool a = true;
+        }
+
+        // Function component of maximum error
+        const unsigned int pos = std::distance(relativErr.begin(), max_error);
+
+        // Get the splitting direction
+        this->pos_ = (int) Patch::getSplittingDirection(pos, scv) - 1;
+    }
+
     // Return the errors
     return result;
 }
+
+bool integrator::check_loads_conditions(const DACE::AlgebraicVector<DACE::DA>& scv, bool debug)
+{
+    // Auxiliary variables
+    int n_rows = (int) scv.size();
+    int n_cols = (int) DACE::DA::getMaxVariables();
+
+    // Result of the comparison
+    bool result{false};
+
+    // Jacobian matrix
+    DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
+
+    // Upper bounds sum
+    double upper_bound_sum = 0;
+    double constant_sum = 0;
+
+    // Reference: https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant
+    for (int i = 0; i < n_rows; i++)
+    {
+        for (int j = 0; j < n_cols; j++)
+        {
+            // Check for non-zero values in order to avoid nans
+            if (this->betas_[j] == 0.0)
+            {
+                continue;
+            }
+
+            // Make derivative
+            auto comp_ij = (1/this->betas_[j]) * scv[i].deriv(j + 1);
+            jacobian.at(i, j) = comp_ij;
+
+            // Take constant part
+            auto comp_ij_cons = comp_ij.cons();
+
+            // Get first term
+            auto comp_ij_first = comp_ij - comp_ij_cons;
+
+            // Bounds computation
+            auto bound_ij_ub = comp_ij_first.bound().m_ub;
+
+            // Sum
+            upper_bound_sum += bound_ij_ub * bound_ij_ub;
+            constant_sum += comp_ij_cons * comp_ij_cons;
+        }
+    }
+
+    // Compute the NLI
+    this->nli_current_ = std::sqrt( upper_bound_sum / constant_sum );
+
+    // Clear sum
+    upper_bound_sum = 0.0;
+
+    if (debug)
+    {
+        std::ofstream outfile;
+        auto time_str = std::string (__TIME__);
+        outfile.open("out/example/loads/nli_" + time_str + ".csv", std::ios_base::app); // append instead of overwrite
+
+        // String to write
+        auto str2write = tools::string::print2string(" %.16f, %.16f, %d", this->t_, this->nli_current_, this->patch_id_);
+
+        // Write
+        outfile << str2write << std::endl;
+    }
+
+    if (this->nli_current_ > this->nli_threshold_ || this->patch_id_ == 0 && (this->nli_current_ > 0.004) && false)
+    {
+        if (this->patch_id_ == 121)
+        {
+            bool a = true;
+        }
+        // It means we have exceeded the threshold!
+        result = true;
+
+        // Compute the direction
+        // DACE::AlgebraicMatrix<DACE::DA> jacobian(n_rows, n_cols);
+        DACE::AlgebraicVector<DACE::DA> v_list(n_cols, 0.0);
+        std::vector<double> mu_list(n_cols);
+
+        // Algorithm to decide which direction is the one that contributes the most
+        for (int k = 0; k < n_cols; k++)
+        {
+            // Get direction to be evaluated
+            v_list[k] = DACE::DA(k+1);
+
+            for (int i = 0; i < n_rows; i++)
+            {
+                for (int j = 0; j < n_cols; j++)
+                {
+                    // Function composition
+                    auto comp_ij = jacobian.at(i, j).eval(v_list);
+
+                    // Get first term
+                    auto comp_ij_first = comp_ij - comp_ij.cons();
+
+                    // Bounds computation
+                    auto bound_ij_ub = comp_ij_first.bound().m_ub;
+
+                    // Sum
+                    upper_bound_sum += bound_ij_ub * bound_ij_ub;
+                }
+            }
+
+            // Save result
+            mu_list[k] = std::sqrt( upper_bound_sum / constant_sum );
+
+            // Clean stuff
+            upper_bound_sum = 0.0;
+            std::fill(v_list.begin(), v_list.end(), 0.0);
+        }
+
+        // Get the maximum
+       this-> pos_ = (int) std::distance(mu_list.begin(), std::max_element(mu_list.begin(), mu_list.end()));
+    }
+
+    // Return the errors
+    return result;
+}
+
 
 void integrator::set_errToll(const std::vector<double> &errToll)
 {
     // Info
     auto vect2str = tools::vector::num2string(errToll, ", ");
-    std::fprintf(stdout, "Setting the Error Tolerances vector: '%s'\n", vect2str.c_str());
+    std::fprintf(stdout, "Setting the Error Tolerances vector to...: '%s'\n", vect2str.c_str());
 
     // Setting it...
     this->errToll_ = errToll;
+}
+
+void integrator::set_nli_threshold(const double &nli_threshold)
+{
+    // Info
+    std::fprintf(stdout, "Setting the NLI threshold to...: '%.3f'\n", nli_threshold);
+
+    // Setting it...
+    this->nli_threshold_ = nli_threshold;
 }
 
 // Some auxiliary functions for the RK78, TODO: Can we get rid of min/max?
@@ -338,11 +646,14 @@ double normtmp( int N, std::vector<double> X)
 
 template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::AlgebraicVector<T> Y0)
 {
+    // Auxiliary variables
+    bool flag_interruption_errToll;
+
     // TODO: Investigate what is this
     double ERREST;
-    double H0 = 0.001;
-    double HS = 0.1;
-    double H1 = 100.0;
+    double H0 = 0.001; // Minimum step size
+    double HS = 0.1;   // Initial step size
+    double H1 = 100.0; // Maximum step size
     double EPS = 1.e-12;
     double BS = 20*EPS;
 
@@ -465,20 +776,24 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
         Z[I][1] = 0.0 ;
     }
 
-    H = std::abs(HS);
-    HH0 = std::abs(H0);
-    HH1 = std::abs(H1);
-    X = this->t0_;
+    H = std::abs(HS); // Initial step size
+    HH0 = std::abs(H0); // Minimum step size
+    HH1 = std::abs(H1); // Maximum step size
+    X = this->t_;
     RFNORM = 0.0;
     ERREST = 0.0;
 
     // Iteration
     int idx = 0;
 
+    // Auxiliary previous state
+    auto x_prev = Y0;
+
+    // Integrate until X reaches the desired time
     while(X != this->t1_)
     {
         // Print detailed info
-        this->print_detailed_information(Y0, idx, X);
+        this->print_detailed_information(x_prev, idx, X);
 
         // compute new stepsize
         if (RFNORM != 0)
@@ -486,6 +801,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             // TODO: What is the difference between std::min and min ?
             H = H*min(4.0,exp(HSQR*log(EPS/RFNORM)));
         }
+
+        // If the stepsize is larger in absolute value than HH1, limit it to HH1
         if (std::abs(H) > std::abs(HH1))
         {
             H = HH1;
@@ -505,7 +822,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
         {
             for (I = 0; I<N; I++)
             {
-                Y0[I] = 0.0 ; // EVALUATE RHS AT 13 POINTS
+                Y0[I] = 0.0; // EVALUATE RHS AT 13 POINTS
 
                 for (K=0; K<J; K++)
                 {
@@ -517,6 +834,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             // TODO: Fix this
             Y1 = this->problem_->solve(Y0, X+H*A[J]);
 
+            // std::cout << Y1 << std::endl;
+
             for (I = 0; I<N; I++)
             {
                 Z[I][J+3] = Y1[I];
@@ -525,7 +844,8 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
 
         for (I = 0; I<N; I++)
         {
-            Z[I][1] = 0.0 ; Z[I][2] = 0.0 ; // EXECUTE 7TH,8TH ORDER STEPS
+            Z[I][1] = 0.0 ;
+            Z[I][2] = 0.0 ; // EXECUTE 7TH,8TH ORDER STEPS
 
             for (J = 0; J<13; J++)
             {
@@ -540,7 +860,7 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
 
         for (I = 0; I<N; I++)
         {
-            Y1cons[I] = cons(Y1[I]);
+            Y1cons[I] = DACE::cons(Y1[I]);
         }
 
         // ESTIMATE ERROR AND DECIDE ABOUT BACKSTEP
@@ -559,14 +879,132 @@ template<typename T> DACE::AlgebraicVector<T> integrator::RK78(int N, DACE::Alge
             ERREST = ERREST + RFNORM;
         }
 
+        // Check ADS conditions to continue integration
+        // TODO: Confirm x_prev, Y1check logic assignation, not tested.
+        if (this->interrupt_)
+        {
+            DACE::AlgebraicVector<DACE::DA> Y1check(N);
+            for (I = 0; I<N; I++) { Y1check[I] = Z[I][0]; }
+
+            // Check returned flag
+            flag_interruption_errToll = this->check_conditions(Y1check);
+
+            // Break integration if needed
+            if (flag_interruption_errToll)
+            {
+                Y1 = x_prev;
+                break;
+            }
+
+            // Update next state
+            x_prev = Y1check;
+        }
+
+        // Update times to the class
+        this->t_ = X;
+        this->h_ = H;
+
         idx++;
     }
 
-    for (I = 0; I<N; I++)
+    if (!flag_interruption_errToll)
     {
-        Y1[I] = Z[I][0];
+        for (I = 0; I<N; I++)
+        {
+            Y1[I] = Z[I][0];
+        }
     }
 
+    this->end_ = this->t_ >= this->t1_;
+
     return Y1;
+
+}
+
+
+void integrator::summary(std::string *summary2return, bool recursive)
+{
+    // Check if this module is summary to be launched
+    if (!this) {
+        *summary2return += tools::string::print2string("Integrator (%p): is nullptr.\n", this);
+
+        // Return
+        return;
+    }
+
+    // Pointers
+    *summary2return += tools::string::print2string("Integrator (%p): problem flag set to '%p'\n",
+                                                   this, this->problem_);
+
+    // BOOLS
+    *summary2return += tools::string::print2string("Integrator (%p): interrupt flag set to '%s'\n",
+                                                   this, this->interrupt_ ? "true" : "false");
+
+    *summary2return += tools::string::print2string("Integrator (%p): end flag set to '%s'\n",
+                                                   this, this->end_ ? "true" : "false");
+
+    *summary2return += tools::string::print2string("Integrator (%p): params_set flag set to '%s'\n",
+                                                   this, this->params_set_ ? "true" : "false");
+
+    // INTEGERS
+    *summary2return += tools::string::print2string("Integrator (%p): patch_id flag set to '%d'\n",
+                                                   this, this->patch_id_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nvar flag set to '%d'\n",
+                                                   this, this->nvar_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): steps flag set to '%d'\n",
+                                                   this, this->steps_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): pos flag set to '%d'\n",
+                                                   this, this->pos_);
+
+    // DOUBLES
+    *summary2return += tools::string::print2string("Integrator (%p): t0 flag set to '%.2f'\n",
+                                                   this, this->t0_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): t1 flag set to '%.2f'\n",
+                                                   this, this->t1_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): t flag set to '%.2f'\n",
+                                                   this, this->t_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): h flag set to '%.2f'\n",
+                                                   this, this->h_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): hmax flag set to '%.2f'\n",
+                                                   this, this->hmax_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nli_current flag set to '%.2f'\n",
+                                                   this, this->nli_current_);
+
+    *summary2return += tools::string::print2string("Integrator (%p): nli_threshold flag set to '%.2f'\n",
+                                                   this, this->nli_threshold_);
+
+    // ENUMS
+    *summary2return += tools::string::print2string("Integrator (%p): type flag set to '%s'\n",
+                                                   this, tools::enums::INTEGRATOR2str(this->type).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): algorithm flag set to '%s'\n",
+                                                   this, tools::enums::ALGORITHM2str(this->algorithm_).c_str());
+    // VECTORS
+    *summary2return += tools::string::print2string("Integrator (%p): errToll flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->errToll_).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): betas flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->betas_).c_str());
+
+    *summary2return += tools::string::print2string("Integrator (%p): vector flag set to '%s'\n",
+                                                   this, tools::vector::num2string(this->vector).c_str());
+
+    // DA vectors
+    *summary2return += tools::string::print2string("Integrator (%p): scv flag set to '%s'\n",
+                                                   this, tools::vector::da_cons2string(this->scv_).c_str());
+
+    // If recursive, summarize internal pointers
+    if (recursive)
+    {
+        this->problem_->summary(summary2return, recursive);
+    }
 
 }

@@ -281,7 +281,7 @@ int main()
     // Manifold RVsplit = stack.getSplitDomain(KeplerProp, errToll, nSplitMax, DT,  mu );
 
     // Info to the user
-    std::fprintf(stdout," It creates '%zu' domains.", RVsplit.size());
+    // std::fprintf(stdout," It creates '%zu' domains.", RVsplit.size());
 
     // Close function with exit code 0
     return 0;

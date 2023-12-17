@@ -2,12 +2,12 @@
 # VerneDA COMPILATION CMAKE SCRIPT
 ############################################
 
+# CMAKE MINIMUM REQUIRED VERSION
+cmake_minimum_required(VERSION 3.21)
+
 # PROJECT: VerneDA
 # Create project, load parameters (flags & default values)
 project(VerneDA)
-
-# CMAKE MINIMUM REQUIRED VERSION
-cmake_minimum_required(VERSION 3.21)
 
 # CXX Standard to be used by the compiler
 set(CMAKE_CXX_STANDARD 17)
@@ -58,20 +58,20 @@ set(CTEST_BUILD_FLAGS -j${N_CORES})
 option(BUILD_DACE_MASTER_LIBS "Build DACE library from MASTER" OFF)
 option(BUILD_DACE_AFOSSA_LIBS "Build DACE library from AFOSSA fork" OFF)
 
+# Message
+MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
+MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
+
 # Options safety checks
 if (BUILD_DACE_MASTER_LIBS EQUAL BUILD_DACE_AFOSSA_LIBS OR (NOT BUILD_DACE_MASTER_LIBS) EQUAL (NOT BUILD_DACE_AFOSSA_LIBS))
-    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
-    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
     MESSAGE( FATAL_ERROR "Please choose at least one: BUILD_DACE_MASTER_LIBS or BUILD_DACE_AFOSSA_LIBS. Not both.")
 endif ()
 
 if (BUILD_DACE_MASTER_LIBS)
-    MESSAGE( STATUS "BUILD_DACE_MASTER_LIBS: ${BUILD_DACE_MASTER_LIBS}")
     MESSAGE( STATUS "DACE will be built from git MASTER branch tared file: version on Oct 22, 2022. <- Frozen version.")
 endif ()
 
 if (BUILD_DACE_AFOSSA_LIBS)
-    MESSAGE( STATUS "BUILD_DACE_AFOSSA_LIBS: ${BUILD_DACE_AFOSSA_LIBS}")
     MESSAGE( STATUS "DACE will be built from git AFOSSA (Alberto Fossa) fork. <- Version of this fork and updates are totally user responsible.")
 endif ()
 
@@ -130,7 +130,6 @@ set(PYPLOT_TYPE_ATTITUDE "attitude")
 
 # Application version information
 # This is automatic; do not touch anything
-# TODO: No version for the while
 string(APPEND UCFLAGS " -D CODE_VERSION=\"\\\"$(shell cat ${CMAKE_SOURCE_DIR}/VERSION)\\\"\"")
 string(APPEND UCFLAGS " -D OS_VERSION=\"\\\"$(shell uname -iors)\\\"\"")
 string(APPEND UCFLAGS " -D GIT_BRANCH=\"\\\"$(shell git symbolic-ref --short HEAD)\\\"\"")
@@ -152,7 +151,7 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # BUILD EXTERNAL PROJECTS
 ############################################
 # Note for cmake developers: this projects have their own CMakeLists, we have to build and install them
-# TODO: Do something like this if the project requires some kind of system library to be installed in the system.
+# TODO: Do something like this if the project requires some kind of system library to be installed, like boost.
 # find_package(Eigen3 REQUIRED)
 # IF( NOT EIGEN3_INCLUDE_DIR )
 #     MESSAGE( FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
@@ -168,74 +167,36 @@ string(APPEND UCFLAGS " -D PYPLOT_ATTITUDE=\"\\\"${PYPLOT_TYPE_ATTITUDE}\\\"\"")
 # Load ExternalProject module
 include(ExternalProject)
 
-## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
 ## TODO: Let the user choose between CMAKE_3RDPARTY_DIR_DACE_MASTER or CMAKE_3RDPARTY_DIR_DACE_AFOSSA
 if (BUILD_DACE_MASTER_LIBS)
-    ExternalProject_Add(dace
-            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
-            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_MASTER}/
-            CMAKE_COMMAND cmake ..
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            BUILD_COMMAND make -j${N_CORES}
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            INSTALL_COMMAND make install
-            )
-elseif (BUILD_DACE_AFOSSA_LIBS)
-    ExternalProject_Add(dace
-            SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-            PREFIX ${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}/
-            CMAKE_COMMAND cmake ..
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            BUILD_COMMAND make -j${N_CORES}
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
-            INSTALL_COMMAND make install
-            )
+    set(CMAKE_3RDPARTY_DIR_DACE "${CMAKE_3RDPARTY_DIR_DACE_MASTER}")
+elseif (BUILD_DACE_AFOSSA_LIBS) # TODO: Try to download this from the internet directly instead of having it as a submodule
+    set(CMAKE_3RDPARTY_DIR_DACE "${CMAKE_3RDPARTY_DIR_DACE_AFOSSA}")
 endif ()
 
+## Build DACE Application, it can be found in this link: https://github.com/dacelib/dace/wiki/Getting-Started
+ExternalProject_Add(dace
+        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_DACE}/
+        PREFIX ${CMAKE_3RDPARTY_DIR_DACE}/
+        CMAKE_COMMAND cmake ..
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+        BUILD_COMMAND make -j${N_CORES}
+        INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}dace/
+        INSTALL_COMMAND make install
+)
+
 # Build RJSP: Ridiculously JSON Parser: https://github.com/subh83/RSJp-cpp
-#ExternalProject_Add(rsjplib
-#        #SOURCE_DIR ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#        ## BUILD_IN_SOURCE ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#        #PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        ## CMAKE_COMMAND cmake ..
-#        ## -DCMAKE_BUILD_TYPE=Release
-#        ## -DCMAKE_INSTALL_PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/
-#        ## INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
-#        #BUILD_COMMAND COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        ## INSTALL_COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#        #INSTALL_COMMAND ""
-#        SOURCE_DIR ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/    # This is not likely to be CMAKE_CURRENT_LIST_DIR
-#        # INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp   # Just an example
-#        # CONFIGURE_COMMAND ""
-#        # BUILD_COMMAND ${CMAKE_COMMAND} -E env
-#        #     HOST_CC=...   # See below
-#        #     CC=${CMAKE_C_COMPILER}
-#        #     make -C <SOURCE_DIR>
-#        #--Configure step-------------
-#        CONFIGURE_COMMAND ""
-#        # CMAKE_COMMAND cmake -E echo "Skipping cmake step..."
-#        #--Build step-----------------
-#        BUILD_COMMAND cmake -E echo "Skipping build step..."
-#        #--Install step---------------
-#        INSTALL_COMMAND make install "PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp"
-#        )
-
-# install(TARGETS rsjp
-#         LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#         PUBLIC_HEADER DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
-
-# add_custom_target(rjsp
-#         WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/
-#         COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/ install
-#         )
+add_custom_command(OUTPUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include/RSJparser.tcc
+        COMMAND make PREFIX=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
+        WORKING_DIRECTORY ${CMAKE_3RDPARTY_DIR_RJSP_MASTER}
+)
 
 #ExternalProject_Add_StepTargets(rsjplib install)
-file(GLOB MY_PUBLIC_HEADERS
-        "${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/*.tcc"
-        )
-file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+#file(GLOB MY_PUBLIC_HEADERS
+        #"${CMAKE_3RDPARTY_DIR_RJSP_MASTER}/*.tcc"
+#)
+#file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
 
 # TODO: OPTION TO EXPLORE! -> https://stackoverflow.com/questions/10487256/cmake-how-to-properly-copy-static-librarys-header-file-into-usr-include
 # INSTALL(TARGETS mylib
@@ -248,6 +209,7 @@ file(COPY ${MY_PUBLIC_HEADERS} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
 ############################################
 # Get info from external dace library
 ExternalProject_Get_Property(dace install_dir)
+MESSAGE( STATUS "Getting DACE libraries from the installed directory...: '${install_dir}'")
 set(daceinclude "${install_dir}/include")
 set(dacelib_dir "${install_dir}/lib")
 set(dacelib_file "${CMAKE_SHARED_LIBRARY_PREFIX}dace${CMAKE_SHARED_LIBRARY_SUFFIX}")
@@ -256,11 +218,33 @@ set(dacelib_path "${dacelib_dir}/${dacelib_file}")
 ############################################
 # FILES LOCATION
 ############################################
-# Location of header files and libraries (inside source dir, except the includes)
-include_directories(
-        ${daceinclude}
-        src/core
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp)
+# TODO: Modularize this hard path
+# Include MATLAB stuff (optional) for MEX files
+option(BUILD_WITH_MATLAB "Build with matlab libraries" OFF)
+MESSAGE( STATUS "BUILD_WITH_MATLAB: ${BUILD_WITH_MATLAB}")
+if (BUILD_WITH_MATLAB)
+    # TODO: Usually matlab is built in home: ATTENTION HERE!
+    set(CMD_WHO whoami)
+    execute_process(
+            COMMAND ${CMD_WHO}
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE WHO
+            RESULT_VARIABLE ENV_RES
+            ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    MESSAGE( STATUS "Including MATLAB MEX files includes from '${WHO}'s home...")
+    include_directories(
+            ${daceinclude}
+            src/core
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
+            /home/${WHO}/MATLAB/R2023b/extern/include
+            /home/${WHO}/MATLAB/R2023b/simulink/include
+            )
+else ()
+    include_directories(
+            ${daceinclude}
+            src/core
+            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
+endif ()
 
 #===========================================
 # LIBRARY: DACE (IMPORTED LIBRARY)
@@ -280,7 +264,7 @@ set_target_properties(${LIBRARY_DACE} PROPERTIES
 set(LIBRARY_RSJP_LIB "rsjp")
 
 add_library(${LIBRARY_RSJP_LIB} SHARED
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/RSJparser.tcc)
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include/RSJparser.tcc)
 
 # Provide the full path to the library, so CMake knows where to find it
 set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
@@ -301,6 +285,7 @@ add_library(base SHARED
         src/core/base/enums.h
         src/core/base/constants.h
         src/core/base/Header_Info.cpp
+        src/core/base/structs.h
         )
 
 set_target_properties(base
@@ -313,16 +298,39 @@ set_target_properties(base
 set(LIBRARY_TOOLS "tools")
 
 add_library(${LIBRARY_TOOLS} SHARED
-        src/core/tools/vo.cpp
-        src/core/tools/str.cpp)
+        src/core/tools/str.cpp
+        src/core/tools/math.cpp
+        src/core/tools/ep.cpp)
 
 add_dependencies(tools
-        dace)
+        base)
 
 target_link_libraries(${LIBRARY_TOOLS}
-        ${LIBRARY_DACE})
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_TOOLS} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#
+#===========================================
+# LIBRARY: VerneDA DA_TOOLS
+#===========================================
+set(LIBRARY_DATOOLS "datools")
+
+add_library(${LIBRARY_DATOOLS} SHARED
+        src/core/tools/vo.cpp
+        src/core/tools/io_dace.cpp)
+
+add_dependencies(datools
+        dacelib
+        tools)
+
+target_link_libraries(${LIBRARY_DATOOLS}
+        ${LIBRARY_DACE}
+        ${LIBRARY_TOOLS})
+
+set_target_properties(${LIBRARY_DATOOLS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
@@ -332,16 +340,14 @@ set_target_properties(${LIBRARY_TOOLS} PROPERTIES
 set(LIBRARY_SPECIFICATIONS "specs_input")
 
 add_library(${LIBRARY_SPECIFICATIONS} SHARED
-        src/core/specs/specs.cpp
         src/core/specs/args_input.cpp
         )
 
 add_dependencies(specs_input
-        base
-        core)
+        base)
 
 target_link_libraries(${LIBRARY_SPECIFICATIONS}
-        ${LIBRARY_CORE})
+        ${LIBRARY_BASE})
 
 set_target_properties(${LIBRARY_SPECIFICATIONS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -357,10 +363,12 @@ add_library(${LIBRARY_JSON_PARSER} SHARED
 
 add_dependencies(json
         rsjp
+        tools
         specs_input)
 
 target_link_libraries(json
         rsjp
+        tools
         specs_input)
 
 set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
@@ -373,10 +381,6 @@ set_target_properties(${LIBRARY_JSON_PARSER} PROPERTIES
 set(LIBRARY_CORE "core")
 
 add_library(${LIBRARY_CORE} SHARED
-        src/core/tools/ep.cpp
-        src/core/tools/io.cpp
-        src/core/tools/vo.cpp
-        src/core/tools/str.cpp
         src/core/conversions/angles.cpp
         src/core/geometry/point.cpp
         src/core/solids/solid.cpp
@@ -384,13 +388,16 @@ add_library(${LIBRARY_CORE} SHARED
         src/core/integrator.cpp
         src/core/problems.cpp
         src/core/delta.cpp
-        src/core/quaternion.cpp)
+        src/core/quaternion.cpp
+        src/core/tools/io.cpp)
 
 add_dependencies(core
-        dace)
+        datools
+        )
 
 target_link_libraries(${LIBRARY_CORE}
-        ${LIBRARY_DACE})
+        ${LIBRARY_DATOOLS}
+        )
 
 set_target_properties(${LIBRARY_CORE} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -406,18 +413,56 @@ add_library(${LIBRARY_ADS} SHARED
         src/core/ads/SuperManifold.cpp
         src/core/ads/Patch.cpp
         src/core/ads/SplittingHistory.cpp
-        src/core/ads/ads.h)
+        )
 
 add_dependencies(ads
-        dace)
+        core)
 
 target_link_libraries(${LIBRARY_ADS}
-        ${LIBRARY_DACE})
+        ${LIBRARY_CORE}
+        )
 
 set_target_properties(${LIBRARY_ADS} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
+#===========================================
+# LIBRARY: VerneDA WRITER (Writer)
+#===========================================
+set(LIBRARY_WRITER "writer")
+
+add_library(${LIBRARY_WRITER} SHARED
+        src/core/writer.cpp)
+
+add_dependencies(writer
+        core)
+
+target_link_libraries(${LIBRARY_WRITER}
+        ${LIBRARY_CORE}
+)
+
+set_target_properties(${LIBRARY_WRITER} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
+# LIBRARY: VerneDA FILE PROCESSOR (File processor)
+#===========================================
+set(LIBRARY_FILE_PROCESSOR "file_processor")
+
+add_library(${LIBRARY_FILE_PROCESSOR} SHARED
+        src/core/FileProcessor.cpp)
+
+add_dependencies(file_processor
+        tools)
+
+target_link_libraries(${LIBRARY_FILE_PROCESSOR}
+        ${LIBRARY_TOOLS}
+)
+
+set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
 ########################################################################################################################
 # EXECUTABLES: DACE mains
@@ -521,7 +566,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
 
 ############################################
-# EXECUTABLES: DACE_VSA (DACE VERY SIMPLE ATTITUDE DETERMINATION)
+# EXECUTABLES: DACE_VSAD (DACE VERY SIMPLE ATTITUDE DETERMINATION)
 ############################################
 set(EXECUTABLE_NAME "dace_vsad")
 
@@ -536,11 +581,11 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
+        json
+        ads
+        file_processor
+        writer
         )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -563,12 +608,66 @@ add_executable(${EXECUTABLE_NAME}
 #                   )
 
 target_link_libraries(${EXECUTABLE_NAME}
-        json
-        core
-        ads
-        dacelib
         base
+        json
+        ads
+        file_processor
+        writer
         )
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+############################################
+# EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+if (BUILD_WITH_MATLAB)
+    set(EXECUTABLE_NAME "mex_vsaod")
+
+    add_executable(${EXECUTABLE_NAME}
+            src/main/mex_vsaod.cpp
+    )
+
+    # add_dependencies(${EXECUTABLE_NAME}
+    #                   dependency1
+    #                   dependency2
+    #                   ....
+    #                   )
+
+    target_link_libraries(${EXECUTABLE_NAME}
+            base
+            ads
+
+    )
+
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+            LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+endif ()
+
+############################################
+# EXECUTABLES: DACE_STATIC_TRANSFORMATION
+############################################
+set(EXECUTABLE_NAME "dace_st")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/dace_st.cpp
+)
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        base
+        json
+        ads
+        file_processor
+        writer
+)
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags

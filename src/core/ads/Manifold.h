@@ -12,9 +12,6 @@
 #include <deque>
 #include <algorithm>
 
-// DACE libraries
-#include "dace/dace.h"
-
 // Project libraries
 #include "Patch.h"
 #include "integrator.h"
@@ -56,6 +53,10 @@ private:
     // Attributes
     integrator* integrator_ = nullptr;
 
+    // Domain evolution
+    std::vector<Manifold*>* ini_domain_record = new std::vector<Manifold*>();
+    std::vector<Manifold*>* fin_domain_record = new std::vector<Manifold*>();
+
 public:
     // Setters
 
@@ -64,6 +65,23 @@ public:
      * @param integrator [in] [integrator]
      */
     void set_integrator_ptr(integrator* integrator);
+
+public:
+    // Getters
+
+    /**
+     * Gets integrator pointer
+     * \return integrator pointer
+     */
+    auto get_integrator_ptr() {return this->integrator_;};
+
+
+    /**
+     * Gets pointer to domain record
+     * @return std::vector<Manifold*>*
+     */
+    auto get_ini_domain_record() {return this->ini_domain_record; }
+    auto get_fin_domain_record() {return this->fin_domain_record; }
 
 public: // Methods
 
@@ -75,6 +93,7 @@ public: // Methods
      * @return Manifold*
      */
     Manifold* getSplitDomain(const std::vector<double>& errToll, int nSplitMax, int posOverride = 0);
+    Manifold* getSplitDomain(ALGORITHM algorithm, int nSplitMax, bool domain_evolution = true);
 
     /**
      * Evaluates a point in this manifold, returns the corresponding translation using the proper patch.
@@ -98,10 +117,23 @@ public: // Methods
      */
     std::vector<std::vector<DACE::AlgebraicVector<double>>> wallsPointEvaluationManifold();
 
+
+    /**
+     * Add new patches to this Manifold.
+     * @param new_patches [std::vector<Patch> new_patches]
+     * @param split_count [int]
+     * @param dir [int]
+     */
+    void add_new_patches(std::vector<Patch> &new_patches, int &split_count, int dir);
+
     /**
      * Prints status of the manifold, this routine is called from the main running routine 'getSplitDomain'
      */
     void print_status();
+
+    Manifold *get_initial_split_domain();
+
+    void summary(std::string *summary2return, bool recursive);
 
 
     /*
@@ -116,4 +148,6 @@ public: // Methods
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const double errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
 
     Manifold getSplitDomain(DACE::AlgebraicVector<DACE::DA> (*func)(DACE::AlgebraicVector<DACE::DA>, Observable*, double), const std::vector<double> errToll, const int nSplitMax, Observable* param, const double mu, int posOverride = 0);
+
+    std::vector<std::vector<DACE::AlgebraicVector<double>>> wallsPointEvaluationManifold_useless();
 };

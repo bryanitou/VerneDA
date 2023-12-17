@@ -6,17 +6,13 @@
 #include "dace/dace.h"
 
 // Project libraries
-#include "scv.h"
-#include "integrator.h"
-#include "problems.h"
-#include "delta.h"
+#include "base/Header_Info.h"
+#include "ads/SuperManifold.h"
 #include "tools/io.h"
 #include "json/json_parser.h"
 #include "specs/args_input.h"
-
-// ADS library
-#include "ads/ads.h"
-
+#include "writer.h"
+#include "FileProcessor.h"
 
 /**
  * Main entry point
@@ -47,18 +43,15 @@ int main(int argc, char* argv[])
 
     // Set initial state
     DACE::AlgebraicVector<DACE::DA> scv0 = {
-            my_specs.initial_conditions.mean[0] + 3*DACE::DA(1) * my_specs.initial_conditions.standard_deviation[0],
-            my_specs.initial_conditions.mean[1] + 3*DACE::DA(2) * my_specs.initial_conditions.standard_deviation[1],
-            my_specs.initial_conditions.mean[2] + DACE::DA(3) * my_specs.initial_conditions.standard_deviation[2],
-            my_specs.initial_conditions.mean[3] + DACE::DA(4) * my_specs.initial_conditions.standard_deviation[3],
-            my_specs.initial_conditions.mean[4] + DACE::DA(5) * my_specs.initial_conditions.standard_deviation[4],
-            my_specs.initial_conditions.mean[5] + DACE::DA(6) * my_specs.initial_conditions.standard_deviation[5] };
+            my_specs.initial_conditions.mean[0] + my_specs.scaling.beta[0] * DACE::DA(1),
+            my_specs.initial_conditions.mean[1] + my_specs.scaling.beta[1] * DACE::DA(2),
+            my_specs.initial_conditions.mean[2] + my_specs.scaling.beta[2] * DACE::DA(3),
+            my_specs.initial_conditions.mean[3] + my_specs.scaling.beta[3] * DACE::DA(4),
+            my_specs.initial_conditions.mean[4] + my_specs.scaling.beta[4] * DACE::DA(5),
+            my_specs.initial_conditions.mean[5] + my_specs.scaling.beta[5] * DACE::DA(6)
+    };
 
-    // Declare and initialize class
-    auto s0 = std::make_unique<scv>(scv0);
-
-    // Now, should initialize all the dace variables from the initial conditions
-    auto scv0_DA = s0->get_state_vector_copy();
+    std::cout << scv0 << std::endl;
 
     // Initial and final time and time step
     double const t0 = my_specs.propagation.initial_time;
@@ -66,23 +59,77 @@ int main(int argc, char* argv[])
     double const dt = my_specs.propagation.time_step;
 
     // Initialize integrator
-    auto objIntegrator = std::make_unique<integrator>(INTEGRATOR::RK4, dt);
+    auto objIntegrator = std::make_unique<integrator>(my_specs.propagation.integrator, my_specs.algorithm, dt);
+
+    // Deduce whether interruption feature shall be made or not
+    bool interruption = false;
 
     // Define problem to solve
-    auto prob = problems(PROBLEM::TWO_BODY);
+    problems* prob;
+
+    // Create an empty SuperManifold to be filled in the switch case
+    SuperManifold* super_manifold;
 
     // Build super manifold
-    auto super_manifold = SuperManifold(my_specs.ads.tolerance,
-                                        my_specs.ads.max_split[0]);
+    switch (my_specs.algorithm)
+    {
+        case ALGORITHM::ADS:
+        {
+            // Build super manifold: ADS
+            super_manifold = new SuperManifold(my_specs.ads.tolerance,my_specs.ads.max_split[0], ALGORITHM::ADS);
+
+            // Define problem
+            prob = new problems(my_specs.problem, my_specs.mu);
+
+            // Deduce whether interruption should be made or not
+            interruption = !my_specs.ads.max_split.empty() && my_specs.ads.max_split[0] > 0;
+
+            // Exit switch case
+            break;
+        }
+        case ALGORITHM::LOADS:
+        {
+            // Build super manifold: LOADS
+            super_manifold = new SuperManifold(my_specs.loads.nli_threshold, my_specs.loads.max_split[0], ALGORITHM::LOADS);
+
+            // Set beta constant in integrator
+            objIntegrator->set_beta(my_specs.scaling.beta);
+
+            // Initialize problem
+            prob = new problems(my_specs.problem, my_specs.mu);
+
+            // Deduce whether interruption should be made or not
+            interruption = !my_specs.loads.max_split.empty() && my_specs.loads.max_split[0] > 0;
+
+            // Exit switch case
+            break;
+        }
+        case ALGORITHM::NONE:
+        {
+            // NONE algorithm is equivalent to Splitting algorithms but with interruption mode DISABLED
+            super_manifold = new SuperManifold(ALGORITHM::NONE);
+
+            // Initialize problem
+            prob = new problems(my_specs.problem, my_specs.mu);
+
+            // Exit switch case
+            break;
+        }
+        default:
+        {
+            // TODO: Show some errors here
+            std::exit(20);
+        }
+    }
 
     // Set problem ptr in the integrator
-    objIntegrator->set_problem_ptr(&prob);
+    objIntegrator->set_problem_ptr(prob);
 
     // Setting integrator parameters
-    objIntegrator->set_integration_parameters(scv0_DA, t0, tf, true);
+    objIntegrator->set_integration_parameters(scv0, t0, tf,interruption);
 
     // Set integrator in the super manifold
-    super_manifold.set_integrator_ptr(objIntegrator.get());
+    super_manifold->set_integrator_ptr(objIntegrator.get());
 
     // Docu: Set new truncation error and get the previous one
     double new_eps = 1e-40;
@@ -91,8 +138,9 @@ int main(int argc, char* argv[])
     // Show to the used the new epsilon value
     std::fprintf(stdout, "Epsilon update: Previous: '%1.16f', New: '%1.16f'\n", previous_eps, new_eps);
 
-    // ADS and integration algorithm
-    super_manifold.split_domain();
+    // Apply main algorithm: ADS / LOADS. And integration algorithm
+    std::string prop_summary{};
+    super_manifold->split_domain(&prop_summary);
 
     // Build deltas class
     auto deltas_engine = std::make_shared<delta>();
@@ -101,49 +149,39 @@ int main(int argc, char* argv[])
     deltas_engine->set_stddevs(my_specs.initial_conditions.standard_deviation);
 
     // Compute deltas
-    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 100000);
+    deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, 10000);
 
     // Insert nominal delta
     deltas_engine->insert_nominal(my_specs.algebra.variables);
 
     // Set super manifold in deltas engine
-    deltas_engine->set_superManifold(&super_manifold);
+    deltas_engine->set_superManifold(super_manifold);
 
     // Evaluate deltas
     deltas_engine->evaluate_deltas();
 
-    // Set output path for results
-    std::filesystem::path output_dir = my_specs.output_dir;
-    std::filesystem::path output_eval_deltas_path_dd =  output_dir / "eval_deltas_expression_RK4.dd";
-    std::filesystem::path output_non_eval_deltas_path_dd =  output_dir / "non_eval_deltas_expression.dd";
+    // Create writer object to write files
+    writer writer{};
 
-    // Some other useful optional outputs: validation
-    std::filesystem::path output_walls = output_dir / "eval_walls_RK4.walls";
-    std::filesystem::path output_centers = output_dir / "eval_centers.dd";
+    // What to write
+    writer.set_dump_nominal_results(true, true);
+    // writer.set_dump_frames_results(true, true);
 
-    // Dump non evaluated deltas
-    tools::io::dace::dump_non_eval_deltas(deltas_engine.get(), output_non_eval_deltas_path_dd);
+    // Write files
+    writer.write_files(deltas_engine.get(), my_specs.output_dir);
 
-    // Dump evaluated deltas
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_eval_deltas_path_dd);
+    // Create post-processing object
+    FileProcessor fproc(writer.get_out_obj());
+    fproc.set_metrics(my_specs.initial_conditions.length_units);
 
-    // Dump eval points at the walls
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_walls, EVAL_TYPE::WALLS);
+    // Set UCFLAGS
+    fproc.set_ucflags(PYPLOT_TRANSLATION, PYPLOT_BANANA);
 
-    // Dump eval points at the center
-    tools::io::dace::dump_eval_deltas(deltas_engine.get(), output_centers, EVAL_TYPE::CENTER);
+    // Process files
+    fproc.process_files();
 
-    // Prepare arguments for python call
-    std::unordered_map<std::string, std::string> py_args = {
-            {"file", output_eval_deltas_path_dd},
-            {"plot_type", PYPLOT_TRANSLATION},
-            {"metrics", "m"},
-            {"centers", output_centers},
-            {"walls", output_walls},
-            {"silent", "false"}
-    };
+    // Print summary
+    std::fprintf(stdout, "%s\n", prop_summary.c_str());
 
-    // Draw plots
-    tools::io::plot_variables(PYPLOT_BANANA, py_args, false);
-
+    // TODO: Destroy here all the stuff to avoid mem-leaks
 }

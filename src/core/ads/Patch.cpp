@@ -40,7 +40,7 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v) : DACE::AlgebraicVector<D
     /*! Copy constructor to create a copy of any existing DAvector.
        \param[in] v DAvector to be copied into Patch DAvector
      */
-    history = std::vector<int>();
+    this->history = std::vector<int>();
 }
 
 Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s) : DACE::AlgebraicVector<DACE::DA>(v)
@@ -51,13 +51,22 @@ Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s
     history = s;
 }
 
-Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, double time) : DACE::AlgebraicVector<DACE::DA>(v)
+Patch::Patch(const DACE::AlgebraicVector<DACE::DA> &v, const SplittingHistory &s, const std::vector<double> &t,const std::vector<double> &nlis, ALGORITHM algorithm, double time, double nli, double time_split) : DACE::AlgebraicVector<DACE::DA>(v)
 {
     /*! Copy constructor to create a copy of any existing DAvector and SplittingHistory.
        \param[in] v DAvector and s SplittingHistory to be copied into Patch
      */
-    history = s;
-    t_ = time;
+    this->history = s;
+    this->times = t;
+    this->t_ = time;
+    this->nli = nli;
+    this->nlis = nlis;
+    this->t_split_ = time_split;
+    this->algorithm_ = algorithm;
+
+    // Set some constants
+    this->scaling = ALGORITHM::LOADS == this->algorithm_ ? 1.0/3.0 : 0.5;
+    this->center = ALGORITHM::LOADS == this->algorithm_ ? 2.0/3.0 : 0.5;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +94,7 @@ DACE::AlgebraicVector<DACE::DA> Patch::replay(DACE::AlgebraicVector<DACE::DA> ob
     AlgebraicVector<DA> obj: DAvector of initial Domain
     return: the function call the SplittingHistory replay*/
 
-    return history.replay(obj);
+    return history.replay(this->algorithm_, obj);
 }
 
 std::vector<double> Patch::getTruncationErrors()
@@ -122,6 +131,11 @@ std::vector<double> Patch::getTruncationErrors()
 
 unsigned int Patch::getSplittingDirection(const unsigned int comp)
 {
+    return Patch::getSplittingDirection(comp, DACE::AlgebraicVector<DACE::DA>(*this));
+}
+
+unsigned int Patch::getSplittingDirection(const unsigned int comp, DACE::AlgebraicVector<DACE::DA> algebraicVector)
+{
     /** Member function to calculate the splitting direction this constructor is allowed to call by means a Patch element
       * \param[in]: the hidden input is the Patch element.
       * int comp: is the component of function DA vector with maximum error
@@ -136,7 +150,7 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
     unsigned int n_max_ord = DACE::DA::getMaxOrder();
 
     // Get the patch which is supposed to have the maximum error
-    auto da2eval_max_err = (*this)[comp];
+    auto da2eval_max_err = algebraicVector[comp];
 
     // Iterate 'n_var' times
     for (unsigned int i = 0; i < n_var; ++i )
@@ -153,7 +167,7 @@ unsigned int Patch::getSplittingDirection(const unsigned int comp)
 }
 
 
-std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> obj )
+std::vector<Patch> Patch::split(int dir, DACE::AlgebraicVector<DACE::DA> obj)
 {
     /*
      * Member function to split the Patch \param[in] the hidden input is the 'Patch'
@@ -175,21 +189,61 @@ std::pair<Patch, Patch> Patch::split( int dir, DACE::AlgebraicVector<DACE::DA> o
         dir = Patch::getSplittingDirection(pos);
     }
 
-    std::pair<Patch, Patch> output;
+    std::vector<Patch> output(ALGORITHM::LOADS == this->algorithm_ ? 3 : 2);
     Patch temp = (*this);
 
     temp.history.push_back( -dir );
-    obj[dir-1] =  -0.5 + 0.5*DACE::DA(dir);
+    obj[dir-1] = -this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
-    output.first = temp;
-    temp.history.pop_back();
 
+    // Save time
+    temp.times.push_back(this->t_);
+    temp.nlis.push_back(this->nli);
+
+    // Make copy
+    output[0] = temp;
+
+    // Clear last position
+    temp.history.pop_back();
+    temp.times.pop_back();
+    temp.nlis.pop_back();
 
     temp.history.push_back( dir );
-    obj[dir-1] =  0.5 + 0.5*DACE::DA(dir);
+    obj[dir-1] = +this->center + this->scaling * DACE::DA(dir);
     temp = this -> eval(obj);
-    output.second = temp;
+
+    // Save time
+    temp.times.push_back(this->t_);
+    temp.nlis.push_back(this->nli);
+
+    // Make copy
+    output[1] = temp;
+
+    // Clear last position
     temp.history.pop_back();
+    temp.times.pop_back();
+    temp.nlis.pop_back();
+
+    // In case of having loads, input the scaled centered patch
+    if (ALGORITHM::LOADS == this->algorithm_)
+    {
+        // Set temporal patch
+        temp.history.push_back( dir * 100);
+        obj[dir-1] = 0.0 + scaling * DACE::DA(dir);
+        temp = this -> eval(obj);
+
+        // Save time
+        temp.times.push_back(this->t_);
+        temp.nlis.push_back(this->nli);
+
+        // Make copy
+        output[2] = temp;
+
+        // Clear last position
+        temp.history.pop_back();
+        temp.times.pop_back();
+        temp.nlis.pop_back();
+    }
 
     return output;
 }

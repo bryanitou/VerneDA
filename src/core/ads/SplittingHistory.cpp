@@ -8,7 +8,6 @@
 /********************************************************************************************/
 #include "SplittingHistory.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /*CONSTRUCTORS                                                                */
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +46,11 @@ SplittingHistory::SplittingHistory(const std::vector<int> &v, unsigned int first
         // Hence the +1.
 }
 
+template <typename T> int sgn(T val)
+{
+    return (T(0) < val) - (val < T(0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /*OVERLOAD OPERATORS                                                          */
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +80,7 @@ unsigned int SplittingHistory::count(unsigned int n)
     else {
         unsigned int c = 0;
         for ( int i = 0; i < this -> size(); ++i) {
-            if ( abs(this -> at(i)) == n ) { c += 1;}
+            if ( abs(this -> at(i)) == n ) { c += 1;} // TODO: FIX THIS... IT DOESN'T WORK WITH LOADS
     }
 
       return c;
@@ -84,29 +88,65 @@ unsigned int SplittingHistory::count(unsigned int n)
 }
 
 
-DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay(DACE::AlgebraicVector<DACE::DA> obj )
+DACE::AlgebraicVector<DACE::DA> SplittingHistory::replay( ALGORITHM algorithm, DACE::AlgebraicVector<DACE::DA> obj)
 {
     /*member function to replicate the box splitted by means the assigned splitting history
     INPUT param[in]: the splitting history vector is the hidden object of function
           AlgebraicVector<DA> obj: DAvector of initial Domain
     OUTPUT return the AlgebraicVector <DA> of box corresponding to splitting history
     */
+
+    // Create 'x' identity, hypercube of N dimension
     DACE::AlgebraicVector<DACE::DA> x = DACE::AlgebraicVector<DACE::DA>::identity();
+
+    // Get size of history vector
     const unsigned int size = this -> size();
 
-    for ( unsigned int i = 0; i < size; ++i) {
+    // Iterate through every splitting direction that this patch has been partitioned
+    for ( unsigned int i = 0; i < size; ++i)
+    {
+        // Get the direction in which it was split and if left or right or center
+        auto splitting_val = (*this)[i];
 
-        int n = abs(this -> at(i)) - 1;
-        x[n] = 0.5*(double)((*this)[i]/abs((*this)[i])) + 0.5*DACE::DA(n+1);
+        // Get the splitting direction
+        unsigned int dir = SplittingHistory::getdir(splitting_val);
+
+        // Get the splitting position
+        unsigned int n = dir - 1;
+
+        // Get the sign as double
+        auto sign = (double)(tools::math::sgn(splitting_val));
+
+        // Get the place
+        auto patch_place = SplittingHistory::get_splitting_place(splitting_val);
+
+        // Shifting
+        auto shift =
+                patch_place == SPLITTING_PLACE::MIDDLE ? 0.0 :
+                (algorithm == ALGORITHM::LOADS ? 2.0/3.0 : 0.5 ) * sign ;
+
+        // Shift and scale
+        x[n] = shift + (algorithm == ALGORITHM::LOADS ? 1.0/3.0 : 0.5 ) * DACE::DA(n+1);
+
+        // Compose
         obj = obj.eval(x);
-        x[n] = DACE::DA(n+1);
+
+        // Re-set identity to its initial value
+        x[n] = DACE::DA(dir);
     }
 
     return obj;
 }
 
+/**
+ *      int n = abs(this -> at(i)) - 1;
+        x[n] = 0.5*(double)((*this)[i]/abs((*this)[i])) + 0.5*DACE::DA(n+1);
+        obj = obj.eval(x);
+        x[n] = DACE::DA(n+1);
+ * @return
+ */
 
-std::vector<double> SplittingHistory::center()
+std::vector<double> SplittingHistory::center(ALGORITHM algorithm)
 {
     /*member function to compute the center of the box after the splitting represented by the splitting history vector
     INPUT param[in] the splitting history vector is the hidden object of function
@@ -117,7 +157,7 @@ std::vector<double> SplittingHistory::center()
     // Get number of variables
     const unsigned int var = DACE::DA::getMaxVariables();
 
-    // Check this size
+    // Check this size: splitting history: That is, the information on how this patch has been partitioned
     const unsigned int size =  this->size();
 
     // Auxiliary variable for the initial center and width
@@ -125,19 +165,36 @@ std::vector<double> SplittingHistory::center()
 
     for ( unsigned int i = 0; i < size; ++i)
     {
-        unsigned int n = abs((*this)[i]) - 1;
+        // Get the direction in which it was split and if left or right or center
+        auto splitting_val = (*this)[i];
 
-        // Before it has been evaluated the half of displacement
-        w[n] = 0.5*w[n];
+        // Get the splitting direction
+        unsigned int dir = SplittingHistory::getdir(splitting_val);
 
-        // Then the previous computation is added to the constant part
-        c[n] = c[n] + 0.5*((double)((*this)[i]/abs((*this)[i])))*std::fabs(w[n]);
+        // Get the splitting position
+        unsigned int n = dir - 1;
+
+        // Get the sign as double
+        auto sign = (double)(tools::math::sgn(splitting_val));
+
+        // Shift center // TODO: Make a choice here LOADS vs. ADS.
+        if (algorithm == ALGORITHM::LOADS)
+        {
+            c[n] = c[n] + ((SPLITTING_PLACE::MIDDLE == get_splitting_place(splitting_val)) ? 0.0 : 1.0/3.0 * sign * w[n]);
+        }
+        else
+        {
+            c[n] = c[n] + 0.5*0.5 * sign * w[n];
+        }
+
+        // Re-scale width
+        w[n] = (algorithm == ALGORITHM::LOADS ? 1.0/3.0 : 0.5 ) * w[n];
     }
 
       return c;
 }
 
-std::vector<double> SplittingHistory::width()
+std::vector<double> SplittingHistory::width(ALGORITHM algorithm)
 {
     /* member function to compute the width of the box after the splitting represented by the splitting history vector
     INPUT param[in] the splitting history vector is the hidden object of function
@@ -148,16 +205,20 @@ std::vector<double> SplittingHistory::width()
     const unsigned int size = this -> size();
     std::vector <double> w(var, 2.0);
 
-    for (unsigned int i = 0; i < size; ++i) {
-        unsigned int n = abs((*this)[i]) - 1;
-        w[n] = 0.5*std::fabs(w[n]);
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        // Get the direction
+        auto dir = SplittingHistory::getdir((*this)[i]);
+
+        // TODO: MAKE A CHOICE HERE
+        w[dir - 1] = (algorithm == ALGORITHM::LOADS ? 1.0/3.0 : 0.5 ) * std::fabs(w[dir -1]);
     }
 
     return w;
 }
 
 
-bool SplittingHistory::contain (std::vector<double> pt)
+bool SplittingHistory::contain(std::vector<double> pt, ALGORITHM algorithm)
 {
     /* member function to know if a point belong to an assigned box
     INPUT pt: vector conteining the point to check the belonging
@@ -179,8 +240,8 @@ bool SplittingHistory::contain (std::vector<double> pt)
     else
     {
         // Get the center and direction
-        auto c = SplittingHistory::center();
-        auto w = SplittingHistory::width();
+        auto c = SplittingHistory::center(algorithm);
+        auto w = SplittingHistory::width(algorithm);
 
         // Check the point is lying within the expected domain
         for(unsigned int i = 0; i < pt.size(); ++i)
@@ -202,4 +263,16 @@ bool SplittingHistory::contain (std::vector<double> pt)
 
     // Everything is alright
     return true;
+}
+
+SPLITTING_PLACE SplittingHistory::get_splitting_place(int val)
+{
+    // Get the direction in which it was splitted and if left or right or center
+    return val < 0 ? SPLITTING_PLACE::LEFT : val < 100 ? SPLITTING_PLACE::RIGHT : SPLITTING_PLACE::MIDDLE;
+}
+
+unsigned int SplittingHistory::getdir(int val)
+{
+    // Get the direction from the place
+    return SplittingHistory::get_splitting_place(val) == SPLITTING_PLACE::MIDDLE ? val/100 :  std::abs(val);
 }
