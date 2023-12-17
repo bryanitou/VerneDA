@@ -468,7 +468,7 @@ public:
         // Compute deltas
         deltas_engine->generate_deltas(DISTRIBUTION::GAUSSIAN, n_samples);
 
-        // Insert nominal delta
+      // Insert nominal delta, this is the center
         deltas_engine->insert_nominal(static_cast<int>(ini_state.size()));
 
         // Set super manifold in deltas engine

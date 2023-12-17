@@ -35,7 +35,7 @@ b = zeros(6, n_samples + 1, N);
 for i = 1:length(orbits_period_sec_vec)
     orbit_period_sec =  orbits_period_sec_vec(i);
     orbit_period_und = orbit_period_sec * 1 / scaling_time;
-    tf = orbit_period_und * 0.75;
+    tf = orbit_period_und;
     dt = 10 / scaling_time;
     t = [t0, tf, dt];
     
