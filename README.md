@@ -160,7 +160,7 @@ opengl save software
 Some links which the developer may find useful:
 - libstdc linking error: https://es.mathworks.com/matlabcentral/answers/1907290-how-to-manually-select-the-libstdc-library-to-use-to-resolve-a-version-glibcxx_-not-found
 - mex files examples: https://es.mathworks.com/help/matlab/matlab_external/c-mex-source-file.html#responsive_offcanvas
-
+- hardware assertion: https://es.mathworks.com/matlabcentral/answers/438354-matlab-crashes-after-the-assertion-could-not-initialize-glx-failed
 ## Programming guidelines
 
 TODO
