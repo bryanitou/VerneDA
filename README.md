@@ -132,23 +132,30 @@ TBD: Add description of each place.
 
 MEX files are used in order to call the C++ program from MATLAB. Hence, the C++ project can be used as a propagation engine, embedded in a GNC (Guidance, Navigation and Control) feedback loop, or other engineering purposes.
 
-Before launching MATLAB, some libraries have to be preload (libstdc and dacelib):
-TODO: Modularize this hard set path
-```shell
-export LD_PRELOAD=/lib/x86_64-linux-gnu/libstdc++.so.6 matlab
-export LD_PRELOAD=$LD_PRELOAD:/home/bryan/CLionProjects/ISAE/research_project/VerneDA/build/VerneDA-install-debug/lib/dace/lib/libdace.so matlab
-```
-
-
-From MATLAB, in order to build the MEX file:
+Before launching MATLAB, some libraries have to be preload (libstdc).
+For this reason, a very simple bash script has been written to load the libstdc library, the following command should be run in terminal:
 
 ```shell
-mex -setup c++
+bash scripts/matlab
 ```
 
-```shell
-mex -v CXXFLAGS='$CXXFLAGS -std=c++20' -Ibuild/VerneDA-install-debug/lib/dace/include/ -Isrc/core src/main/mex_vsod.cpp
+Don't hesitate to modify the `script/matlab` file since it was created as a convention for some developers who had saved matlab in that filesystem pattern.
+
+In MATLAB, in order to build the MEX file:
+
+1. Run `mex_build.m`
+2. Test the matlab files found in `src/main/matlab/example`
+
+### MATLAB in VM
+
+For some reason, matlab in VM tries to find hardware parameters such as the graphics card.
+This leads to a bug when executing (not compiling) the code, to avoid this, run in matlab's command line:
+
+```matlab
+opengl save software
 ```
+
+### MATLAB mex files
 
 Some links which the developer may find useful:
 - libstdc linking error: https://es.mathworks.com/matlabcentral/answers/1907290-how-to-manually-select-the-libstdc-library-to-use-to-resolve-a-version-glibcxx_-not-found
