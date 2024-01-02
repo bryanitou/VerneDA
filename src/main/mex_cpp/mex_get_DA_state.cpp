@@ -3,7 +3,7 @@
 
 
 // MEX thingy
-#include "mex.hpp"
+#include "mex_cpp.hpp"
 #include "mexAdapter.hpp"
 
 // DACE libraries
@@ -16,7 +16,7 @@
 #include "ads/SuperManifold.h"
 #include "delta.h"
 
-class MexFunction : public matlab::mex::Function {
+class MexFunction : public matlab::mex_cpp::Function {
 
 private:
     // Set some variables used in the functions
@@ -24,7 +24,7 @@ private:
     DACE::AlgebraicVector<DACE::DA> scv0;
 
 public:
-    void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override {
+    void operator()(matlab::mex_cpp::ArgumentList outputs, matlab::mex_cpp::ArgumentList inputs) override {
       try {
 
         // Check the health of the passed inputs
@@ -81,7 +81,7 @@ public:
       }
     }
 
-    void checkArguments(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) {
+    void checkArguments(matlab::mex_cpp::ArgumentList outputs, matlab::mex_cpp::ArgumentList inputs) {
       // Auxiliary variable
       std::string err2print;
       bool print_error = false;

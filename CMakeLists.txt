@@ -506,7 +506,7 @@ set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
 #===========================================
 if (BUILD_WITH_MATLAB)
     # MEX functions files
-    matlab_add_mex(NAME mex_vsaod SRC src/main/mex/mex_vsaod.cpp)
+    matlab_add_mex(NAME mex_vsaod SRC src/main/mex_cpp/mex_vsaod.cpp)
 
     set(LIBRARY_WRITER "mex_utils")
 
@@ -696,7 +696,7 @@ if (BUILD_WITH_MATLAB)
     #set(EXECUTABLE_NAME "mex_vsaod")
 #
     #add_executable(${EXECUTABLE_NAME}
-    #        src/main/mex/mex_vsaod.cpp
+    #        src/main/mex_cpp/mex_vsaod.cpp
     #)
 #
     ## add_dependencies(${EXECUTABLE_NAME}
@@ -723,7 +723,7 @@ if (BUILD_WITH_MATLAB)
     set(EXECUTABLE_NAME "mex_propagate_DA_vector")
 
     add_executable(${EXECUTABLE_NAME}
-            src/main/mex/mex_propagate_DA_state.cpp
+            src/main/mex_cpp/mex_propagate_DA_state.cpp
     )
 
     # add_dependencies(${EXECUTABLE_NAME}
