@@ -62,10 +62,10 @@ public:
             if (n_max == -1)
             {
               // Info
-              matlabPtr->feval(u"fprintf",
+              this->matlabPtr->feval(u"fprintf",
                                0,
                                std::vector<matlab::data::Array>(
-                                       {factory.createScalar("DA Simple propagation selected...\n")}));
+                                       {this->factory.createScalar("DA Simple propagation selected...\n")}));
 
               // Perform operation
               auto fin_state = propagate_orbit_get_final_DA(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
@@ -127,10 +127,10 @@ public:
 
 
                 // Show string
-                matlabPtr->feval(u"error",
+                this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
             }
         }
 
@@ -159,10 +159,10 @@ public:
 
 
                 // Show string
-                matlabPtr->feval(u"error",
+                this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
             }
         }
 
@@ -191,10 +191,10 @@ public:
                 err2print = tools::string::print2string("Input %d must be of type double", i + 1);
 
                 // Show error
-                matlabPtr->feval(u"error",
+                this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -226,10 +226,10 @@ public:
                 err2print = tools::string::print2string("Input %d must be of type int16", i + 1);
 
                 // Show error
-                matlabPtr->feval(u"error",
+                this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -260,10 +260,10 @@ public:
                 err2print = tools::string::print2string("Input %d must be of type MATLAB_STRING", i + 1);
 
                 // Show error
-                matlabPtr->feval(u"error",
+                this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -272,9 +272,9 @@ public:
 
         // Check number of outputs
         if (outputs.size() > 1) {
-            matlabPtr->feval(u"error",
+            this->matlabPtr->feval(u"error",
                              0,
-                             std::vector<matlab::data::Array>({factory.createScalar("Only one output is returned")}));
+                             std::vector<matlab::data::Array>({this->factory.createScalar("Only one output is returned")}));
         }
     }
 
@@ -338,7 +338,7 @@ public:
       fromUTF8(c_plus_plus_string, u16_String);
 
       // Return result
-      return factory.createArray<matlab::data::MATLABString>({1, 1},
+      return this->factory.createArray<matlab::data::MATLABString>({1, 1},
                                                              {matlab::data::MATLABString(u16_String.c_str()) });
     }
 
@@ -356,10 +356,10 @@ public:
                 auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*3 + j]);
 
                 // Show error
-                matlabPtr->feval(u"fprintf",
+                this->matlabPtr->feval(u"fprintf",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {factory.createScalar(err2print)}));
+                                         {this->factory.createScalar(err2print)}));
             }
         }
         // Return result
@@ -387,9 +387,9 @@ public:
 
     SuperManifold* propagate_orbit_loads_SUPER_MANIFOLD(const std::vector<double>& t, double& nli, int& n_max, PROBLEM prob, const double* inertia = nullptr, bool simple_DA_propagation = false)
     {
-      matlabPtr->feval(u"fprintf",
+      this->matlabPtr->feval(u"fprintf",
                        0,
-                       std::vector<matlab::data::Array>({factory.createScalar(scv0.toString())}));
+                       std::vector<matlab::data::Array>({this->factory.createScalar(scv0.toString())}));
 
       // Initial and final time and time step
       double const t0 = t[0];
@@ -431,10 +431,10 @@ public:
             auto err2print = tools::string::print2string("i: %d, j: %d --> %f\n", i, j, inertia3x3[i][j]);
 
             // Show error
-            matlabPtr->feval(u"fprintf",
+            this->matlabPtr->feval(u"fprintf",
                              0,
                              std::vector<matlab::data::Array>(
-                                     {factory.createScalar(err2print)}));
+                                     {this->factory.createScalar(err2print)}));
           }
         }
 
@@ -547,7 +547,7 @@ public:
 
       // Print summary
       // std::fprintf(stdout, "%s\n", prop_summary.c_str());
-      // matlabPtr->feval(u"fprintf", 0, std::vector<matlab::data::Array>({factory.createScalar(prop_summary)}));
+      // this->matlabPtr->feval(u"fprintf", 0, std::vector<matlab::data::Array>({this->factory.createScalar(prop_summary)}));
 
       // Get result
       return deltas_engine->get_eval_deltas_poly();
