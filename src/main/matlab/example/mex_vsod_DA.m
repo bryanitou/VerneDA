@@ -23,22 +23,22 @@ n_split_max = int16(-1);
 n_samples = int16(0);
 
 % Periods to simulate
-orbits_period_sec_vec = [1] * orbit_period_sec;
+orbits_period_sec_vec = [0.75] * orbit_period_sec;
 
 % Set time constraints
 t0 = 0.0;
 
 % Save the results here
 N = length(orbits_period_sec_vec);
-b = strings(N);
+b = strings(6, N);
 
 for i = 1:length(orbits_period_sec_vec)
     orbit_period_sec =  orbits_period_sec_vec(i);
     orbit_period_und = orbit_period_sec * 1 / scaling_time;
-    tf = orbit_period_und * 0.75;
+    tf = orbit_period_und;
     dt = 10 / scaling_time;
     t = [t0, tf, dt];
     
     % Test MEX executable
-    b(i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
+    b(:, i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
 end

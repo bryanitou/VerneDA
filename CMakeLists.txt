@@ -219,31 +219,72 @@ set(dacelib_path "${dacelib_dir}/${dacelib_file}")
 # FILES LOCATION
 ############################################
 # TODO: Modularize this hard path
+set(CMD_WHO whoami)
+execute_process(
+        COMMAND ${CMD_WHO}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE WHO
+        RESULT_VARIABLE ENV_RES
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 # Include MATLAB stuff (optional) for MEX files
 option(BUILD_WITH_MATLAB "Build with matlab libraries" OFF)
 MESSAGE( STATUS "BUILD_WITH_MATLAB: ${BUILD_WITH_MATLAB}")
 if (BUILD_WITH_MATLAB)
+
+    # Look for MATLAB
+    # Note: matlab should be in the global path (test whereis matlab in PATH for UNIX)
+    find_package(Matlab 23.2 EXACT REQUIRED)
+
+    IF( NOT Matlab_INCLUDE_DIRS )
+        MESSAGE( FATAL_ERROR "Please point the environment variable Matlab_INCLUDE_DIRS to the include directory of your MATLAB installation.")
+    ELSE ()
+        MESSAGE( STATUS "Matlab root dir: ${Matlab_ROOT_DIR}")
+        MESSAGE( STATUS "Matlab header files: ${Matlab_INCLUDE_DIRS}")
+        MESSAGE( STATUS "Matlab mex library: ${Matlab_MEX_LIBRARY}")
+        MESSAGE( STATUS "Matlab mex extension: ${Matlab_MEX_EXTENSION}")
+        MESSAGE( STATUS "Matlab mx library: ${Matlab_MX_LIBRARY}")
+    ENDIF()
+
     # TODO: Usually matlab is built in home: ATTENTION HERE!
-    set(CMD_WHO whoami)
-    execute_process(
-            COMMAND ${CMD_WHO}
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            OUTPUT_VARIABLE WHO
-            RESULT_VARIABLE ENV_RES
-            ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
     MESSAGE( STATUS "Including MATLAB MEX files includes from '${WHO}'s home...")
     include_directories(
             ${daceinclude}
             src/core
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
-            /home/${WHO}/MATLAB/R2023b/extern/include
-            /home/${WHO}/MATLAB/R2023b/simulink/include
+            # Matlab stuff
+            ${Matlab_INCLUDE_DIRS}
             )
 else ()
     include_directories(
             ${daceinclude}
             src/core
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
+endif ()
+
+if (BUILD_WITH_MATLAB)
+    #===========================================
+    # LIBRARY: MATLAB LIBRARIES (IMPORTED LIBRARY)
+    #===========================================
+    #MESSAGE( STATUS "Including MATLAB extern libraries in '${WHO}'s home...")
+    #set(MatlabEngine_path "/home/${WHO}/MATLAB/R2023b/extern/bin/glnxa64/libMatlabEngine.so" )
+    #set(MatlabDataArray_path "/home/${WHO}/MATLAB/R2023b/extern/bin/glnxa64/libMatlabDataArray.so" )
+#
+    #set(LIBRARY_MatlabEngine "MatlabEnginelib")
+#
+    #add_library(${LIBRARY_MatlabEngine} SHARED IMPORTED)
+#
+    ## Provide the full path to the library, so CMake knows where to find it
+    #set_target_properties(${LIBRARY_MatlabEngine} PROPERTIES
+    #        IMPORTED_LOCATION ${MatlabEngine_path})
+#
+    #set(LIBRARY_MatlabDataArray "MatlabDataArraylib")
+#
+    #add_library(${LIBRARY_MatlabDataArray} SHARED IMPORTED)
+#
+    ## Provide the full path to the library, so CMake knows where to find it
+    #set_target_properties(${LIBRARY_MatlabDataArray} PROPERTIES
+    #        IMPORTED_LOCATION ${MatlabDataArray_path})
 endif ()
 
 #===========================================
@@ -273,11 +314,6 @@ set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
         PUBLIC_HEADER "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/RSJparser.tcc"
         LINK_FLAGS "-Wl,-rpath,./")
 
-# TODO: INSTALLATION STILL NOT WORKING, should change the prefix of the PREFIX and make install the makefile
-# install(TARGETS rsjp
-#         LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp
-#         PUBLIC_HEADER DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
-#
 #===========================================
 # LIBRARY: VerneDA BASE
 #===========================================
@@ -320,7 +356,8 @@ set(LIBRARY_DATOOLS "datools")
 
 add_library(${LIBRARY_DATOOLS} SHARED
         src/core/tools/vo.cpp
-        src/core/tools/io_dace.cpp)
+        src/core/tools/io_dace.cpp
+        )
 
 add_dependencies(datools
         dacelib
@@ -464,6 +501,39 @@ set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
         COMPILE_FLAGS "-fPIC"
         LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
 
+#===========================================
+# LIBRARY: VerneDA MEX FILES and library for utils (mex_utils)
+#===========================================
+if (BUILD_WITH_MATLAB)
+    # MEX functions files
+    matlab_add_mex(NAME mex_vsaod SRC src/main/mex/mex_vsaod.cpp)
+
+    set(LIBRARY_WRITER "mex_utils")
+
+    add_library(${LIBRARY_WRITER} SHARED
+            src/core/tools/mex_aux.cpp)
+
+    add_dependencies(mex_utils
+            core
+    )
+
+    target_link_libraries(${LIBRARY_WRITER}
+            ${LIBRARY_CORE}
+            # ${LIBRARY_MatlabDataArray}
+            # ${LIBRARY_MatlabEngine}
+    )
+
+    set_target_properties(${LIBRARY_WRITER} PROPERTIES
+            COMPILE_FLAGS "-fPIC"
+            LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+    target_link_libraries(mex_vsaod
+                    base
+                    ads
+                    mex_utils
+            )
+
+endif ()
 ########################################################################################################################
 # EXECUTABLES: DACE mains
 ########################################################################################################################
@@ -623,10 +693,37 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 # EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
 ############################################
 if (BUILD_WITH_MATLAB)
-    set(EXECUTABLE_NAME "mex_vsaod")
+    #set(EXECUTABLE_NAME "mex_vsaod")
+#
+    #add_executable(${EXECUTABLE_NAME}
+    #        src/main/mex/mex_vsaod.cpp
+    #)
+#
+    ## add_dependencies(${EXECUTABLE_NAME}
+    ##                   dependency1
+    ##                   dependency2
+    ##                   ....
+    ##                   )
+#
+    #target_link_libraries(${EXECUTABLE_NAME}
+    #        base
+    #        ads
+    #        mex_utils
+    #)
+#
+    #set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+    #        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+    #        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+endif ()
+
+############################################
+# EXECUTABLES: DACE_VSOD (DACE VERY SIMPLE ORBIT DETERMINATION)
+############################################
+if (BUILD_WITH_MATLAB)
+    set(EXECUTABLE_NAME "mex_propagate_DA_vector")
 
     add_executable(${EXECUTABLE_NAME}
-            src/main/mex_vsaod.cpp
+            src/main/mex/mex_propagate_DA_state.cpp
     )
 
     # add_dependencies(${EXECUTABLE_NAME}

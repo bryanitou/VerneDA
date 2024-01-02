@@ -11,7 +11,7 @@ out
 cfg
 
 # Ignore MEX files
-mex
+mexa64
 
 # Ignore .asv files
 *.asv

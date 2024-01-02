@@ -1,6 +1,5 @@
 /**
 * Main to be embedded in matlab
-*/
 
 // MEX thingy
 #include "mex.hpp"
@@ -38,50 +37,16 @@ public:
             checkArguments(outputs, inputs);
 
             // Extract inputs
-            auto ini_state = convertMatlabTypedArray2NormalVector(inputs[0]);
-            auto stddev = convertMatlabTypedArray2NormalVector(inputs[1]);
-            auto t = convertMatlabTypedArray2NormalVector(inputs[2]);
-            auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
-            auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
-            auto n_max = convertMatlabInt2NormalInt(inputs[5]);
-            auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
-            auto str_alg = convertMatlabStr2NormalStr(inputs[7]);
-            auto str_enum =
-                    str_alg == "tbp" ? PROBLEM::TWO_BODY :
-                    str_alg == "ftmp" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
+            auto DA_vector_str = convertMatlabStr2NormalStr(inputs[0]);
 
-            double* inertia = nullptr;
+            // Convert DA string vector to DA Algebraic vector
+            auto DA_algebraic = DACE::write()
 
-            // If FTMP
-            if (str_enum == PROBLEM::FREE_TORQUE_MOTION)
-            {
-                inertia = convertMatlab3x3Array2Normal3x3Array(inputs[8]);
-            }
+            // Perform operation
+            auto fin_state = propagate_orbit_get_final_DA(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
 
-            // Simple DA propagation
-            if (n_max == -1)
-            {
-              // Info
-              matlabPtr->feval(u"fprintf",
-                               0,
-                               std::vector<matlab::data::Array>(
-                                       {factory.createScalar("DA Simple propagation selected...\n")}));
-
-              // Perform operation
-              auto fin_state = propagate_orbit_get_final_DA(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
-
-              // Convert all states to matlab array
-              outputs[0] = convertNormalStr2MatlabStr(fin_state);
-            }
-            else // LOADS propagation
-            {
-              // Perform operation
-              auto fin_state = propagate_orbit_loads(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
-
-              // Convert all states to matlab array
-              outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
-            }
-
+            // Convert all states to matlab array
+            outputs[0] = convertNormalStr2MatlabStr(fin_state);
 
         }
         catch (int)
@@ -553,3 +518,4 @@ public:
       return deltas_engine->get_eval_deltas_poly();
     }
 };
+ */

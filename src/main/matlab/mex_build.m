@@ -9,12 +9,12 @@ verne_lib_dir = 'build/VerneDA-install-debug/lib';
 verne_include_arg = '-Isrc/core';
 verne_lib_dir_arg =  strcat('-L', verne_lib_dir);
 mex_file_cpp = 'mex_vsaod.cpp';
-mex_file_path_cpp = strcat('src/main/', mex_file_cpp);
+mex_file_path_cpp = strcat('src/main/mex/', mex_file_cpp);
 CXXFLAGS = 'CXXFLAGS=$CXXFLAGS -std=c++20 -Wall';
 LDFLAGS = strcat('LDFLAGS=$LDFLAGS -Wl,-rpath,', dace_lib_dir,',-rpath,', verne_lib_dir);
 CXX = 'CXX=/usr/bin/g++';
-outdir = 'mex';
-mex_file_path_mexa64 = strrep(strcat(outdir, "/", mex_file_cpp), '.cpp','.mexa64');
+outdir = 'mexa64';
+mex_file_path_mexa64 = strrep(strcat(outdir, "/", mex_file_cpp), '.cpp', '.mexa64');
 
 % Make dir and clean files if existing
 if ~exist(outdir, 'dir')
@@ -29,4 +29,4 @@ end
 
 
 % Build mex file
-mex('-v', dace_include_arg, dace_lib_dir_arg, '-ldace', verne_include_arg, verne_lib_dir_arg, '-lcore', '-lads', '-ltools', mex_file_path_cpp, '-outdir', outdir, CXX, CXXFLAGS, LDFLAGS)
+mex('-v', dace_include_arg, dace_lib_dir_arg, '-ldace', verne_include_arg, verne_lib_dir_arg, '-lcore', '-lads', '-ltools', '-lmex_utils', mex_file_path_cpp, '-outdir', outdir, CXX, CXXFLAGS, LDFLAGS)
