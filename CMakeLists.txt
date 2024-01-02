@@ -506,7 +506,7 @@ set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
 #===========================================
 if (BUILD_WITH_MATLAB)
     # MEX functions files
-    matlab_add_mex(NAME mex_vsaod SRC src/main/mex_vsaod.cpp)
+    matlab_add_mex(NAME mex_vsaod SRC src/main/mex_cpp/mex_vsaod.cpp)
 
     target_link_libraries(mex_vsaod
             base
