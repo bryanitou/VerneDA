@@ -315,6 +315,21 @@ set_target_properties(${LIBRARY_RSJP_LIB} PROPERTIES
         LINK_FLAGS "-Wl,-rpath,./")
 
 #===========================================
+# LIBRARY: VerneDA MEX_AUX
+#===========================================
+set(LIBRARY_MEX_AUX "mex_aux")
+
+add_library(${LIBRARY_MEX_AUX} SHARED
+        src/core/tools/mex_aux.cpp)
+
+target_link_libraries(${LIBRARY_MEX_AUX}
+        ${Matlab_MEX_LIBRARY})
+
+set_target_properties(${LIBRARY_MEX_AUX} PROPERTIES
+        COMPILE_FLAGS "-fPIC"
+        LINK_FLAGS "-Wl,-rpath,./") # To use relative paths in shared libs
+
+#===========================================
 # LIBRARY: VerneDA BASE
 #===========================================
 add_library(base SHARED
@@ -511,6 +526,7 @@ if (BUILD_WITH_MATLAB)
     target_link_libraries(mex_vsaod
             base
             ads
+            mex_aux
     )
 
 endif ()

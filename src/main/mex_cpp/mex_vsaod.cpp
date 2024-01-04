@@ -6,6 +6,9 @@
 #include "mex.hpp"
 #include "mexAdapter.hpp"
 
+// MEX aux library
+#include "tools/mex_aux.h"
+
 // DACE libraries
 #include "dace/dace.h"
 
@@ -38,9 +41,9 @@ public:
             checkArguments(outputs, inputs);
 
             // Extract inputs
-            auto ini_state = convertMatlabTypedArray2NormalVector(inputs[0]);
-            auto stddev = convertMatlabTypedArray2NormalVector(inputs[1]);
-            auto t = convertMatlabTypedArray2NormalVector(inputs[2]);
+            auto ini_state = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
+            auto stddev = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
+            auto t = mex_aux::convertMatlabTypedArray2NormalVector(inputs[2]);
             auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
             auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
             auto n_max = convertMatlabInt2NormalInt(inputs[5]);
@@ -276,23 +279,6 @@ public:
                              0,
                              std::vector<matlab::data::Array>({this->factory.createScalar("Only one output is returned")}));
         }
-    }
-
-
-    static std::vector<double> convertMatlabTypedArray2NormalVector(const matlab::data::TypedArray<double>& array2convert)
-    {
-        // Set result
-        // TODO: std::vector<double> result(array2convert.begin(), array2convert.end());
-        std::vector<double> result;
-
-        // Pass to vector
-        for (auto &in : array2convert)
-        {
-            result.push_back(in);
-        }
-
-        // Return result
-        return result;
     }
 
     static double convertMatlabDouble2NormalDouble(const matlab::data::TypedArray<double>& double2convert)
