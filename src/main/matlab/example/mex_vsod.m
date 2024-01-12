@@ -2,6 +2,13 @@
 close all;
 clear all;
 
+ctrl = mps.cache.control('myRedisConnection','Redis','Port',4519);
+start(ctrl)
+c = mps.cache.connect('myCache', 'Connection', 'myRedisConnection');
+put(c,'keyOne',10,'keyTwo',20,'keyThree',30,'keyFour',[400 500],'keyFive',magic(5))
+tt = table(keys(c), get(c,keys(c))','VariableNames',{'Keys','Values'})
+n = clear(c);
+
 % Orbit Period
 orbit_period_sec = 15361.68181049502; % seconds
 
@@ -23,7 +30,7 @@ n_split_max = int16(10);
 n_samples = int16(10000);
 
 % Periods to simulate
-orbits_period_sec_vec = [1] * orbit_period_sec;
+orbits_period_sec_vec = [0.25] * orbit_period_sec;
 
 % Set time constraints
 t0 = 0.0;

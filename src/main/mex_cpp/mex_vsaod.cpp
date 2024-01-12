@@ -26,7 +26,7 @@ private:
     std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
 
     // Get array factory
-    matlab::data::ArrayFactory factory;
+    std::shared_ptr<matlab::data::ArrayFactory> factoryPtr;
 
     // Set some variables used in the functions
     std::vector<double> betas;
@@ -37,6 +37,9 @@ public:
     {
         try
         {
+            // Set factory
+            this->factoryPtr = std::make_shared<matlab::data::ArrayFactory>();
+
             // Check the health of the passed inputs
             checkArguments(outputs, inputs);
 
@@ -44,11 +47,11 @@ public:
             auto ini_state = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
             auto stddev = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
             auto t = mex_aux::convertMatlabTypedArray2NormalVector(inputs[2]);
-            auto ci = convertMatlabDouble2NormalDouble(inputs[3]);
-            auto nli = convertMatlabDouble2NormalDouble(inputs[4]);
-            auto n_max = convertMatlabInt2NormalInt(inputs[5]);
-            auto n_samples = convertMatlabInt2NormalInt(inputs[6]);
-            auto str_alg = convertMatlabStr2NormalStr(inputs[7]);
+            auto ci = mex_aux::convertMatlabDouble2NormalDouble(inputs[3]);
+            auto nli = mex_aux::convertMatlabDouble2NormalDouble(inputs[4]);
+            auto n_max = mex_aux::convertMatlabInt2NormalInt(inputs[5]);
+            auto n_samples = mex_aux::convertMatlabInt2NormalInt(inputs[6]);
+            auto str_alg = mex_aux::convertMatlabStr2NormalStr(inputs[7]);
             auto str_enum =
                     str_alg == "tbp" ? PROBLEM::TWO_BODY :
                     str_alg == "ftmp" ? PROBLEM::FREE_TORQUE_MOTION : PROBLEM::NA;
@@ -58,7 +61,7 @@ public:
             // If FTMP
             if (str_enum == PROBLEM::FREE_TORQUE_MOTION)
             {
-                inertia = convertMatlab3x3Array2Normal3x3Array(inputs[8]);
+                inertia = this->convertMatlab3x3Array2Normal3x3Array(inputs[8]);
             }
 
             // Simple DA propagation
@@ -68,13 +71,13 @@ public:
               this->matlabPtr->feval(u"fprintf",
                                0,
                                std::vector<matlab::data::Array>(
-                                       {this->factory.createScalar("DA Simple propagation selected...\n")}));
+                                       {this->factoryPtr->createScalar("DA Simple propagation selected...\n")}));
 
               // Perform operation
               auto fin_state = propagate_orbit_get_final_DA(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
 
               // Convert all states to matlab array
-              outputs[0] = convertNormalStr2MatlabStr(fin_state);
+              outputs[0] = this->convertNormalStr2MatlabStr(fin_state);
             }
             else // LOADS propagation
             {
@@ -82,7 +85,7 @@ public:
               auto fin_state = propagate_orbit_loads(ini_state, stddev, t, ci, nli, n_max, n_samples, str_enum, inertia);
 
               // Convert all states to matlab array
-              outputs[0] = convertNormalVector2MatlabTypedArray(*fin_state);
+              outputs[0] = this->convertNormalVector2MatlabTypedArray(*fin_state);
             }
 
 
@@ -91,6 +94,59 @@ public:
         {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");
         }
+    }
+
+    matlab::data::TypedArray<double> convertNormalVector2MatlabTypedArray(const std::vector<DACE::AlgebraicVector<double>>& final_state)
+    {
+        // Set result
+        matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>({final_state[0].size(), final_state.size()});
+
+        // Iterate and assign
+        for (int i = 0; i < final_state.size(); i++)
+        {
+            for (int j = 0; j < final_state[j].size(); j++)
+            {
+                result[j][i] = final_state[i][j];
+            }
+        }
+
+        // Return result
+        return result;
+    }
+
+    double* convertMatlab3x3Array2Normal3x3Array(const matlab::data::TypedArray<double>& arr2convert)
+    {
+        auto* result = (double*) malloc(sizeof (double ) * 3 * 3);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result[i*3 + j] = arr2convert[i][j];
+
+                // Prepare string
+                auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*3 + j]);
+
+                // Show error
+                this->matlabPtr->feval(u"fprintf",
+                                       0,
+                                       std::vector<matlab::data::Array>(
+                                               {this->factoryPtr->createScalar(err2print)}));
+            }
+        }
+        // Return result
+        return result;
+    }
+
+    matlab::data::TypedArray<matlab::data::MATLABString> convertNormalStr2MatlabStr(std::string & c_plus_plus_string)
+    {
+        std::u16string u16_String{};
+
+        mex_aux::fromUTF8(c_plus_plus_string, u16_String);
+
+        // Return result
+        return this->factoryPtr->createArray<matlab::data::MATLABString>({1, 1},
+                                                                         {matlab::data::MATLABString(u16_String.c_str()) });
     }
 
     void checkArguments(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) {
@@ -133,7 +189,7 @@ public:
                 this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
+                                         {this->factoryPtr->createScalar(err2print)}));
             }
         }
 
@@ -165,7 +221,7 @@ public:
                 this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
+                                         {this->factoryPtr->createScalar(err2print)}));
             }
         }
 
@@ -197,7 +253,7 @@ public:
                 this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
+                                         {this->factoryPtr->createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -232,7 +288,7 @@ public:
                 this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
+                                         {this->factoryPtr->createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -266,7 +322,7 @@ public:
                 this->matlabPtr->feval(u"error",
                                  0,
                                  std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
+                                         {this->factoryPtr->createScalar(err2print)}));
 
                 // Reset print error
                 print_error = false;
@@ -277,105 +333,15 @@ public:
         if (outputs.size() > 1) {
             this->matlabPtr->feval(u"error",
                              0,
-                             std::vector<matlab::data::Array>({this->factory.createScalar("Only one output is returned")}));
+                             std::vector<matlab::data::Array>({this->factoryPtr->createScalar("Only one output is returned")}));
         }
-    }
-
-    static double convertMatlabDouble2NormalDouble(const matlab::data::TypedArray<double>& double2convert)
-    {
-        // Return result
-        return double2convert[0];
-    }
-
-    static int convertMatlabInt2NormalInt(const matlab::data::TypedArray<int_least16_t >& int2convert)
-    {
-        // Return result
-        return int2convert[0];
-    }
-
-    static std::string convertMatlabStr2NormalStr(const matlab::data::TypedArray<matlab::data::MATLABString>& str2convert)
-    {
-        // Return result
-        return std::string(str2convert[0]);
-    }
-
-    template <typename T>
-    std::string toUTF8(const  std::basic_string<T,  std::char_traits<T>,  std::allocator<T>>& source)
-    {
-      std::string result;
-
-      std::wstring_convert< std::codecvt_utf8_utf16<T>, T> convertor;
-      result = convertor.to_bytes(source);
-
-      return result;
-    }
-
-    template <typename T>
-    void fromUTF8(const std::string& source, std::basic_string<T,std::char_traits<T>, std::allocator<T>>& result)
-    {
-      std::wstring_convert<std::codecvt_utf8_utf16<T>, T> convertor;
-      result = convertor.from_bytes(source);
-    }
-
-    matlab::data::TypedArray<matlab::data::MATLABString> convertNormalStr2MatlabStr(std::string & c_plus_plus_string)
-    {
-      std::u16string u16_String{};
-
-      fromUTF8(c_plus_plus_string, u16_String);
-
-      // Return result
-      return this->factory.createArray<matlab::data::MATLABString>({1, 1},
-                                                             {matlab::data::MATLABString(u16_String.c_str()) });
-    }
-
-    double* convertMatlab3x3Array2Normal3x3Array(const matlab::data::TypedArray<double>& arr2convert)
-    {
-        double* result = (double*) malloc(sizeof (double ) * 3 * 3);
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < 3; j++)
-            {
-                result[i*3 + j] = arr2convert[i][j];
-
-                // Prepare string
-                auto err2print = tools::string::print2string("i: %d, j: %d, i*3 + j: %d --> %f\n", i, j, i*3 + j, result[i*3 + j]);
-
-                // Show error
-                this->matlabPtr->feval(u"fprintf",
-                                 0,
-                                 std::vector<matlab::data::Array>(
-                                         {this->factory.createScalar(err2print)}));
-            }
-        }
-        // Return result
-        return result;
-    }
-
-
-    matlab::data::TypedArray<double> convertNormalVector2MatlabTypedArray(const dace_array& final_state)
-    {
-        // Set result
-        matlab::data::TypedArray<double> result = this->factory.createArray<double>({final_state[0].size(), final_state.size()});
-
-        // Iterate and assign
-        for (int i = 0; i < final_state.size(); i++)
-        {
-            for (int j = 0; j < final_state[j].size(); j++)
-            {
-                result[j][i] = final_state[i][j];
-            }
-        }
-
-        // Return result
-        return result;
     }
 
     SuperManifold* propagate_orbit_loads_SUPER_MANIFOLD(const std::vector<double>& t, double& nli, int& n_max, PROBLEM prob, const double* inertia = nullptr, bool simple_DA_propagation = false)
     {
       this->matlabPtr->feval(u"fprintf",
                        0,
-                       std::vector<matlab::data::Array>({this->factory.createScalar(scv0.toString())}));
+                       std::vector<matlab::data::Array>({this->factoryPtr->createScalar(scv0.toString())}));
 
       // Initial and final time and time step
       double const t0 = t[0];
@@ -420,7 +386,7 @@ public:
             this->matlabPtr->feval(u"fprintf",
                              0,
                              std::vector<matlab::data::Array>(
-                                     {this->factory.createScalar(err2print)}));
+                                     {this->factoryPtr->createScalar(err2print)}));
           }
         }
 
@@ -463,13 +429,11 @@ public:
 
       // Initialize beta
       this->betas = std::vector<double>(stddev.size());
-      for (int i = 0; i < stddev.size(); i++)
-        betas[i] = ci * stddev[i];
+      for (int i = 0; i < stddev.size(); i++) { betas[i] = ci * stddev[i]; }
 
       // Initialize state DA vector
       this->scv0 = DACE::AlgebraicVector<DACE::DA>(ini_state.size());
-      for (int i = 0; i < ini_state.size(); i++)
-        scv0[i] = ini_state[i] + betas[i] * DACE::DA(i + 1);
+      for (int i = 0; i < ini_state.size(); i++) { scv0[i] = ini_state[i] + betas[i] * DACE::DA(i + 1); }
     }
 
     std::string propagate_orbit_get_final_DA(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max, int& n_samples, PROBLEM prob, const double* inertia = nullptr)
@@ -483,6 +447,7 @@ public:
       // Return result
       return super_manifold->current_->front().toString();
     }
+
 
     std::shared_ptr<dace_array> propagate_orbit_loads(const std::vector<double>& ini_state, const std::vector<double>& stddev, const std::vector<double>& t, double& ci, double& nli, int& n_max, int& n_samples, PROBLEM prob, const double* inertia = nullptr)
     {

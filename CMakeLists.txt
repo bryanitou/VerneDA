@@ -323,7 +323,9 @@ add_library(${LIBRARY_MEX_AUX} SHARED
         src/core/tools/mex_aux.cpp)
 
 target_link_libraries(${LIBRARY_MEX_AUX}
-        ${Matlab_MEX_LIBRARY})
+        ${Matlab_MEX_LIBRARY}
+        ${Matlab_MX_LIBRARY}
+        ${LIBRARY_DACE})
 
 set_target_properties(${LIBRARY_MEX_AUX} PROPERTIES
         COMPILE_FLAGS "-fPIC"
@@ -521,15 +523,11 @@ set_target_properties(${LIBRARY_FILE_PROCESSOR} PROPERTIES
 #===========================================
 if (BUILD_WITH_MATLAB)
     # MEX functions files
-    matlab_add_mex(NAME mex_vsaod SRC src/main/mex_cpp/mex_vsaod.cpp)
-
-    target_link_libraries(mex_vsaod
-            base
-            ads
-            mex_aux
-    )
-
+    matlab_add_mex(NAME mex_vsaod
+            SRC src/main/mex_cpp/mex_vsaod.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 endif ()
+
 ########################################################################################################################
 # EXECUTABLES: DACE mains
 ########################################################################################################################
