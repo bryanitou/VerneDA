@@ -218,15 +218,6 @@ set(dacelib_path "${dacelib_dir}/${dacelib_file}")
 ############################################
 # FILES LOCATION
 ############################################
-# TODO: Modularize this hard path
-set(CMD_WHO whoami)
-execute_process(
-        COMMAND ${CMD_WHO}
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        OUTPUT_VARIABLE WHO
-        RESULT_VARIABLE ENV_RES
-        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-
 # Include MATLAB stuff (optional) for MEX files
 option(BUILD_WITH_MATLAB "Build with matlab libraries" OFF)
 MESSAGE( STATUS "BUILD_WITH_MATLAB: ${BUILD_WITH_MATLAB}")
@@ -234,9 +225,9 @@ if (BUILD_WITH_MATLAB)
 
     # Look for MATLAB
     # Note: matlab should be in the global path (test whereis matlab in PATH for UNIX)
-    find_package(Matlab 23.2 EXACT REQUIRED)
+    find_package(Matlab 9.14 EXACT REQUIRED)
 
-    IF( NOT Matlab_INCLUDE_DIRS )
+    IF( NOT Matlab_FOUND )
         MESSAGE( FATAL_ERROR "Please point the environment variable Matlab_INCLUDE_DIRS to the include directory of your MATLAB installation.")
     ELSE ()
         MESSAGE( STATUS "Matlab root dir: ${Matlab_ROOT_DIR}")
@@ -246,45 +237,17 @@ if (BUILD_WITH_MATLAB)
         MESSAGE( STATUS "Matlab mx library: ${Matlab_MX_LIBRARY}")
     ENDIF()
 
-    # TODO: Usually matlab is built in home: ATTENTION HERE!
-    MESSAGE( STATUS "Including MATLAB MEX files includes from '${WHO}'s home...")
     include_directories(
             ${daceinclude}
             src/core
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include
-            # Matlab stuff
-            ${Matlab_INCLUDE_DIRS}
+            ${Matlab_INCLUDE_DIRS} # Matlab stuff
     )
 else ()
     include_directories(
             ${daceinclude}
             src/core
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}RSJp/include)
-endif ()
-
-if (BUILD_WITH_MATLAB)
-    #===========================================
-    # LIBRARY: MATLAB LIBRARIES (IMPORTED LIBRARY)
-    #===========================================
-    #MESSAGE( STATUS "Including MATLAB extern libraries in '${WHO}'s home...")
-    #set(MatlabEngine_path "/home/${WHO}/MATLAB/R2023b/extern/bin/glnxa64/libMatlabEngine.so" )
-    #set(MatlabDataArray_path "/home/${WHO}/MATLAB/R2023b/extern/bin/glnxa64/libMatlabDataArray.so" )
-    #
-    #set(LIBRARY_MatlabEngine "MatlabEnginelib")
-    #
-    #add_library(${LIBRARY_MatlabEngine} SHARED IMPORTED)
-    #
-    ## Provide the full path to the library, so CMake knows where to find it
-    #set_target_properties(${LIBRARY_MatlabEngine} PROPERTIES
-    #        IMPORTED_LOCATION ${MatlabEngine_path})
-    #
-    #set(LIBRARY_MatlabDataArray "MatlabDataArraylib")
-    #
-    #add_library(${LIBRARY_MatlabDataArray} SHARED IMPORTED)
-    #
-    ## Provide the full path to the library, so CMake knows where to find it
-    #set_target_properties(${LIBRARY_MatlabDataArray} PROPERTIES
-    #        IMPORTED_LOCATION ${MatlabDataArray_path})
 endif ()
 
 #===========================================
@@ -525,6 +488,16 @@ if (BUILD_WITH_MATLAB)
     # MEX functions files
     matlab_add_mex(NAME mex_vsaod
             SRC src/main/mex_cpp/mex_vsaod.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_state
+            SRC src/main/mex_cpp/mex_get_DA_state.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_propagate_DA_state
+            SRC src/main/mex_cpp/mex_propagate_DA_state.cpp
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 endif ()
 
