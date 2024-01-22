@@ -48,7 +48,7 @@ problems::~problems() {
 }
 
 
-DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t ) const
+DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t, const std::unordered_set<std::string>& perturbations) const
 {
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> pos(3), res(6);
@@ -67,6 +67,73 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[3] = -this->mu_*pos[0]/(r*r*r); // Vx_dot
     res[4] = -this->mu_*pos[1]/(r*r*r); // Vy_dot
     res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
+
+    // Compute next Vx, Vy, Vz state from the current position
+    if (perturbations.find("J2") != perturbations.end()) {
+        // Include J2 perturbation (example, you'll need to define J2 coefficient)
+        // Update the following lines accordingly
+        res[3] += /* J2 perturbation for Vx */;
+        res[4] += /* J2 perturbation for Vy */;
+        res[5] += /* J2 perturbation for Vz */;
+    } else {
+        std::cout << "Warning: 'J2' perturbation not found." << std::endl;
+    }
+
+    if (perturbations.find("drag") != perturbations.end()) {
+        // Include atmospheric drag perturbation
+
+        // Check if the input object is valid
+        if (!input_obj) {
+            std::cerr << "Error: Invalid 'json_input' object." << std::endl;
+        } else {
+            double Cd = input_obj->drag_coefficient;
+            double A = input_obj->cross_sectional_area;
+            double m = input_obj->mass;
+            double rho = input_obj->atmospheric_density;
+            double V = pos.vnorm(); // Velocity magnitude
+
+            // Ensure non-zero values to avoid division by zero
+            if (Cd == 0.0 || A == 0.0 || m == 0.0 || V == 0.0) {
+                std::cerr << "Error: Invalid parameters for atmospheric drag." << std::endl;
+            } else {
+                // Calculate atmospheric drag acceleration
+                double atmospheric_drag_acceleration = -0.5*rho*Cd*A*V**2/m;
+
+                // Add the acceleration due to atmospheric drag to the velocity components
+                res[3] += atmospheric_drag_acceleration; // Vx_dot
+                res[4] += atmospheric_drag_acceleration; // Vy_dot
+                res[5] += atmospheric_drag_acceleration; // Vz_dot
+            }
+        }
+    } else {
+        std::cout << "Warning: 'drag' perturbation not found." << std::endl;
+    }
+
+    if (perturbations.find("solar_radiation_pressure") != perturbations.end()) {
+        // Check if the input object has been parsed correctly
+        if (!input_obj) {
+            std::cerr << "Error: Invalid 'json_input' object." << std::endl;
+        } else {
+            double r = input_obj->reflection_factor;
+            double A = input_obj->cross_sectional_area;
+            double m = input_obj->mass;
+
+            // Ensure non-zero values to avoid division by zero
+            if (r == 0.0 || A == 0.0 || m == 0.0) {
+                std::cerr << "Error: Invalid parameters for solar radiation pressure." << std::endl;
+            } else {
+                // Calculate solar radiation pressure acceleration
+                double solar_radiation_pressure_acceleration = 4.5e-6*(1+r)*A/m;
+
+                // Add the acceleration due to solar radiation pressure to the velocity components
+                res[3] += solar_radiation_pressure_acceleration; // Vx_dot
+                res[4] += solar_radiation_pressure_acceleration; // Vy_dot
+                res[5] += solar_radiation_pressure_acceleration; // Vz_dot
+            }
+        }
+    } else {
+        std::cout << "Warning: 'solar_radiation_pressure' perturbation not found." << std::endl;
+    }
 
     // Return result
     return res;

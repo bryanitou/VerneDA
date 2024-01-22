@@ -14,52 +14,28 @@
     },
     "initial_conditions": {
       "length_units": "rad",
-      "mean": [
-        0.0,
-        0.0,
-        0.0,
-        0.01,
-        0.0,
-        0.0
-      ],
+      "mean": [0.0, 0.0, 0.0, 0.01, 0.0, 0.0],
       "confidence_interval": 1,
-      "standard_deviation": [
-        0.03,
-        0.03,
-        0.03,
-        0.0,
-        0.0,
-        0.0
-      ],
+      "standard_deviation": [0.03, 0.03, 0.03, 0.0, 0.0, 0.0],
       "inertia": [
         [2040.0, 130.0, 25.0],
         [130.0, 1670.0, -55.0],
         [25.0, -55.0, 2570.0]
-      ]
+      ],
+      "reflection_factor": 0.5,
+      "cross_sectional_area": 6,
+      "mass": 1000.0,
+      "drag_coefficient": 3.5,
+      "atmospheric_density": 1.11164,
     },
     "ads": {
       "length_units": "rad",
-      "tolerance": [
-        1.0E-10,
-        1.0E-10,
-        1.0E-10,
-        1.0E-8,
-        1.0E-8,
-        1.0E-8
-      ],
-      "max_split": [
-        10,
-        10,
-        10,
-        10,
-        10,
-        10
-      ]
+      "tolerance": [1.0E-10, 1.0E-10, 1.0E-10, 1.0E-8, 1.0E-8, 1.0E-8],
+      "max_split": [10, 10, 10, 10, 10, 10]
     }
   },
 
-  "output":
-  {
+  "output": {
     "directory": "./out/2023-2024/attitude/ads/RK4"
   }
 }
