@@ -33,8 +33,7 @@ public:
             // mex_aux::checkArguments(outputs, inputs, MEX_FILE_TYPE::GET_DA);
             // Extract inputs -----------
             auto ini_state = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
-            auto stddev = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
-            auto ci = mex_aux::convertMatlabDouble2NormalDouble(inputs[2]);
+            auto betas = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
 
             // Perform logic here -----------
             // Initialize DACE with 6 variables
@@ -42,7 +41,8 @@ public:
 
             // Initialize state DA vector
             auto scv0 = DACE::AlgebraicVector<DACE::DA>(ini_state.size());
-            for (int i = 0; i < ini_state.size(); i++) { scv0[i] = ini_state[i] + ci * stddev[i] * DACE::DA(i + 1); }
+            for (int i = 0; i < ini_state.size(); i++) { scv0[i] = ini_state[i] + betas[i] * DACE::DA(i + 1); }
+
             // Return DA vector as str
             outputs[0] = this->convertDAVector2MatlabStr(scv0);
         }
