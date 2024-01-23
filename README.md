@@ -132,67 +132,76 @@ TBD: Add description of each place.
 
 MEX files are used in order to call the C++ program from MATLAB. Hence, the C++ project can be used as a propagation engine, embedded in a GNC (Guidance, Navigation and Control) feedback loop, or other engineering purposes.
 
-Before launching MATLAB, some libraries have to be preload (libstdc and dacelib):
-TODO: Modularize this hard set path
-```shell
-export LD_PRELOAD=/lib/x86_64-linux-gnu/libstdc++.so.6 matlab
-export LD_PRELOAD=$LD_PRELOAD:/home/bryan/CLionProjects/ISAE/research_project/VerneDA/build/VerneDA-install-debug/lib/dace/lib/libdace.so matlab
-```
-
-
-From MATLAB, in order to build the MEX file:
+Before launching MATLAB, some libraries have to be preload (libstdc).
+For this reason, a very simple bash script has been written to load the libstdc library, the following command should be run in terminal:
 
 ```shell
-mex -setup c++
+bash scripts/matlab
 ```
 
-```shell
-mex -v CXXFLAGS='$CXXFLAGS -std=c++20' -Ibuild/VerneDA-install-debug/lib/dace/include/ -Isrc/core src/main/mex_vsod.cpp
+Don't hesitate to modify the `script/matlab` file since it was created as a convention for some developers who had saved matlab in that filesystem pattern.
+
+In MATLAB, in order to build the MEX file:
+
+1. Run `mex_build.m`
+2. Test the matlab files found in `src/main/matlab/example`
+
+### MATLAB in VM
+
+For some reason, matlab in VM tries to find hardware parameters such as the graphics card.
+This leads to a bug when executing (not compiling) the code, to avoid this, run in matlab's command line:
+
+```matlab
+opengl save software
 ```
+
+### MATLAB mex files
 
 Some links which the developer may find useful:
 - libstdc linking error: https://es.mathworks.com/matlabcentral/answers/1907290-how-to-manually-select-the-libstdc-library-to-use-to-resolve-a-version-glibcxx_-not-found
 - mex files examples: https://es.mathworks.com/help/matlab/matlab_external/c-mex-source-file.html#responsive_offcanvas
-
+- hardware assertion: https://es.mathworks.com/matlabcentral/answers/438354-matlab-crashes-after-the-assertion-could-not-initialize-glx-failed
 ## Programming guidelines
 
 TODO
 
 ## Developers in CLion Environment
 
-1 - Clone the repository from CLion's Version control using the same URL:
+1. Clone the repository from CLion's Version control using the same URL:
 `git@github.com:bryanitou/VerneDA.git`.
 
-2 - Enter to the project folder if you are not in already.
+2. Enter to the project folder if you are not in already.
 
-3 - Run:
+3. Run:
+   ```shell
+   bash scripts/install_3rdparties.sh
+   ```
 
-```shell
-bash scripts/install_3rdparties.sh
-```
+4. Settings -> Build, Execution, Deployment -> CMake.
 
-4 - Settings -> Build, Execution, Deployment -> CMake.
-
-5 - Leave unchecked 'Reload CMake project on editing CMakeLists.txt or other CMake configuration files' and go to
+5. Leave unchecked 'Reload CMake project on editing CMakeLists.txt or other CMake configuration files' and go to
 Settings -> Advanced Settings and check 'Do not trigger CMake reload on external changes if auto-reload is disabled'.
 (Version 2021.1 has this knob in the Registry under the name: `cmake.disable.auto.reload.external.changes`, older
 versions do not have it)
 
-6 - 'Enable profile' and set a 'Name' and 'Build type', like `Debug`.
+6. 'Enable profile' and set a 'Name' and 'Build type', like `Debug`.
 
-7 - Change the 'Generator' to 'Unix Makefiles', now in 'CMake options' should appear `-G "Unix Makefiles"`.
+7. Change the 'Generator' to 'Unix Makefiles', now in 'CMake options' should appear `-G "Unix Makefiles"`.
 
-8 - Add to options `-DCMAKE_INSTALL_PREFIX=../VerneDA-install-debug` (TODO: to match with `build_all.sh`).
+8. Add to options `-DCMAKE_INSTALL_PREFIX=../VerneDA-install-debug` (TODO: to match with `build_all.sh`).
 
-9 - Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_AFOSSA_LIBS=ON`. Only choose one, please read the 
+9. Add to options `-DBUILD_DACE_MASTER_LIBS=ON` OR `-DBUILD_DACE_AFOSSA_LIBS=ON`. Only choose one, please read the 
 above this CMAKE options (build section) for further information.
 
-10 - Set 'Build directory' to `build/VerneDA-build-debug` (TODO: to match with `build_all.sh`, this
-script is still to be done).
+10. Add to options `-DBUILD_WITH_MATLAB=ON`. This will try to look for the matlab header files to make the includes in the mex files.
+Pay attention that if the matlab header files are not in the expected location, errors will arise.
+Please take a look at file `scripts/matlab` to understand where matlab is expected to be found or line 225 from CMakeLists.txt.
 
-11 - 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
+11. Set 'Build directory' to `build/VerneDA-build-debug`.
 
-12 - After accepting, CLion will run cmake. If it fails, check step 1 and reload cmake from CLion's window.
+12. 'Build options' are the `make` options. CLion sets automatically the number of threads to use.
+
+13. After accepting, CLion will run cmake. If it fails, check step 1 and reload cmake from CLion's window.
 
 Note that you will have to reload CLion's CMake manually when necessary from the CMake bottom window.
 
