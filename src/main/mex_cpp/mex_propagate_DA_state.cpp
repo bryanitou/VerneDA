@@ -66,7 +66,7 @@ public:
         std::vector<DACE::DA> da_vector;
         std::u16string u16_String{};
         // Attention: this line is sensitive to MATLAB versions
-        auto result = this->factoryPtr->createArray<matlab::data::MATLABString>({6, manifold->size()});
+        auto result = this->factoryPtr->createArray<matlab::data::MATLABString>({manifold->front().size(), manifold->size()});
 
         for (int j = 0; j < manifold->size(); j++)
         {
