@@ -657,11 +657,8 @@ DACE::AlgebraicVector<double> Manifold::pointEvaluationManifold(const DACE::Alge
              */
             if ( i == size - 1 )
             {
-                // Create Null vector
-                DACE::AlgebraicVector<double> Null(this -> at(0).size(), NAN);
-
                 // Return Null vector
-                return Null;
+                return {(this -> at(0).size(), NAN)};
             }
         }
     }
