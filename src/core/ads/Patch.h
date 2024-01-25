@@ -27,7 +27,7 @@ public:
     double nli = 0.0;
     double t_split_ = -1;
     int id_ = 0;
-    ALGORITHM algorithm_{ALGORITHM::NONE};
+    ALGORITHM algorithm_{ALGORITHM::NA};
 
     // Auxiliary variables
     double scaling;
