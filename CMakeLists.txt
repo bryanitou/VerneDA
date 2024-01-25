@@ -499,6 +499,16 @@ if (BUILD_WITH_MATLAB)
     matlab_add_mex(NAME mex_propagate_DA_state
             SRC src/main/mex_cpp/mex_propagate_DA_state.cpp
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_samples
+            SRC src/main/mex_cpp/mex_get_samples.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_propagate_DA_and_get_samples
+            SRC src/main/mex_cpp/mex_propagate_DA_state_and_get_samples.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 endif ()
 
 ########################################################################################################################
