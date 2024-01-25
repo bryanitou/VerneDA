@@ -2,13 +2,6 @@
 close all;
 clear all;
 
-ctrl = mps.cache.control('myRedisConnection','Redis','Port',4519);
-start(ctrl)
-c = mps.cache.connect('myCache', 'Connection', 'myRedisConnection');
-put(c,'keyOne',10,'keyTwo',20,'keyThree',30,'keyFour',[400 500],'keyFive',magic(5))
-tt = table(keys(c), get(c,keys(c))','VariableNames',{'Keys','Values'})
-n = clear(c);
-
 % Orbit Period
 orbit_period_sec = 15361.68181049502; % seconds
 
@@ -30,7 +23,7 @@ n_split_max = int16(10);
 n_samples = int16(10000);
 
 % Periods to simulate
-orbits_period_sec_vec = [0.25] * orbit_period_sec;
+orbits_period_sec_vec = [0.50] * orbit_period_sec;
 
 % Set time constraints
 t0 = 0.0;
@@ -40,9 +33,7 @@ N = length(orbits_period_sec_vec);
 b = zeros(6, n_samples + 1, N);
 
 for i = 1:length(orbits_period_sec_vec)
-    orbit_period_sec =  orbits_period_sec_vec(i);
-    orbit_period_und = orbit_period_sec * 1 / scaling_time;
-    tf = orbit_period_und;
+    tf = orbits_period_sec_vec(i) / scaling_time;
     dt = 10 / scaling_time;
     t = [t0, tf, dt];
     
@@ -53,8 +44,7 @@ end
 figure(1);
 % Plot the result
 for i = 1:length(orbits_period_sec_vec)
-    r = b(:,:,i);
-    plot3(r(1,:), r(2,:), r(3,:), '*');
+    plot3(b(1,:,i), b(2,:,i), b(3,:,i), '*');
     hold on;
 end
 r_earth = 6378 / scaling_length;
