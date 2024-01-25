@@ -36,13 +36,28 @@ std::string mex_aux::convertMatlabStr2NormalStr(const matlab::data::TypedArray<m
 
 std::vector<std::string> mex_aux::convertMatlabStrVector2NormalStrVector(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert) {
     auto dim = str2convert.getDimensions();
-    std::fprintf(stdout, "hi %zu\n", dim[0]);
-    std::fprintf(stdout, "hi %zu\n", dim[1]);
-
     std::vector<std::string> result(dim[0]);
+    for (unsigned int i = 0; i < result.size(); i++) {result[i] = std::string(str2convert[i][0]);}
+    return result;
+}
 
-    for (unsigned int i = 0; i < result.size(); i++) {result[i] = std::string(str2convert[i][0]);
-        std::fprintf(stdout, "%s\n",result[i].c_str());}
+std::vector<std::vector<std::string>> mex_aux::convertMatlabStrArray2NormalStrVector(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert) {
+    auto dim = str2convert.getDimensions();
+    auto n_patches = dim[1];
+    auto n_dim = dim[0];
+    std::vector<std::vector<std::string>> result(n_patches);
+    std::vector<std::string> da_vector(n_dim);
+
+    std::fprintf(stdout, "n_patches: %zu, n_dim: %zu\n", n_patches, n_dim);
+
+    for (unsigned int i = 0; i < n_patches; i++)
+    {
+        for (unsigned int j = 0; j < n_dim; j++)
+        {
+            da_vector[j] = std::string(str2convert[j][i]);
+        }
+        result[i] = da_vector;
+    }
     return result;
 }
 

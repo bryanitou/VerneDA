@@ -80,6 +80,9 @@ namespace mex_aux
     // void checkArguments(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs, MEX_FILE_TYPE type);
     std::vector<std::string>
     convertMatlabStrVector2NormalStrVector(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert);
+
+    std::vector<std::vector<std::string>>
+    convertMatlabStrArray2NormalStrVector(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert);
 }
 
 // Include template
