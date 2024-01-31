@@ -18,3 +18,8 @@ mex
 
 # Ignore virtual environment
 venv
+
+# Ignore simulink stuff
+*.slxc
+*.autosave
+slprj
