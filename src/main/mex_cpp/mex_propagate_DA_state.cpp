@@ -106,14 +106,11 @@ public:
         problems *problem;
         problem = new problems(PROBLEM::TWO_BODY, 1);
 
-        // Deduce whether interruption should be made or not
-        auto interruption = true;
-
         // Set problem ptr in the integrator
         objIntegrator->set_problem_ptr(problem);
 
         // Setting integrator parameters
-        objIntegrator->set_integration_parameters(scv, t0, tf, interruption);
+        objIntegrator->set_integration_parameters(scv, t0, tf, false);
 
         // Set integrator in the super manifold
         super_manifold->set_integrator_ptr(objIntegrator.get());
