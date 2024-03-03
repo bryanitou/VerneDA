@@ -8,14 +8,16 @@ if (root_dir_name ~= 'VerneDA')
 end
 
 % Directories to be added
-mex_file = 'mex';
+mex_files = 'build/VerneDA-install-debug/lib';
 matlab_files = 'src/main/matlab';
 example_files = 'src/main/matlab/example';
+propagation_files = 'src/main/matlab/propagation';
 
 % Add to path
-addpath(mex_file);
+addpath(mex_files);
 addpath(matlab_files);
-addpath(example_files)
+addpath(example_files);
+addpath(propagation_files);
 
 % Notice user
 fprintf("All paths added to Maltab environment! Pwd set to: %s\n", pwd)

@@ -19,8 +19,8 @@ ci = 3;
 
 % LOADS configuration
 nli = 0.02;
-n_split_max = int16(10);
-n_samples = int16(-1);
+n_split_max = int16(-1);
+n_samples = int16(0);
 
 % Periods to simulate
 orbits_period_sec_vec = [1] * orbit_period_sec;
@@ -30,7 +30,7 @@ t0 = 0.0;
 
 % Save the results here
 N = length(orbits_period_sec_vec);
-b = zeros(6, n_samples + 1, N);
+b = strings(N);
 
 for i = 1:length(orbits_period_sec_vec)
     orbit_period_sec =  orbits_period_sec_vec(i);
@@ -40,27 +40,5 @@ for i = 1:length(orbits_period_sec_vec)
     t = [t0, tf, dt];
     
     % Test MEX executable
-    b(:,:,i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
+    b(i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
 end
-
-figure(1);
-% Plot the result
-for i = 1:length(orbits_period_sec_vec)
-    r = b(:,:,i);
-    plot3(r(1,:), r(2,:), r(3,:), '*');
-    hold on;
-end
-
-
-r_earth = 6378 / scaling_length;
-[x ,y , z ] = sphere;
-x = x * r_earth;
-y = y * r_earth;
-z = z * r_earth;
-hold on;
-surf (x ,y , z ) ;
-axis equal ;
-xlabel (" x [ km ]") ;
-ylabel (" y [ km ]") ;
-zlabel (" z [ km ]") ;
-grid on;

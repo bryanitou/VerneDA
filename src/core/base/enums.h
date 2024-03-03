@@ -148,3 +148,15 @@ enum class FILM
     FINAL,
     NA
 };
+
+/**
+* MEX file type
+*/
+enum class MEX_FILE_TYPE
+{
+    GET_DA,
+    FILTER,
+    PROPAGATE,
+    VSAOD,
+    NA,
+};

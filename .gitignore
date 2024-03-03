@@ -15,3 +15,6 @@ mex
 
 # Ignore .asv files
 *.asv
+
+# Ignore virtual environment
+venv

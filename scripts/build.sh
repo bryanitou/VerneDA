@@ -42,5 +42,6 @@ build_type="Debug"
 current_dir=$(pwd)
 build_dir="$current_dir/build/VerneDA-build-debug"
 install_dir="$current_dir/build/VerneDA-install-debug"
-cmake -DBUILD_DACE_AFOSSA_LIBS=ON -DBUILD_DACE_MASTER_LIBS=OFF -DBUILD_WITH_MATLAB=OFF -DCMAKE_BUILD_TYPE="$build_type" -DCMAKE_INSTALL_PREFIX="$install_dir" -S "$current_dir" -B "$build_dir"
+cmake -DBUILD_DACE_AFOSSA_LIBS=ON -DBUILD_DACE_MASTER_LIBS=OFF -DBUILD_WITH_MATLAB=ON -DCMAKE_BUILD_TYPE="$build_type" -DCMAKE_INSTALL_PREFIX="$install_dir" -S "$current_dir" -B "$build_dir"
+cmake --build "${build_dir}" -- -j "${threads}" && cmake --install "${build_dir}"
 cmake --build "${build_dir}" -- -j "${threads}" && cmake --install "${build_dir}"
