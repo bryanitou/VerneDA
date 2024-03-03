@@ -9,6 +9,9 @@ namespace constants
     {
         // Gravitational constant
         const double G = 6.6743E-11; // m^3 kg^-1 s^-2
+
+        // Velocity of the light
+        const double c = 299792.458; // km/s
     }
     namespace earth
     {
@@ -24,6 +27,9 @@ namespace constants
 
         // local gravity at surface
         const double g = constants::earth::mu / (constants::earth::radius * constants::earth::radius);
+
+        // J2 coefficient
+        const double J2 = 1.08263E-3;
     }
 
     namespace sun
