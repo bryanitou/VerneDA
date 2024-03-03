@@ -48,8 +48,7 @@ problems::~problems() {
 }
 
 
-DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t, const std::unordered_set<std::string>& perturbations) const
-{
+DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<DACE::DA> scv, double t){
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> pos(3), res(6);
 
@@ -59,88 +58,101 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     pos[2] = scv[2]; // Pz_dot
     auto r = pos.vnorm();
 
-    res[0] = scv[3]; // Px_dot = Vx
-    res[1] = scv[4]; // Py_dot = Vy
-    res[2] = scv[5]; // Pz_dot = Vz
+    vel[0] = scv[3]; // Vx
+    vel[1] = scv[4]; // Vy
+    vel[2] = scv[5]; // Vz
+    auto V = vel.vnorm();
+
+    res[0] = vel[0]; // Px_dot = Vx
+    res[1] = vel[1]; // Py_dot = Vy
+    res[2] = vel[2]; // Pz_dot = Vz
 
     // Compute next Vx, Vy, Vz state from the current position
     res[3] = -this->mu_*pos[0]/(r*r*r); // Vx_dot
     res[4] = -this->mu_*pos[1]/(r*r*r); // Vy_dot
     res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
-    // Compute next Vx, Vy, Vz state from the current position
-    if (perturbations.find("J2") != perturbations.end()) {
-        // Include J2 perturbation (example, you'll need to define J2 coefficient)
-        // Update the following lines accordingly
-        res[3] += /* J2 perturbation for Vx */;
-        res[4] += /* J2 perturbation for Vy */;
-        res[5] += /* J2 perturbation for Vz */;
-    } else {
-        std::cout << "Warning: 'J2' perturbation not found." << std::endl;
+    // Read perturbations from input object
+    auto input_obj = json_parser::parse_input_file("input.json");
+    auto perturbations = input_obj->perturbations;
+    // Check if the input object is valid
+    if (!input_obj) {
+        std::cerr << "Error: Invalid 'json_input' object." << std::endl;
     }
+    else{
+        // Compute next Vx, Vy, Vz state from the current position
+        if (perturbations.find("J2") != perturbations.end()) {
+            // Include J2 perturbation formula
+            double factor = (3.0 / 2.0) * constants::mu* constants::J2 * (constants::radius*constants::radius) / std::pow(r, 5);
 
-    if (perturbations.find("drag") != perturbations.end()) {
-        // Include atmospheric drag perturbation
+            double a_J2_x = pos[0] * (5.0 * pos[2] * pos[2] / (r * r) - 1);
+            double a_J2_y = pos[1] * (5.0 * pos[2] * pos[2] / (r * r) - 1);
+            double a_J2_z = pos[1] * (5.0 * pos[2] * pos[2] / (r * r) - 3);
 
-        // Check if the input object is valid
-        if (!input_obj) {
-            std::cerr << "Error: Invalid 'json_input' object." << std::endl;
-        } else {
+            // Update the following lines accordingly
+            res[3] += factor * a_J2_x; // Vx_dot
+            res[4] += factor * a_J2_y; // Vy_dot
+            res[5] += factor * a_J2_z; // Vz_dot
+            }
+        }
+        else {
+        std::cout << "Warning: 'J2' perturbation not found." << std::endl;
+        }
+
+        if (perturbations.find("drag") != perturbations.end()) {
             double Cd = input_obj->drag_coefficient;
             double A = input_obj->cross_sectional_area;
             double m = input_obj->mass;
             double rho = input_obj->atmospheric_density;
-            double V = pos.vnorm(); // Velocity magnitude
 
             // Ensure non-zero values to avoid division by zero
             if (Cd == 0.0 || A == 0.0 || m == 0.0 || V == 0.0) {
-                std::cerr << "Error: Invalid parameters for atmospheric drag." << std::endl;
+                    std::cerr << "Error: Invalid parameters for atmospheric drag." << std::endl;
             } else {
                 // Calculate atmospheric drag acceleration
-                double atmospheric_drag_acceleration = -0.5*rho*Cd*A*V**2/m;
+                double a_drag_x = -0.5*rho**V*Cd*A*vel[0]/m;
+                double a_drag_y = -0.5*rho**V*Cd*A*vel[1]/m;
+                double a_drag_z = -0.5*rho**V*Cd*A*vel[2]/m;
 
                 // Add the acceleration due to atmospheric drag to the velocity components
-                res[3] += atmospheric_drag_acceleration; // Vx_dot
-                res[4] += atmospheric_drag_acceleration; // Vy_dot
-                res[5] += atmospheric_drag_acceleration; // Vz_dot
+                res[3] += a_drag_x; // Vx_dot
+                res[4] += a_drag_y; // Vy_dot
+                res[5] += a_drag_z; // Vz_dot
+                }
             }
+        else {
+            std::cout << "Warning: 'drag' perturbation not found." << std::endl;
         }
-    } else {
-        std::cout << "Warning: 'drag' perturbation not found." << std::endl;
-    }
 
-    if (perturbations.find("solar_radiation_pressure") != perturbations.end()) {
-        // Check if the input object has been parsed correctly
-        if (!input_obj) {
-            std::cerr << "Error: Invalid 'json_input' object." << std::endl;
-        } else {
-            double r = input_obj->reflection_factor;
+        if (perturbations.find("solar_radiation_pressure") != perturbations.end()) {
+            double reflectionFactor = input_obj->reflection_factor;
             double A = input_obj->cross_sectional_area;
             double m = input_obj->mass;
 
             // Ensure non-zero values to avoid division by zero
-            if (r == 0.0 || A == 0.0 || m == 0.0) {
+            if (reflectionFactor == 0.0 || A == 0.0 || m == 0.0) {
                 std::cerr << "Error: Invalid parameters for solar radiation pressure." << std::endl;
             } else {
+
                 // Calculate solar radiation pressure acceleration
-                double solar_radiation_pressure_acceleration = 4.5e-6*(1+r)*A/m;
+                double a_solar_x = -reflectionFactor*A**2pos[0]/(constants::c*m);
+                double a_solar_y = -reflectionFactor*A**2pos[1]/(constants::c*m);
+                double a_solar_z = -reflectionFactor*A**2pos[2]/(constants::c*m);
 
                 // Add the acceleration due to solar radiation pressure to the velocity components
-                res[3] += solar_radiation_pressure_acceleration; // Vx_dot
-                res[4] += solar_radiation_pressure_acceleration; // Vy_dot
-                res[5] += solar_radiation_pressure_acceleration; // Vz_dot
-            }
+                res[3] += a_solar_x; // Vx_dot
+                res[4] += a_solar_y; // Vy_dot
+                res[5] += a_solar_z; // Vz_dot
+                }
+        } else {
+            std::cout << "Warning: 'solar_radiation_pressure' perturbation not found." << std::endl;
         }
-    } else {
-        std::cout << "Warning: 'solar_radiation_pressure' perturbation not found." << std::endl;
-    }
 
     // Return result
     return res;
 }
 
-DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::DA> pol)
-{
+DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::DA> pol){
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> cart(2);
 
@@ -152,8 +164,7 @@ DACE::AlgebraicVector<DACE::DA> problems::pol2cart(DACE::AlgebraicVector<DACE::D
     return cart;
 }
 
-DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t )
-{
+DACE::AlgebraicVector<DACE::DA> problems::FreeFallObject(DACE::AlgebraicVector<DACE::DA> scv, double t){
     // Create position and resultant vector
     DACE::AlgebraicVector<DACE::DA> pos(3), vel(3), res(6);
 

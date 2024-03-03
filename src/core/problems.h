@@ -16,6 +16,7 @@
 #include "tools/ep.h"
 #include "tools/vo.h"
 #include "quaternion.h"
+#include "json/json_parser.h"
 
 class problems
 {
