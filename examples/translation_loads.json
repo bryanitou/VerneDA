@@ -38,7 +38,12 @@
         0.0,
         0.0,
         0.0
-      ]
+      ],
+      "cross_sectional_area": 6,
+      "mass": 1000.0,
+      "drag_coefficient": 3.5,
+      "atmospheric_density": 1.11164,
+      "perturbations": ["J2"]
     },
     "loads" : {
       "nli_threshold" : 0.02,

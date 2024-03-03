@@ -21,12 +21,7 @@
         [2040.0, 130.0, 25.0],
         [130.0, 1670.0, -55.0],
         [25.0, -55.0, 2570.0]
-      ],
-      "reflection_factor": 0.5,
-      "cross_sectional_area": 6,
-      "mass": 1000.0,
-      "drag_coefficient": 3.5,
-      "atmospheric_density": 1.11164,
+      ]
     },
     "ads": {
       "length_units": "rad",

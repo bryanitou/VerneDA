@@ -55,6 +55,13 @@ public:// Attributes
          std::vector<double> mean{};
          std::vector<double> standard_deviation{};
          double confidence_interval{};
+         double reflection_factor{};
+         double cross_sectional_area{};
+         double mass{};
+         double drag_coefficient{};
+         double atmospheric_density{};
+         std::vector<std::string> perturbations{};
+
 
          // If we have attitude...
          double inertia[3][3]{};

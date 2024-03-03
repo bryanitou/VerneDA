@@ -145,6 +145,7 @@ void json_parser::parse_input_section(RSJresource& rsj_obj, json_input * json_in
     if (json_input_obj->algorithm == ALGORITHM::NA)
     {
         // Info and exit program
+        // Info and exit program
         std::fprintf(stdout, "Algorithm type should be: ADS, LOADS or NONE. JSON "
                              "file: '%s'\n", json_input_obj->filepath.c_str());
 
@@ -202,6 +203,14 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
     json_input_obj->initial_conditions.mean = rsj_obj["mean"].as_vector<double>();
     json_input_obj->initial_conditions.standard_deviation = rsj_obj["standard_deviation"].as_vector<double>();
     json_input_obj->initial_conditions.confidence_interval = rsj_obj["confidence_interval"].as<double>();
+    json_input_obj->initial_conditions.reflection_factor = rsj_obj["initial_conditions"]["reflection_factor"].as<double>();
+    json_input_obj->initial_conditions.cross_sectional_area = rsj_obj["initial_conditions"]["cross_sectional_area"].as<int>();
+    json_input_obj->initial_conditions.mass = rsj_obj["initial_conditions"]["mass"].as<double>();
+    json_input_obj->initial_conditions.drag_coefficient = rsj_obj["initial_conditions"]["drag_coefficient"].as<double>();
+    json_input_obj->initial_conditions.atmospheric_density = rsj_obj["initial_conditions"]["atmospheric_density"].as<double>();
+    json_input_obj->initial_conditions.perturbations = rsj_obj["initial_conditions"]["perturbations"].as_vector<std::string>();
+
+    // Set initial conditions
     json_input_obj->initial_conditions.set = true;
 
     // If kilometers, convert to meters
