@@ -201,3 +201,106 @@ template <typename T> int tools::math::sgn(T val)
 {
     return (T(0) < val) - (val < T(0));
 }
+
+
+template <typename T> DACE::AlgebraicVector<T> tools::math::get_spherical(DACE::AlgebraicVector<T> r6)
+{
+    DACE::AlgebraicVector<T> spherical_coord(3);
+    auto x = r6[0];
+    auto y = r6[1];
+    auto z = r6[2];
+    spherical_coord[0] = DACE::sqrt( x*x + y*y + z*z); // Range
+    spherical_coord[1] = DACE::atan2( y , x); // Azimuth
+    spherical_coord[2] = DACE::atan2( z , DACE::sqrt(x*x + y*y)); // Elevation
+
+    return spherical_coord;
+}
+
+template <typename T>
+DACE::AlgebraicMatrix<T> tools::math::Kroneckerproduct_vect(
+        DACE::AlgebraicVector<T>& A, DACE::AlgebraicVector<T>& B)
+{
+    // Convert to matrix Nx1
+    auto A_matrix = tools::math::vector2matrix(A); // Vector of 1 column
+    auto B_matrix = tools::math::vector2matrix(B).transpose(); // Vector of 1 column
+
+    // Print matrix
+    for (int i = 0; i < A_matrix.nrows(); i++)
+    {
+        for (int j = 0; j < A_matrix.ncols(); j++)
+        {
+            std::fprintf(stdout, "Matrix_A[%2d, %2d] = \n", i, j);
+            std::fprintf(stdout, "%s \n",A_matrix.at(i, j).toString().c_str());
+        }
+    }
+    std::fprintf(stdout, "Matrix print finished\n");
+    return tools::math::Kroneckerproduct(A_matrix, B_matrix);
+}
+
+template <typename T>
+DACE::AlgebraicMatrix<T> tools::math::vector2matrix(DACE::AlgebraicVector<T> v)
+{
+    // Assign values
+    unsigned int nrows = v.size();
+    DACE::AlgebraicMatrix<T> result(nrows, 1);
+    // std::fprintf(stdout, "About to convert to matrix, the vector: %s\n", v.toString().c_str());
+
+    for (int i = 0; i < nrows; i++)
+    {
+        // Set column vector
+        result.at(i, 0) = v[i];
+    }
+
+    return result;
+}
+
+template <typename T>
+DACE::AlgebraicMatrix<T> tools::math::vectorize2d21d(DACE::AlgebraicMatrix<T> v)
+{
+    // Assign values
+    unsigned int n_col = 1;
+    DACE::AlgebraicMatrix<T> result(v.nrows() * v.ncols(), n_col);
+
+    for (int i = 0; i < v.nrows(); i++)
+    {
+        // Set column vector
+        for (int j = 0; j < v.ncols(); j++)
+        {
+            result.at(i * v.nrows() + j, 0) = v.at(i, j);
+        }
+    }
+
+    return result;
+}
+
+template <typename T>
+DACE::AlgebraicMatrix<T> tools::math::Kroneckerproduct(
+        DACE::AlgebraicMatrix<T>  A, DACE::AlgebraicMatrix<T>  B)
+{
+    // Auxiliary variables
+    unsigned int rowa = A.nrows();
+    unsigned int rowb = B.nrows();
+    unsigned int cola = A.ncols();
+    unsigned int colb = B.ncols();
+    unsigned int idx_row;
+    unsigned int idx_col;
+
+    DACE::AlgebraicMatrix<T>  result(rowa * rowb, cola * colb);
+    std::fprintf(stdout, "Kronocker product will have size: (%2d, %2d)\n", result.nrows(), result.ncols());
+    // i loops till rowa
+    for (int i = 0; i < rowa; i++) {
+        for (int k = 0; k < cola; k++) {
+            for (int j = 0; j < rowb; j++) {
+                for (int l = 0; l < colb; l++) {
+                    idx_row = i * rowb + j;
+                    idx_col = k * colb + l;
+                    std::fprintf(stdout, "Kronecker product: R(%2d, %2d) = A(%d, %d) * B(%d, %d)\n",
+                                 idx_row, idx_col, i, k, j, l);
+                    result.at(idx_row, idx_col) = A.at(i, k) * B.at(j, l);
+                }
+            }
+        }
+    }
+
+    return result;
+}

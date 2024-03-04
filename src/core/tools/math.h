@@ -21,6 +21,10 @@
 #include <vector>
 #include <stdexcept>
 #include <valarray>
+#include <numeric>
+
+#include "dace/dace.h"
+#include "dace/AlgebraicMatrix.h"
 
 namespace tools::math {
     /**
@@ -32,6 +36,9 @@ namespace tools::math {
      */
     std::vector<int> range(int a, int b, int s);
 
+
+    int binomialCoeff(int n, int k);
+    int factorial(int n);
 
     /**
      * Returns n samples equally spaced in [a,b].
@@ -106,7 +113,41 @@ namespace tools::math {
      */
     template<typename T>
     int sgn(T val);
+
+
+    /**+
+     * Get the DA basis for this algebra
+     * @param n_var
+     * @param n_ord
+     * @return
+     */
+    std::vector<std::vector<unsigned int>> get_DA_basis(int n_var, int n_ord);
+
+    /**
+     * Convert from r6 to spherical
+     * @tparam T
+     * @param r6
+     * @return
+     */
+    template <typename T> DACE::AlgebraicVector<T> get_spherical(DACE::AlgebraicVector<T> r6);
+
+    /**
+     * Kronocker product
+     * @tparam T
+     * @param A
+     * @param B
+     * @return
+     */
+    template <typename T>
+    DACE::AlgebraicMatrix<T> Kroneckerproduct_vect(DACE::AlgebraicVector<T>& A, DACE::AlgebraicVector<T>& B);
+    template <typename T>
+    DACE::AlgebraicMatrix<T> Kroneckerproduct(DACE::AlgebraicMatrix<T>A, DACE::AlgebraicMatrix<T>B);
+    template <typename T>
+    DACE::AlgebraicMatrix<T> vector2matrix(DACE::AlgebraicVector<T> v);
+    template<typename T>
+    DACE::AlgebraicMatrix<T> vectorize2d21d(DACE::AlgebraicMatrix<T> v);
 }
+
 
 
 // Include templates

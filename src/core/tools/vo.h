@@ -47,6 +47,20 @@ namespace tools::vector
     template<typename T>
     std::string unwrapMxN(int M, int N, T** matrix, const std::string& separator = ",",
                           const std::string& precision = "", bool close = true);
+
+    /**
+     * DA vector representation in string form
+     * @param da
+     * @return
+     */
+    std::string DA_vector2string(const DACE::AlgebraicVector<DACE::DA>& da);
+
+    /**
+     * DA vector representation in string form
+     * @param da
+     * @return
+     */
+    std::string DA2string(const DACE::DA & da);
 }
 
 // Include templates implementation

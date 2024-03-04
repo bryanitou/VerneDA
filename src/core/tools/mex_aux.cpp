@@ -24,7 +24,12 @@ double mex_aux::convertMatlabDouble2NormalDouble(const matlab::data::TypedArray<
     return double2convert[0];
 }
 
-int mex_aux::convertMatlabInt2NormalInt(const matlab::data::TypedArray<int_least16_t> &int2convert) {
+int mex_aux::convertMatlab16Int2NormalInt(const matlab::data::TypedArray<int_least16_t> &int2convert) {
+    // Return result
+    return int2convert[0];
+}
+
+int mex_aux::convertMatlab32Int2NormalInt(const matlab::data::TypedArray<int_least32_t> &int2convert) {
     // Return result
     return int2convert[0];
 }

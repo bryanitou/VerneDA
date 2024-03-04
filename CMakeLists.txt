@@ -509,6 +509,36 @@ if (BUILD_WITH_MATLAB)
     matlab_add_mex(NAME mex_propagate_DA_and_get_samples
             SRC src/main/mex_cpp/mex_propagate_DA_state_and_get_samples.cpp
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_filter_DA
+            SRC src/main/mex_cpp/mex_filter_DA_state.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_second_moments
+            SRC src/main/mex_cpp/mex_get_DA_second_moments.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_predict_spherical
+            SRC src/main/mex_cpp/mex_get_DA_predict_spherical.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_err_variation
+            SRC src/main/mex_cpp/mex_get_DA_err_variation.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_meas_update
+            SRC src/main/mex_cpp/mex_get_DA_meas_update.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_aug_meas_dev
+            SRC src/main/mex_cpp/mex_get_DA_aug_meas_dev.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 endif ()
 
 ########################################################################################################################
@@ -700,6 +730,30 @@ set(EXECUTABLE_NAME "Kepler")
 
 add_executable(${EXECUTABLE_NAME}
         src/main/kepler.cpp
+)
+
+# add_dependencies(${EXECUTABLE_NAME}
+#                   dependency1
+#                   dependency2
+#                   ....
+#                   )
+
+target_link_libraries(${EXECUTABLE_NAME}
+        core
+        dacelib
+)
+
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        COMPILE_FLAGS "${UCFLAGS} -D PROGRAM_NAME=\"\\\"${PROGRAM_NAME}\\\"\"" # Compilation flags
+        LINK_FLAGS "-Wl,-rpath,./") # Use cwd to search shared libs
+
+############################################
+# EXECUTABLES: Algebra basis vectors test
+############################################
+set(EXECUTABLE_NAME "algebra_basis")
+
+add_executable(${EXECUTABLE_NAME}
+        src/main/test/algebra_basis_vectors.cpp
 )
 
 # add_dependencies(${EXECUTABLE_NAME}

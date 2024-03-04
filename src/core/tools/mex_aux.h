@@ -66,7 +66,8 @@ namespace mex_aux
 
     double convertMatlabDouble2NormalDouble(const matlab::data::TypedArray<double> &double2convert);
 
-    int convertMatlabInt2NormalInt(const matlab::data::TypedArray<int_least16_t> &int2convert);
+    int convertMatlab16Int2NormalInt(const matlab::data::TypedArray<int_least16_t> &int2convert);
+    int convertMatlab32Int2NormalInt(const matlab::data::TypedArray<int_least32_t> &int2convert);
 
     std::string
     convertMatlabStr2NormalStr(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert);

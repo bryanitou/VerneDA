@@ -47,8 +47,8 @@ public:
             auto t = mex_aux::convertMatlabTypedArray2NormalVector(inputs[2]);
             auto ci = mex_aux::convertMatlabDouble2NormalDouble(inputs[3]);
             auto nli = mex_aux::convertMatlabDouble2NormalDouble(inputs[4]);
-            auto n_max = mex_aux::convertMatlabInt2NormalInt(inputs[5]);
-            auto n_samples = mex_aux::convertMatlabInt2NormalInt(inputs[6]);
+            auto n_max = mex_aux::convertMatlab16Int2NormalInt(inputs[5]);
+            auto n_samples = mex_aux::convertMatlab16Int2NormalInt(inputs[6]);
             auto str_alg = mex_aux::convertMatlabStr2NormalStr(inputs[7]);
             auto str_enum =
                     str_alg == "tbp" ? PROBLEM::TWO_BODY :

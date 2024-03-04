@@ -1,5 +1,5 @@
 /**
- * Only return DA vector
+ * Propagate DA vector for given amount of time
  */
 // MEX thingy
 #include "mex.hpp"
@@ -13,6 +13,7 @@
 
 // Project libraries
 #include "ads/SuperManifold.h"
+#include "tools/vo.h"
 
 class MexFunction : public matlab::mex::Function {
 
@@ -31,20 +32,28 @@ public:
 
             // TODO: Check the health of the passed inputs
             // mex_aux::checkArguments(outputs, inputs, MEX_FILE_TYPE::GET_DA);
+
             // Extract inputs -----------
-            auto ini_state = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
-            auto betas = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
+            auto r6_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[0]);
+
+            // Number of variables
+            int n_var = (int) r6_state.size();
+
+            // Initialize DACE with 6 variables
+            DACE::DA::init(2, n_var);
+
+            // Convert state to DA vector
+            auto r6_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
+            for (int i = 0; i < n_var; i++) {
+                r6_state_DA[i] = DACE::DA::fromString(r6_state[i]);
+            }
 
             // Perform logic here -----------
-            // Initialize DACE with 6 variables
-            DACE::DA::init(2, ini_state.size());
-
-            // Initialize state DA vector
-            auto scv0 = DACE::AlgebraicVector<DACE::DA>(ini_state.size());
-            for (int i = 0; i < ini_state.size(); i++) { scv0[i] = ini_state[i] + betas[i] * DACE::DA(i + 1); }
+            // Now we can propagate
+            auto predict = tools::math::get_spherical(r6_state_DA);
 
             // Return DA vector as str
-            outputs[0] = this->convertDAVector2MatlabStr(scv0);
+            outputs[0] = convertDAVector2MatlabStr(predict);
         }
         catch (int) {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");
