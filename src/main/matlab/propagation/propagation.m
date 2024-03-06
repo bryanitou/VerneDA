@@ -48,10 +48,14 @@ i = int32(0);
 %% Initialization
 % Get DA vector
 pv_state_DA = mex_get_DA_state(state, betas);
-nx_2nd_mom = stddev .* stddev + state_ini .* state_ini; % Adimensional
+[az, el, range] = cart2sph(stddev(1), stddev(2), stddev(3));
+pred_stddev = [az, el, range];
+ini_2nd_mom_prob = diag(pred_stddev .* pred_stddev ); % Adimensional, central
+ini_4th_mom_prob = diag(3 * pred_stddev .* pred_stddev .* pred_stddev .* pred_stddev); % Adimensional, central
+nx_2nd_mom_pred = ini_2nd_mom_prob; % % Adimensional, central
 
 % Set error of the sensor
-stddev_sens = [100 / scaling_length, 0.1, 0.1];
+stddev_sens = [0.1 / scaling_length, 0.1, 0.1];
 betas_sens = stddev_sens;
 sn_state_DA_noise = mex_get_DA_state(zeros(1, 3), betas_sens);
 
@@ -86,12 +90,12 @@ while 1
     stddev_sens = [0.1 / scaling_length, 0.1, 0.1];
     % state_sens_noise = [state_sens(1:3) + randn(3, 1000)*1.5, % km
     %                     state_sens(4:6) + randn(3, 1000)*1.5];% km/sº
-    meas_update = mex_get_DA_meas_update(predict, sn_state_DA_noise, nx_2nd_mom(1:3))';
+    meas_update = mex_get_DA_meas_update(predict, sn_state_DA_noise, nx_2nd_mom_pred)';
     meas_err_sens = mex_get_DA_err_variation(predict, state_sens_adimensional_spherical, sn_state_DA_noise);
     meas_err_upd = mex_get_DA_err_variation(predict, meas_update, sn_state_DA_noise);
     
     % Kalman gain
-    mex_get_DA_aug_meas_dev(predict, sn_state_DA_noise, nx_2nd_mom(1:3))
+    mex_get_DA_aug_meas_dev(predict, sn_state_DA_noise, nx_2nd_mom_pred)
 
     % Filter goes here
     state_sens_DA = mex_get_DA_state(state_sens_adimensional, state_sens_noise);
@@ -107,8 +111,28 @@ while 1
     pause(2);
 
     % Get the second moments of the predicted state
-    nx_2nd_mom = mex_get_DA_second_moments(nx_2nd_mom, nx_state_DA)';
+    nx_2nd_mom_pred = mex_get_DA_second_moments(nx_2nd_mom_pred, predict)';
 
     % Increase iteration counter
     i = i + 1;
 end
+
+
+% function r4th = get_4th_mom(stddev)
+%     len_stddev = lenght(stddev);
+%     r4th = zero(len_stddev, len_stddev)
+%     for i = 1:len_stddev
+%         for j = 1:len_stddev
+%             for k = 1:len_stddev:
+%                 for l = 1:len_stddev:
+%                     if (i - j - k - l) == 0:
+%                         r4th(i, j) = 3 * stddev(i) * stddev(j) * stddev(k) * stddev(l);
+%                     elseif  i - j == 0 && j - l == 0:
+%                         r4th(i, j) = stddev(i) * stddev(j) * stddev(k) * stddev(l);
+%                     end
+%             end
+%             
+%            
+%         end
+%     end
+% end

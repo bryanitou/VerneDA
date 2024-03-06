@@ -36,26 +36,29 @@ public:
             // Extract inputs -----------
             auto predicted_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[0]);
             auto sensor_noise = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[1]);
-            auto second_moments = mex_aux::convertMatlabTypedArray2NormalVector(inputs[2]);
+            auto second_moments = mex_aux::convertMatlabTypedArray2NormalVectorArray(inputs[2]);
 
             // Number of variables
-            int n_var = (int) predicted_state.size();
+            int n_var_prob = (int) predicted_state.size();
 
             // Initialize DACE with 6 variables
-            DACE::DA::init(2, n_var);
+            DACE::DA::init(2, n_var_prob);
 
             // Convert state to DA vector
-            auto predicted_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
-            for (int i = 0; i < n_var; i++) {
+            auto predicted_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var_prob);
+            for (int i = 0; i < n_var_prob; i++) {
                 predicted_state_DA[i] = DACE::DA::fromString(predicted_state[i]);
             }
-            auto sensor_noise_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
-            for (int i = 0; i < n_var; i++) {
+            auto sensor_noise_DA = DACE::AlgebraicVector<DACE::DA>(n_var_prob);
+            for (int i = 0; i < n_var_prob; i++) {
                 sensor_noise_DA[i] = DACE::DA::fromString(sensor_noise[i]);
             }
-            auto second_moments_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
-            for (int i = 0; i < n_var; i++) {
-                second_moments_DA[i] = second_moments[i];
+            auto second_moments_DA = DACE::AlgebraicMatrix<DACE::DA>(n_var_prob, n_var_prob);
+            for (int i = 0; i < n_var_prob; i++) {
+                for (int j = 0; j < n_var_prob; j++)
+                {
+                    second_moments_DA.at(i, j) = second_moments[i][j];
+                }
             }
             fprintf(stdout, "Algebra: \n");
             fprintf(stdout, "Order: %2d\n", DACE::DA::getMaxOrder());
@@ -63,7 +66,12 @@ public:
 
             // Perform logic here -----------
             // Now we can propagate
-            auto y = (predicted_state_DA + sensor_noise_DA).eval(second_moments_DA);
+            DACE::AlgebraicVector<DACE::DA> y(n_var_prob);
+            for (int i = 0; i < n_var_prob; i++)
+            {
+                y[i] = (predicted_state_DA[i] + sensor_noise_DA[i]).eval(second_moments_DA.getrow(i));
+            }
+
             DACE::AlgebraicVector<DACE::DA> dy = predicted_state_DA - y + sensor_noise_DA;
             fprintf(stdout, "y size: %2d\n", y.size());
             fprintf(stdout, "y: \n");
@@ -83,24 +91,24 @@ public:
             fprintf(stdout, "P2dydy size: (%2d, %2d)\n", P2dydy.nrows(), P2dydy.ncols());
             // DACE::DA P3dydydy[dim3];
             // DACE::DA P4dydydydy[dim4];
-            // get_P3dydydy(prev_second_moments, dy, n_var, P3dydydy);
-            // get_P4dydydydy(prev_second_moments, dy, n_var, P4dydydydy);
-            auto P3dydydy_new = get_P3dydydy_2(second_moments, dy, n_var);
+            // get_P3dydydy(prev_second_moments, dy, n_var_prob, P3dydydy);
+            // get_P4dydydydy(prev_second_moments, dy, n_var_prob, P4dydydydy);
+            auto P3dydydy_new = get_P3dydydy_2(second_moments, dy, n_var_prob);
             fprintf(stdout, "P3dydydy size: (%2d, %2d)\n", P3dydydy_new.nrows(), P3dydydy_new.ncols());
-            auto P4dydydydy_new = get_P4dydydydy_2(second_moments, dy, n_var);
+            auto P4dydydydy_new = get_P4dydydydy_2(second_moments, dy, n_var_prob);
             fprintf(stdout, "P4dydydydy size: (%2d, %2d)\n", P4dydydydy_new.nrows(), P4dydydydy_new.ncols());
             auto vect_P2dydy = tools::math::vectorize2d21d(P2dydy);
             fprintf(stdout, "vect(P2dydy) size: (%2d, %2d)\n", vect_P2dydy.nrows(), vect_P2dydy.ncols());
             // DACE::DA P2dy2dy2[dim4];
-            // get_P2dy2dy2(vect_P2dydy, n_var, P4dydydydy, P2dy2dy2);
-            auto P2dy2dy2_new = get_P2dy2dy2_2(n_var, vect_P2dydy, P4dydydydy_new);
+            // get_P2dy2dy2(vect_P2dydy, n_var_prob, P4dydydydy, P2dy2dy2);
+            auto P2dy2dy2_new = get_P2dy2dy2_2(n_var_prob, vect_P2dydy, P4dydydydy_new);
             fprintf(stdout, "P2dy2dy2 size: (%2d, %2d)\n", P2dy2dy2_new.nrows(), P2dy2dy2_new.ncols());
             auto P2dydy2_new = P3dydydy_new.transpose();
             fprintf(stdout, "P2dydy2 size: (%2d, %2d)\n", P2dydy2_new.nrows(), P2dydy2_new.ncols());
             auto P2dy2dy_new = P3dydydy_new;
             fprintf(stdout, "P2dy2dy size: (%2d, %2d)\n", P2dy2dy_new.nrows(), P2dy2dy_new.ncols());
             // *----------------* Augmented measurement covariance matrix  *----------------*
-            auto P2dYdY = get_PdYdY_2(n_var, P2dydy, P2dydy2_new, P2dy2dy_new, P2dy2dy2_new);
+            auto P2dYdY = get_PdYdY_2(n_var_prob, P2dydy, P2dydy2_new, P2dy2dy_new, P2dy2dy2_new);
             fprintf(stdout, "P2dYdY size: (%2d, %2d)\n", P2dYdY.nrows(), P2dYdY.ncols());
             auto P2dYdY_aug = (1e20 * P2dYdY);
             std::fprintf(stdout, "P2dYdY: %s\n", matrix2str(P2dYdY_aug).c_str());
@@ -113,16 +121,16 @@ public:
             // *----------------* The augmented state-measurement cross covariance matrix  *----------------*
 
             // DACE::DA P2dy2dy[dim3];
-            // transpose3d(n_var, P2dydy2_new, P2dy2dy);
+            // transpose3d(n_var_prob, P2dydy2_new, P2dy2dy);
 
             // DACE::AlgebraicMatrix<DACE::DA> rest = dy2 - vect_P2dydy;
             // Get the deviation in x
             DACE::AlgebraicVector<DACE::DA> dx = predicted_state_DA  - predicted_state_DA.cons();
-            auto Pxdy = get_P2dxdy(n_var, dx, dy, second_moments);
+            auto Pxdy = get_P2dxdy(n_var_prob, dx, dy, second_moments);
             fprintf(stdout, "Pxdy size: (%2d, %2d)\n", Pxdy.nrows(), Pxdy.ncols());
-            auto Pxdydy = get_P2xdy2(n_var, dx, dy, second_moments);
+            auto Pxdydy = get_P2xdy2(n_var_prob, dx, dy, second_moments);
             fprintf(stdout, "Pxdydy size: (%2d, %2d)\n", Pxdydy.nrows(), Pxdydy.ncols());
-            auto PxdY = get_PxdY(n_var, Pxdy, Pxdydy);
+            auto PxdY = get_PxdY(n_var_prob, Pxdy, Pxdydy);
             fprintf(stdout, "PxdY size: (%2d, %2d)\n", PxdY.nrows(), PxdY.ncols());
             DACE::AlgebraicMatrix<DACE::DA> Kalman_gain = PxdY * P2dYdY_inv;
             fprintf(stdout, "Kalman matrix size: (%2d, %2d)\n", Kalman_gain.nrows(), Kalman_gain.ncols());
@@ -168,20 +176,36 @@ public:
         return result;
     }
 
-    static DACE::AlgebraicMatrix<DACE::DA> get_P2dydy(std::vector<double>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy)
+    static DACE::AlgebraicMatrix<DACE::DA> get_P2dydy(std::vector<std::vector<double>>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy)
     {
+        // Auxiliary coefficients
+        double coeff1;
+        double coeff2;
+
         // Get the current workframe of the algebra
-        auto n_var = (int) dy.size();
+        auto n_var_obs = (int) dy.size();
+
+        // Get the current workframe of the algebra
+        auto n_ord_da = (unsigned long) DACE::DA::getMaxOrder();
+        auto n_var_da = (unsigned long) DACE::DA::getMaxVariables();
+        auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
 
         // Generate result vector
-        DACE::AlgebraicMatrix<DACE::DA> result(n_var);
+        DACE::AlgebraicMatrix<DACE::DA> result(n_var_obs);
 
         // Iterate through all the variables
-        for (int i = 0; i < n_var; i++)
+        for (int i = 0; i < n_var_obs; i++)
         {
-            for (int j = 0; j < n_var; j++)
+            for (int j = 0; j < n_var_obs; j++)
             {
-                result.at(i, j) = (dy[i]*dy[j]).eval(prev_2nd_moment);
+                for (const auto & basi : basis)
+                {
+                    // Get the constants for this base
+                    coeff1 = dy[i].getCoefficient(basi);
+                    coeff2 = dy[j].getCoefficient(basi);
+                    result.at(i, j) += coeff1*coeff2;
+                }
+                result.at(i, j) *= prev_2nd_moment[i][j];
             }
         }
 
@@ -189,60 +213,59 @@ public:
         return result;
     }
 
-    static void get_P3dydydy(std::vector<double>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
-                             unsigned int n_var, DACE::DA res[])
+    static DACE::AlgebraicMatrix<DACE::DA> get_P3dydydy_2(std::vector<std::vector<double>>& prev_3rd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
+                                                          unsigned int n_var)
     {
-        for (int i = 0; i < n_var; i++)
-        {
-            for (int j = 0; j < n_var; j++)
-            {
-                for (int k = 0; k < n_var; k++)
-                {
-                    res[i*n_var*n_var + j*n_var + k]= (dy[i] * dy[j] * dy[k]).eval(prev_2nd_moment);
-                }
-            }
-        }
-    }
+        // Auxiliary coefficients
+        double coeff1;
+        double coeff2;
+        double coeff3;
 
-    static DACE::AlgebraicMatrix<DACE::DA> get_P3dydydy_2(std::vector<double>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
-                             unsigned int n_var)
-    {
+        // Get the current workframe of the algebra
+        auto n_ord_da = (unsigned long) DACE::DA::getMaxOrder();
+        auto n_var_da = (unsigned long) DACE::DA::getMaxVariables();
+        auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
+
+        // Build resultant matrix
         DACE::AlgebraicMatrix<DACE::DA> result(n_var*n_var, n_var);
+
         for (int i = 0; i < n_var; i++)
         {
             for (int j = 0; j < n_var; j++)
             {
                 for (int k = 0; k < n_var; k++)
                 {
-                    result.at(i*n_var + j, k) = (dy[i] * dy[j] * dy[k]).eval(prev_2nd_moment);
+                    for (const auto & basi : basis)
+                    {
+                        // Get the constants for this base
+                        coeff1 = dy[i].getCoefficient(basi);
+                        coeff2 = dy[j].getCoefficient(basi);
+                        coeff3 = dy[k].getCoefficient(basi);
+                        result.at(i*n_var + j, k) += coeff1*coeff2*coeff3;
+                    }
+
+                    result.at(i*n_var + j, k) *= prev_3rd_moment[i][j];
                 }
             }
         }
         return result;
     }
 
-    static void get_P4dydydydy(std::vector<double>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
-                               unsigned int n_var, DACE::DA res[])
-    {
-        for (int i = 0; i < n_var; i++)
-        {
-            for (int j = 0; j < n_var; j++)
-            {
-                for (int k = 0; k < n_var; k++)
-                {
-                    for (int l = 0; l < n_var; l++)
-                    {
-                        res[i*n_var*n_var*n_var + j*n_var*n_var +
-                        k*n_var + l]= (dy[i] * dy[j] * dy[k] * dy[l]).eval(prev_2nd_moment);
-                    }
-                }
-            }
-        }
-    }
-
-    static DACE::AlgebraicMatrix<DACE::DA> get_P4dydydydy_2(std::vector<double>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
+    static DACE::AlgebraicMatrix<DACE::DA> get_P4dydydydy_2(std::vector<std::vector<double>>& prev_2nd_moment, const DACE::AlgebraicVector<DACE::DA>& dy,
                                unsigned int n_var)
     {
+        // Auxiliary coefficients
+        double coeff1;
+        double coeff2;
+        double coeff3;
+        double coeff4;
+
+        // Get the current workframe of the algebra
+        auto n_ord_da = (unsigned long) DACE::DA::getMaxOrder();
+        auto n_var_da = (unsigned long) DACE::DA::getMaxVariables();
+        auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
+
+        // Build resultant matrix
         DACE::AlgebraicMatrix<DACE::DA> result(n_var*n_var, n_var*n_var);
         for (int i = 0; i < n_var; i++)
         {
@@ -252,7 +275,17 @@ public:
                 {
                     for (int l = 0; l < n_var; l++)
                     {
-                        result.at(i*n_var + j, k*n_var + l) = (dy[i] * dy[j] * dy[k] * dy[l]).eval(prev_2nd_moment);
+                        for (const auto & basi : basis)
+                        {
+                            // Get the constants for this base
+                            coeff1 = dy[i].getCoefficient(basi);
+                            coeff2 = dy[j].getCoefficient(basi);
+                            coeff3 = dy[k].getCoefficient(basi);
+                            coeff4 = dy[l].getCoefficient(basi);
+                            result.at(i*n_var + j, k*n_var + l) += coeff1*coeff2*coeff3*coeff4;
+                        }
+
+                        result.at(i*n_var + j, k*n_var + l) *= prev_2nd_moment[i][j];
                     }
                 }
             }

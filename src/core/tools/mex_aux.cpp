@@ -19,6 +19,29 @@ std::vector<double> mex_aux::convertMatlabTypedArray2NormalVector(const matlab::
     return result;
 }
 
+std::vector<std::vector<double>> mex_aux::convertMatlabTypedArray2NormalVectorArray(const matlab::data::TypedArray<double> &array2convert) {
+    // Set result
+    // TODO: std::vector<double> result(array2convert.begin(), array2convert.end());
+
+    auto dim =  array2convert.getDimensions();
+    auto dim_rows = dim[0];
+    auto dim_cols = dim[1];
+    std::vector<std::vector<double>> result(dim_rows);
+    std::vector<double> col(dim_cols);
+    // Pass to vector
+    for (int i = 0; i < dim_rows; i++)
+    {
+        result[i] = col;
+        for (int j = 0; j < dim_cols; j++)
+        {
+            result[i][j] = array2convert[i][j];
+        }
+    }
+
+    // Return result
+    return result;
+}
+
 double mex_aux::convertMatlabDouble2NormalDouble(const matlab::data::TypedArray<double> &double2convert) {
     // Return result
     return double2convert[0];

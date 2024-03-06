@@ -84,6 +84,9 @@ namespace mex_aux
 
     std::vector<std::vector<std::string>>
     convertMatlabStrArray2NormalStrVector(const matlab::data::TypedArray<matlab::data::MATLABString> &str2convert);
+
+    std::vector<std::vector<double>>
+    convertMatlabTypedArray2NormalVectorArray(const matlab::data::TypedArray<double> &array2convert);
 }
 
 // Include template
