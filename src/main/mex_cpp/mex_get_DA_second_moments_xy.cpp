@@ -80,14 +80,17 @@ public:
         return result;
     }
 
-    matlab::data::TypedArray<double> get_2nd_Mom(std::vector<std::vector<double>>& prev_2nd_moment, DACE::AlgebraicVector<DACE::DA> next_state_DA)
+    matlab::data::TypedArray<double> get_2nd_Mom(std::vector<std::vector<double>>& prev_2nd_moment,
+                                                 DACE::AlgebraicVector<DACE::DA> next_state_DA_x,
+                                                 DACE::AlgebraicVector<DACE::DA> next_state_DA_y)
     {
         // Auxiliary coefficients
         double coeff1;
         double coeff2;
 
         // Get the dimension of the propagation
-        auto n_var_problem = next_state_DA.size();
+        auto n_var_problem_x = next_state_DA_x.size();
+        auto n_var_problem_y = next_state_DA_y.size();
 
         // Get the current workframe of the algebra
         auto n_ord_da = (unsigned long) DACE::DA::getMaxOrder();
@@ -95,24 +98,25 @@ public:
 
         // Generate result vector
         matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>(
-                {n_var_problem, n_var_problem});
+                {n_var_problem_x, n_var_problem_y});
 
         // Get the basis generator of the algebra
         auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
 
         // Remove the constant part
-        next_state_DA = next_state_DA - next_state_DA.cons();
+        next_state_DA_x = next_state_DA_x - next_state_DA_x.cons();
+        next_state_DA_y = next_state_DA_y - next_state_DA_y.cons();
 
         // Iterate through all the variables
-        for (int i = 0; i < n_var_problem; i++)
+        for (int i = 0; i < n_var_problem_x; i++)
         {
-            for (int j = 0; j < n_var_problem; j++)
+            for (int j = 0; j < n_var_problem_y; j++)
             {
                 for (const auto & basi : basis)
                 {
                     // Get the constants for this base
-                    coeff1 = next_state_DA[i].getCoefficient(basi);
-                    coeff2 = next_state_DA[j].getCoefficient(basi);
+                    coeff1 = next_state_DA_x[i].getCoefficient(basi);
+                    coeff2 = next_state_DA_y[j].getCoefficient(basi);
                     result[i][j] += coeff1*coeff2;
                 }
                 result[i][j] *= prev_2nd_moment[i][j];

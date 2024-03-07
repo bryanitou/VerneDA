@@ -34,36 +34,25 @@ public:
             // mex_aux::checkArguments(outputs, inputs, MEX_FILE_TYPE::GET_DA);
 
             // Extract inputs -----------
-            auto predicted_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[0]);
-            auto sensor_state = mex_aux::convertMatlabTypedArray2NormalVector(inputs[1]);
-            auto sensor_err = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[0]);
+            auto new_1st_moment = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
+            auto pred_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[1]);
+            auto sensor = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[2]);
 
             // Number of variables
-            int n_var = (int) predicted_state.size();
+            int n_var = (int) pred_state.size();
 
             // Initialize DACE with 6 variables
             DACE::DA::init(2, n_var);
 
             // Convert state to DA vector
-            auto predicted_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
+            auto err_var_pred_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
             for (int i = 0; i < n_var; i++) {
-                predicted_state_DA[i] = DACE::DA::fromString(predicted_state[i]);
+                err_var_pred_DA[i] =
+                       - new_1st_moment[i] + DACE::DA::fromString(pred_state[i]) + DACE::DA::fromString(sensor[i]);
             }
-            auto sensor_err_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
-            for (int i = 0; i < n_var; i++) {
-                sensor_err_DA[i] = DACE::DA::fromString(sensor_err[i]);
-            }
-            auto sensor_state_DA = DACE::AlgebraicVector<double>(n_var);
-            for (int i = 0; i < n_var; i++) {
-                sensor_state_DA[i] = sensor_state[i];
-            }
-
-            // Perform logic here -----------
-            // Now we can propagate
-            DACE::AlgebraicVector<DACE::DA> err_var = predicted_state_DA - sensor_state_DA + sensor_err_DA;
 
             // Return DA vector as str
-            outputs[0] = convertDAVector2MatlabStr(err_var);
+            outputs[0] = convertDAVector2MatlabStr(err_var_pred_DA);
         }
         catch (int) {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");

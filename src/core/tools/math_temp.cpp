@@ -222,7 +222,7 @@ DACE::AlgebraicMatrix<T> tools::math::Kroneckerproduct_vect(
 {
     // Convert to matrix Nx1
     auto A_matrix = tools::math::vector2matrix(A); // Vector of 1 column
-    auto B_matrix = tools::math::vector2matrix(B).transpose(); // Vector of 1 column
+    auto B_matrix = tools::math::vector2matrix(B); // Vector of 1 column
 
     // Print matrix
     for (int i = 0; i < A_matrix.nrows(); i++)

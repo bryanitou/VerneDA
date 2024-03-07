@@ -516,11 +516,6 @@ if (BUILD_WITH_MATLAB)
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 
     # MEX functions files
-    matlab_add_mex(NAME mex_get_DA_second_moments
-            SRC src/main/mex_cpp/mex_get_DA_second_moments.cpp
-            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
-
-    # MEX functions files
     matlab_add_mex(NAME mex_get_DA_predict_spherical
             SRC src/main/mex_cpp/mex_get_DA_predict_spherical.cpp
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
@@ -538,6 +533,36 @@ if (BUILD_WITH_MATLAB)
     # MEX functions files
     matlab_add_mex(NAME mex_get_DA_aug_meas_dev
             SRC src/main/mex_cpp/mex_get_DA_aug_meas_dev.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_aug_meas_dev2
+            SRC src/main/mex_cpp/mex_get_DA_aug_meas_dev2.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_first_moments
+            SRC src/main/mex_cpp/mex_get_DA_first_moments.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_second_moments
+            SRC src/main/mex_cpp/mex_get_DA_second_moments.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_second_moments_xy
+            SRC src/main/mex_cpp/mex_get_DA_second_moments_xy.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_third_moments
+            SRC src/main/mex_cpp/mex_get_DA_third_moments.cpp
+            LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
+
+    # MEX functions files
+    matlab_add_mex(NAME mex_get_DA_fourth_moments
+            SRC src/main/mex_cpp/mex_get_DA_fourth_moments.cpp
             LINK_TO ${LIBRARY_ADS}  ${LIBRARY_BASE} ${LIBRARY_MEX_AUX})
 endif ()
 

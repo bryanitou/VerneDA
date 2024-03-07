@@ -34,7 +34,7 @@ public:
             // mex_aux::checkArguments(outputs, inputs, MEX_FILE_TYPE::GET_DA);
 
             // Extract inputs -----------
-            auto prev_2nd_moment = mex_aux::convertMatlabTypedArray2NormalVectorArray(inputs[0]);
+            auto prev_3rd_moment = mex_aux::convertMatlabTypedArray2NormalVectorArray(inputs[0]);
             auto pred_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[1]);
 
             // Number of variables
@@ -57,34 +57,19 @@ public:
             // auto next_2nd_moments = get_2nd_Mom(prev_2nd_moment, next_state_DA);
 
             // Return DA vector as str
-            outputs[0] = get_2nd_Mom(prev_2nd_moment, next_state_DA);
+            outputs[0] = get_3rd_Mom(prev_3rd_moment, next_state_DA);
         }
         catch (int) {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");
         }
     }
 
-    matlab::data::TypedArray<double>
-    convertNormalVector2MatlabTypedArray(const std::vector<double> &v) {
-        // Set result
-        matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>(
-                {v.size()});
-
-        // Iterate and assign
-        for (int i = 0; i < v.size(); i++)
-        {
-            result[i] = v[i];
-        }
-
-        // Return result
-        return result;
-    }
-
-    matlab::data::TypedArray<double> get_2nd_Mom(std::vector<std::vector<double>>& prev_2nd_moment, DACE::AlgebraicVector<DACE::DA> next_state_DA)
+    matlab::data::TypedArray<double> get_3rd_Mom(std::vector<std::vector<double>>& prev_3rd_moment, DACE::AlgebraicVector<DACE::DA> next_state_DA)
     {
         // Auxiliary coefficients
         double coeff1;
         double coeff2;
+        double coeff3;
 
         // Get the dimension of the propagation
         auto n_var_problem = next_state_DA.size();
@@ -95,7 +80,7 @@ public:
 
         // Generate result vector
         matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>(
-                {n_var_problem, n_var_problem});
+                {n_var_problem*n_var_problem, n_var_problem});
 
         // Get the basis generator of the algebra
         auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
@@ -108,19 +93,22 @@ public:
         {
             for (int j = 0; j < n_var_problem; j++)
             {
-                for (const auto & basi : basis)
+                for (int k = 0; k < n_var_problem; k++)
                 {
-                    // Get the constants for this base
-                    coeff1 = next_state_DA[i].getCoefficient(basi);
-                    coeff2 = next_state_DA[j].getCoefficient(basi);
-                    result[i][j] += coeff1*coeff2;
+                    for (const auto & basi : basis)
+                    {
+                        // Get the constants for this base
+                        coeff1 = next_state_DA[i].getCoefficient(basi);
+                        coeff2 = next_state_DA[j].getCoefficient(basi);
+                        coeff3 = next_state_DA[k].getCoefficient(basi);
+                        result[i * n_var_problem + j][k] += coeff1*coeff2*coeff3;
+                    }
+                    result[i * n_var_problem + j][k] *= prev_3rd_moment[i * n_var_problem + j][k];
                 }
-                result[i][j] *= prev_2nd_moment[i][j];
+
             }
         }
 
-        // std::fprintf(stdout, "%s\n", tools::vector::num2string(result).c_str());
-        // Done!
         return result;
     }
 };

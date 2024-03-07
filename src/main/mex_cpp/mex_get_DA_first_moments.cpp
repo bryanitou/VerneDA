@@ -34,8 +34,9 @@ public:
             // mex_aux::checkArguments(outputs, inputs, MEX_FILE_TYPE::GET_DA);
 
             // Extract inputs -----------
-            auto prev_2nd_moment = mex_aux::convertMatlabTypedArray2NormalVectorArray(inputs[0]);
+            auto prev_1st_moment = mex_aux::convertMatlabTypedArray2NormalVector(inputs[0]);
             auto pred_state = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[1]);
+            auto noise = mex_aux::convertMatlabStrVector2NormalStrVector(inputs[2]);
 
             // Number of variables
             int n_var = (int) pred_state.size();
@@ -44,20 +45,13 @@ public:
             DACE::DA::init(2, n_var);
 
             // Convert state to DA vector
-            auto next_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
+            auto nx_noisy_state_DA = DACE::AlgebraicVector<DACE::DA>(n_var);
             for (int i = 0; i < n_var; i++) {
-                next_state_DA[i] = DACE::DA::fromString(pred_state[i]);
+                nx_noisy_state_DA[i] = DACE::DA::fromString(pred_state[i]) + DACE::DA::fromString(noise[i]);
             }
 
-            // Print previous moments
-            // std::fprintf(stdout, "%s\n", tools::vector::num2string(prev_2nd_moment).c_str());
-
-            // Perform logic here -----------
-            // Now we can propagate
-            // auto next_2nd_moments = get_2nd_Mom(prev_2nd_moment, next_state_DA);
-
             // Return DA vector as str
-            outputs[0] = get_2nd_Mom(prev_2nd_moment, next_state_DA);
+            outputs[0] = get_1st_Mom(prev_1st_moment, nx_noisy_state_DA);
         }
         catch (int) {
             std::fprintf(stdout, "ERROR: Something unexpected happened...");
@@ -80,12 +74,9 @@ public:
         return result;
     }
 
-    matlab::data::TypedArray<double> get_2nd_Mom(std::vector<std::vector<double>>& prev_2nd_moment, DACE::AlgebraicVector<DACE::DA> next_state_DA)
-    {
-        // Auxiliary coefficients
-        double coeff1;
-        double coeff2;
 
+    matlab::data::TypedArray<double> get_1st_Mom(std::vector<double>& prev_1st_moment, DACE::AlgebraicVector<DACE::DA> next_state_DA)
+    {
         // Get the dimension of the propagation
         auto n_var_problem = next_state_DA.size();
 
@@ -94,8 +85,7 @@ public:
         auto n_var_da = (unsigned long) DACE::DA::getMaxVariables();
 
         // Generate result vector
-        matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>(
-                {n_var_problem, n_var_problem});
+        matlab::data::TypedArray<double> result = this->factoryPtr->createArray<double>({1, n_var_problem});
 
         // Get the basis generator of the algebra
         auto basis = tools::math::get_DA_basis((int) n_var_da, (int) n_ord_da);
@@ -106,20 +96,15 @@ public:
         // Iterate through all the variables
         for (int i = 0; i < n_var_problem; i++)
         {
-            for (int j = 0; j < n_var_problem; j++)
+            for (const auto & basi : basis)
             {
-                for (const auto & basi : basis)
-                {
-                    // Get the constants for this base
-                    coeff1 = next_state_DA[i].getCoefficient(basi);
-                    coeff2 = next_state_DA[j].getCoefficient(basi);
-                    result[i][j] += coeff1*coeff2;
-                }
-                result[i][j] *= prev_2nd_moment[i][j];
+                // Get the constants for this base
+                result[i] += next_state_DA[i].getCoefficient(basi);
             }
+            result[i] *= prev_1st_moment[i];
+
         }
 
-        // std::fprintf(stdout, "%s\n", tools::vector::num2string(result).c_str());
         // Done!
         return result;
     }
