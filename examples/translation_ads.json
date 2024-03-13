@@ -36,7 +36,7 @@
       "mass": 1000.0,
       "drag_coefficient": 3.5,
       "atmospheric_density": 1.11164,
-      "perturbations": ["J2"]
+      "perturbations": ["J2", "drag"]
     },
     "ads": {
       "length_units": "km",
