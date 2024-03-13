@@ -5,6 +5,9 @@
 
 #include "problems.h"
 #include <vector>
+#include <algorithm>
+#include <iostream>
+
 
 problems::problems(PROBLEM type, double mu)
 {
@@ -75,9 +78,9 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
 
     // Read perturbations from input object
     auto input_obj = json_parser::parse_input_file("input.json");
-    auto perturbations = input_obj.initial_conditions.perturbations;
+    std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
     // Compute next Vx, Vy, Vz state from the current position
-    if (perturbations.find("J2") != perturbations.end()) {
+    if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
         // Include J2 perturbation formula
         auto factor = (3.0 / 2.0) * constants::earth::mu* constants::earth::J2 * (constants::earth::radius*constants::earth::radius) / (r * r * r * r * r);
 
@@ -94,14 +97,14 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
         std::cout << "Warning: 'J2' perturbation not found." << std::endl;
     }
 
-    if (perturbations.find("drag") != perturbations.end()) {
+    if (std::find(perturbations.begin(), perturbations.end(),"drag") != perturbations.end()) {
         double Cd = input_obj.initial_conditions.drag_coefficient;
         double A = input_obj.initial_conditions.cross_sectional_area;
         double m = input_obj.initial_conditions.mass;
         double rho = input_obj.initial_conditions.atmospheric_density;
 
         // Ensure non-zero values to avoid division by zero
-        if (Cd == 0.0 || A == 0.0 || m == 0.0 || V == 0.0) {
+        if (Cd == 0.0 || A == 0.0 || m == 0.0) {
                 std::cerr << "Error: Invalid parameters for atmospheric drag." << std::endl;
         }
         else {
@@ -120,7 +123,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             std::cout << "Warning: 'drag' perturbation not found." << std::endl;
         }
 
-    if (perturbations.find("solar_radiation_pressure") != perturbations.end()) {
+    if (std::find(perturbations.begin(), perturbations.end(),"solar_radiation_pressure") != perturbations.end()) {
         double reflectionFactor = input_obj.initial_conditions.reflection_factor;
         double A = input_obj.initial_conditions.cross_sectional_area;
         double m = input_obj.initial_conditions.mass;
