@@ -411,10 +411,12 @@ add_library(${LIBRARY_CORE} SHARED
 
 add_dependencies(core
         datools
+        json
 )
 
 target_link_libraries(${LIBRARY_CORE}
         ${LIBRARY_DATOOLS}
+        json
 )
 
 set_target_properties(${LIBRARY_CORE} PROPERTIES

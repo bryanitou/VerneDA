@@ -5,6 +5,9 @@
 
 // System libraries
 #include <cstdlib>
+#include <vector>
+#include <algorithm>
+#include <iostream>
 
 // DACE libraries
 #include "dace/dace.h"

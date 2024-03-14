@@ -37,7 +37,7 @@ check_package g++
 echo "ALL PACKAGES OK."
 echo " "
 
-threads=$(n_cores)
+threads=1
 build_type="Debug"
 current_dir=$(pwd)
 build_dir="$current_dir/build/VerneDA-build-debug"

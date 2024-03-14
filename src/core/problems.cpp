@@ -4,10 +4,6 @@
  */
 
 #include "problems.h"
-#include <vector>
-#include <algorithm>
-#include <iostream>
-
 
 problems::problems(PROBLEM type, double mu)
 {
@@ -93,9 +89,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
         res[4] += factor * a_J2_y; // Vy_dot
         res[5] += factor * a_J2_z; // Vz_dot
     }
-    else {
-        std::cout << "Warning: 'J2' perturbation not found." << std::endl;
-    }
 
     if (std::find(perturbations.begin(), perturbations.end(),"drag") != perturbations.end()) {
         double Cd = input_obj.initial_conditions.drag_coefficient;
@@ -118,9 +111,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             res[4] += a_drag_y; // Vy_dot
             res[5] += a_drag_z; // Vz_dot
             }
-        }
-        else {
-            std::cout << "Warning: 'drag' perturbation not found." << std::endl;
         }
 
     if (std::find(perturbations.begin(), perturbations.end(),"solar_radiation_pressure") != perturbations.end()) {
@@ -146,7 +136,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             }
         }
         else {
-            std::cout << "Warning: 'solar_radiation_pressure' perturbation not found." << std::endl;
+            std::cout << "Warning: perturbation not found." << std::endl;
         }
     // Return result
     return res;
