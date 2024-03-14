@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     DACE::DACEException::setWarning(false);
 
     // Create my_specs object
-    auto my_specs = json_parser::parse_input_file(args_in.json_filepath);
+    auto my_specs = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_loads.json");
 
     // Initialize DACE with 6 variables
     DACE::DA::init(my_specs.algebra.order, my_specs.algebra.variables);

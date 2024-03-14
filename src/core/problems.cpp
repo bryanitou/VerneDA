@@ -73,7 +73,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
     // Read perturbations from input object
-    auto input_obj = json_parser::parse_input_file("input.json");
+    auto input_obj = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_loads.json");
     std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
     // Compute next Vx, Vy, Vz state from the current position
     if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
