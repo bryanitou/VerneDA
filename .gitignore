@@ -18,3 +18,7 @@ mex
 
 # Ignore virtual environment
 venv
+
+# Ignore MATLAB SIMULINK stuff
+*.slxc
+slprj
