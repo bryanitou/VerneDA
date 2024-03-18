@@ -169,8 +169,6 @@ int main(int argc, char* argv[])
 
     // Write files
     writer.write_files(deltas_engine.get(), my_specs.output_dir);
-    // me oies?nop voy
-    // mira whatsapp
 
     // Create post-processing object
     FileProcessor fproc(writer.get_out_obj());

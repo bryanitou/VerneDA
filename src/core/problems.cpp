@@ -75,8 +75,11 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     // Read perturbations from input object
     auto input_obj = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_loads.json");
     std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
-    // Compute next Vx, Vy, Vz state from the current position
+
     if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
+        // Display in the terminal a message in order to show that J2 has been selected
+        std::cout << "J2 perturbation has been selected." << std::endl;
+
         // Include J2 perturbation formula
         auto factor = (3.0 / 2.0) * constants::earth::mu* constants::earth::J2 * (constants::earth::radius*constants::earth::radius) / (r * r * r * r * r);
 
@@ -84,20 +87,23 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
         auto a_J2_y = pos[1] * (5.0 * pos[2] * pos[2] / (r * r) - 1);
         auto a_J2_z = pos[1] * (5.0 * pos[2] * pos[2] / (r * r) - 3);
 
-        // Update the following lines accordingly
+        // Update Vx, Vy, Vz
         res[3] += factor * a_J2_x; // Vx_dot
         res[4] += factor * a_J2_y; // Vy_dot
         res[5] += factor * a_J2_z; // Vz_dot
     }
 
-    if (std::find(perturbations.begin(), perturbations.end(),"drag") != perturbations.end()) {
+    else if (std::find(perturbations.begin(), perturbations.end(),"DRAG") != perturbations.end()) {
+        // Display in the terminal a message in order to show that DRAG has been selected
+        std::cout << "Atmospheric drag perturbation has been selected." << std::endl;
+
         double Cd = input_obj.initial_conditions.drag_coefficient;
         double A = input_obj.initial_conditions.cross_sectional_area;
         double m = input_obj.initial_conditions.mass;
         double rho = input_obj.initial_conditions.atmospheric_density;
 
         // Ensure non-zero values to avoid division by zero
-        if (Cd == 0.0 || A == 0.0 || m == 0.0) {
+        if (Cd == 0.0 || A == 0.0 || m == 0.0 || rho == 0.0) {
                 std::cerr << "Error: Invalid parameters for atmospheric drag." << std::endl;
         }
         else {
@@ -110,10 +116,13 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             res[3] += a_drag_x; // Vx_dot
             res[4] += a_drag_y; // Vy_dot
             res[5] += a_drag_z; // Vz_dot
-            }
         }
+    }
 
-    if (std::find(perturbations.begin(), perturbations.end(),"solar_radiation_pressure") != perturbations.end()) {
+    else if (std::find(perturbations.begin(), perturbations.end(),"SOLAR_RADIATION") != perturbations.end()) {
+        // Display in the terminal a message in order to show that SOLAR_RADIATION has been selected
+        std::cout << "Solar radiation pressure perturbation has been selected." << std::endl;
+
         double reflectionFactor = input_obj.initial_conditions.reflection_factor;
         double A = input_obj.initial_conditions.cross_sectional_area;
         double m = input_obj.initial_conditions.mass;
@@ -134,10 +143,10 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             res[4] += a_solar_y; // Vy_dot
             res[5] += a_solar_z; // Vz_dot
             }
-        }
-        else {
-            std::cout << "Warning: perturbation not found." << std::endl;
-        }
+    }
+    else {
+        std::cout << "Warning: perturbation not found." << std::endl;
+    }
     // Return result
     return res;
 }

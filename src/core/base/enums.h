@@ -150,6 +150,17 @@ enum class FILM
 };
 
 /**
+* perturbations
+*/
+enum class PERTURBATIONS
+{
+    J2,
+    DRAG,
+    SOLAR_RADIATION,
+    NA,
+};
+
+/**
 * MEX file type
 */
 enum class MEX_FILE_TYPE
