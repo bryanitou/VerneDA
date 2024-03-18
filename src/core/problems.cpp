@@ -73,7 +73,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
     // Read perturbations from input object
-    auto input_obj = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_loads.json");
+    auto input_obj = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_ads.json");
     std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
 
     if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
@@ -93,7 +93,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
         res[5] += factor * a_J2_z; // Vz_dot
     }
 
-    else if (std::find(perturbations.begin(), perturbations.end(),"DRAG") != perturbations.end()) {
+    if (std::find(perturbations.begin(), perturbations.end(),"DRAG") != perturbations.end()) {
         // Display in the terminal a message in order to show that DRAG has been selected
         std::cout << "Atmospheric drag perturbation has been selected." << std::endl;
 
@@ -119,7 +119,7 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
         }
     }
 
-    else if (std::find(perturbations.begin(), perturbations.end(),"SOLAR_RADIATION") != perturbations.end()) {
+    if (std::find(perturbations.begin(), perturbations.end(),"SOLAR_RADIATION") != perturbations.end()) {
         // Display in the terminal a message in order to show that SOLAR_RADIATION has been selected
         std::cout << "Solar radiation pressure perturbation has been selected." << std::endl;
 
@@ -143,9 +143,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
             res[4] += a_solar_y; // Vy_dot
             res[5] += a_solar_z; // Vz_dot
             }
-    }
-    else {
-        std::cout << "Warning: perturbation not found." << std::endl;
     }
     // Return result
     return res;
