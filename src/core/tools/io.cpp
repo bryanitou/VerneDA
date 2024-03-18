@@ -3,6 +3,7 @@
  */
 
 #include "io.h"
+#include <vector>
 
 void tools::io::dace::dump_eval_deltas(delta* delta, const std::filesystem::path &file_path, EVAL_TYPE eval_type)
 {
@@ -100,6 +101,10 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
 
     // Write the header
     file2write << "PATCH_ID, HISTORY, SPLIT_NLI, BIRTH_TIME, SPLITTING_TIME" << std::endl;
+
+    std::vector<double> nli_values; // Vector to store patch.nli values
+    std::vector<double> time_values; // Vector to store time values
+
     int i = 0;
     for (auto & patch : *current_manifold)
     {
@@ -113,6 +118,10 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
         history = tools::vector::num2string(patch.get_history_int(), ", ", "%3d");
         times = tools::vector::num2string(patch.get_times_doubles(), ", ", "%3.16f");
         nlis = tools::vector::num2string(patch.get_nlis_doubles(), ", ", "%3.16f");
+
+        // Store nli value in the vector
+        nli_values.push_back(patch.nli);
+
         line2write = tools::string::print2string( "%3d, %s, %2.16f, %2.16f, %s, %s",
                                                   i, history.c_str(), patch.nli, patch.t_split_, times.c_str(), nlis.c_str());
 
@@ -122,10 +131,15 @@ void tools::io::dace::dump_splitting_history(delta *delta, const std::filesystem
         i++;
     }
 
-
     // Close file
     file2write.close();
 
+    // Save nli values to a separate CSV file
+    std::ofstream nli_file("nli_values.csv");
+    for (double nli : nli_values) {
+        nli_file << nli << std::endl;
+    }
+    nli_file.close();
 }
 
 void tools::io::dace::print_manifold_evolution(delta* delta, const std::filesystem::path &dir_path, EVAL_TYPE eval_type)
