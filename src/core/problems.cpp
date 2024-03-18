@@ -77,8 +77,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
 
     if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
-        // Display in the terminal a message in order to show that J2 has been selected
-        std::cout << "J2 perturbation has been selected." << std::endl;
 
         // Include J2 perturbation formula
         auto factor = (3.0 / 2.0) * constants::earth::mu* constants::earth::J2 * (constants::earth::radius*constants::earth::radius) / (r * r * r * r * r);
@@ -94,8 +92,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     }
 
     if (std::find(perturbations.begin(), perturbations.end(),"DRAG") != perturbations.end()) {
-        // Display in the terminal a message in order to show that DRAG has been selected
-        std::cout << "Atmospheric drag perturbation has been selected." << std::endl;
 
         double Cd = input_obj.initial_conditions.drag_coefficient;
         double A = input_obj.initial_conditions.cross_sectional_area;
@@ -120,8 +116,6 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     }
 
     if (std::find(perturbations.begin(), perturbations.end(),"SOLAR_RADIATION") != perturbations.end()) {
-        // Display in the terminal a message in order to show that SOLAR_RADIATION has been selected
-        std::cout << "Solar radiation pressure perturbation has been selected." << std::endl;
 
         double reflectionFactor = input_obj.initial_conditions.reflection_factor;
         double A = input_obj.initial_conditions.cross_sectional_area;
