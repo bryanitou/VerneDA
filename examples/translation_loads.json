@@ -43,8 +43,12 @@
       "mass": 1000.0,
       "drag_coefficient": 3.5,
       "atmospheric_density": 1.11164,
-      "reflection_factor": 0.5,
-      "perturbations": ["J2", "SOLAR_RADIATION"]
+      "reflection_factor": 1.5,
+      "perturbations": ["J2", "SOLAR_RADIATION"],
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "UT": 0
     },
     "loads" : {
       "nli_threshold" : 0.02,

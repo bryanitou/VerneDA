@@ -210,6 +210,11 @@ void json_parser::parse_initial_conditions_section(RSJresource& rsj_obj, json_in
     json_input_obj->initial_conditions.drag_coefficient = rsj_obj["drag_coefficient"].as<double>();
     json_input_obj->initial_conditions.atmospheric_density = rsj_obj["atmospheric_density"].as<double>();
     json_input_obj->initial_conditions.perturbations = rsj_obj["perturbations"].as_vector<std::string>();
+    json_input_obj->initial_conditions.year = rsj_obj["year"].as<double>();
+    json_input_obj->initial_conditions.month = rsj_obj["month"].as<double>();
+    json_input_obj->initial_conditions.day = rsj_obj["day"].as<double>();
+    json_input_obj->initial_conditions.UT = rsj_obj["UT"].as<double>();
+
 
     // Set initial conditions
     json_input_obj->initial_conditions.set = true;

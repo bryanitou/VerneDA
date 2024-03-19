@@ -4,6 +4,9 @@
  */
 
 #include "problems.h"
+#include <cmath>
+using namespace std;
+#include <iostream>
 
 problems::problems(PROBLEM type, double mu)
 {
@@ -72,9 +75,50 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
     res[4] = -this->mu_*pos[1]/(r*r*r); // Vy_dot
     res[5] = -this->mu_*pos[2]/(r*r*r); // Vz_dot
 
+
     // Read perturbations from input object
     auto input_obj = json_parser::parse_input_file("/home/nerea/CLionProjects/VerneDA/examples/translation_ads.json");
     std::vector<std::string> perturbations = input_obj.initial_conditions.perturbations;
+
+    // Date
+    double year = input_obj.initial_conditions.year;
+    double month = input_obj.initial_conditions.month;
+    double day = input_obj.initial_conditions.day;
+    double UT = input_obj.initial_conditions.UT;
+
+    // Compute the Julian day number JD
+    double JD = 367*year-floor(7*(year+(month+9)/12)/4)+ floor(275*month/9)+day+1721013.5+UT/24.0;
+
+    // Compute n, the number of days since J2000
+    double n = JD - 2451545.0;
+
+    // Compute the number of Julian centuries since J2000
+    double T_0 = n/36525.0;
+
+    // Compute the mean anomaly of the Sun
+    double M = 357.5291 + 0.98560028*n;
+
+    // Compute the ecliptic longitude of the Sun
+    double L = 280.460 + 0.98564736*n;
+
+    // Compute the longitude
+    double lambda = L + 1.915*std::sin(M) + 0.020*std::sin(2*M);
+
+    // Compute the obliquity of the ecliptic
+    double epsilon = 23.439 - 3.56*pow(10,-7)*n;
+
+    // Compute the unit vector u from the earth to the sun
+    DACE::AlgebraicVector<DACE::DA> u(3),r_sun(3);
+    u = {std::cos(lambda), std::sin(lambda)*std::cos(epsilon), std::sin(lambda)*std::sin(epsilon)};
+
+    // Compute the distance r of the sun from the earth
+    double R = 1.00014 - 0.01671*std::cos(M) - 0.00014*std::cos(2*M); // in AU
+
+    // Compute the sun's geocentric position vector
+    r_sun = {R*u[0], R*u[1], R*u[2]};
+
+    // Compute the norm of R
+    auto r_sun_norm = r_sun.vnorm();
 
     if (std::find(perturbations.begin(), perturbations.end(),"J2") != perturbations.end()) {
 
@@ -117,26 +161,76 @@ DACE::AlgebraicVector<DACE::DA> problems::TwoBodyProblem(DACE::AlgebraicVector<D
 
     if (std::find(perturbations.begin(), perturbations.end(),"SOLAR_RADIATION") != perturbations.end()) {
 
-        double reflectionFactor = input_obj.initial_conditions.reflection_factor;
+        double C_r = input_obj.initial_conditions.reflection_factor;
         double A = input_obj.initial_conditions.cross_sectional_area;
         double m = input_obj.initial_conditions.mass;
+        double S = constants::sun::S;
 
         // Ensure non-zero values to avoid division by zero
-        if (reflectionFactor == 0.0 || A == 0.0 || m == 0.0) {
+        if (C_r == 0.0 || A == 0.0 || m == 0.0) {
             std::cerr << "Error: Invalid parameters for solar radiation pressure." << std::endl;
         }
         else {
 
             // Calculate solar radiation pressure acceleration
-            auto a_solar_x = -reflectionFactor*A*A*pos[0]/(constants::gravity::c*m);
-            auto a_solar_y = -reflectionFactor*A*A*pos[1]/(constants::gravity::c*m);
-            auto a_solar_z = -reflectionFactor*A*A*pos[2]/(constants::gravity::c*m);
+            auto p_solar_factor = -C_r*S*A/(constants::gravity::c*m);
+
+            // Compute solar radiation pressure acceleration
+            auto a_solar_x = p_solar_factor*r_sun[0];
+            auto a_solar_y = p_solar_factor*r_sun[1];
+            auto a_solar_z = p_solar_factor*r_sun[2];
 
             // Add the acceleration due to solar radiation pressure to the velocity components
             res[3] += a_solar_x; // Vx_dot
             res[4] += a_solar_y; // Vy_dot
             res[5] += a_solar_z; // Vz_dot
             }
+        if (std::find(perturbations.begin(), perturbations.end(),"MOON") != perturbations.end()) {
+            double mu_m = constants::moon::mu;
+
+
+            // Ensure non-zero values to avoid division by zero
+            if (C_r == 0.0 || A == 0.0 || m == 0.0) {
+                std::cerr << "Error: Invalid parameters for lunar gravity perturbation." << std::endl;
+            } else {
+
+                // Compute alpha
+                double alpha = constants::moon::g[0];
+                double delta = 0;
+                double lambda1 = constants::moon::g[0] + constants::moon::c[0] * T_0;
+
+                for (int i = 1; i < 7; i++) {
+                    alpha += constants::moon::g[i] * std::cos(constants::moon::h[i] + constants::moon::k[i] * T_0);
+                    delta += constants::moon::d[i] * std::sin(constants::moon::e[i] + constants::moon::f[i] * T_0);
+                    lambda1 += constants::moon::a[i] * std::sin(constants::moon::b[i] + constants::moon::c[i] * T_0);
+                }
+                // Calculate solar radiation pressure acceleration
+                auto r_m_factor = constants::earth::radius / std::sin(alpha);
+
+                // Compute the moon's geocentric position vector
+                DACE::AlgebraicVector<DACE::DA> r_m(3);
+                r_m = {r_m_factor * std::cos(lambda1) * std::cos(delta), r_m_factor *
+                                                                         (std::sin(lambda) * std::cos(delta) *
+                                                                          std::cos(epsilon) -
+                                                                          std::sin(epsilon) * std::sin(delta)),
+                       r_m_factor *
+                       (std::sin(lambda) * std::cos(delta) * std::sin(epsilon) + std::cos(epsilon) * std::sin(delta))};
+
+                // Compute vectors
+                auto r_m_norm = r_m.vnorm();
+                auto r_ms = r_m - pos;
+                auto r_ms_norm = r_ms.vnorm();
+
+
+                // Compute solar radiation pressure acceleration
+                auto a_moon = -mu_m * (r_ms / (r_ms_norm * r_ms_norm * r_ms_norm) - r_m / (r_m * r_m * r_m));
+
+                // Add the acceleration due to solar radiation pressure to the velocity components
+                res[3] += a_moon[0]; // Vx_dot
+                res[4] += a_moon[1]; // Vy_dot
+                res[5] += a_moon[2]; // Vz_dot
+            }
+        }
     }
     // Return result
     return res;

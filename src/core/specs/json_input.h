@@ -61,7 +61,10 @@ public:// Attributes
          double drag_coefficient{};
          double atmospheric_density{};
          std::vector<std::string> perturbations{};
-
+         double year{};
+         double month{};
+         double day{};
+         double UT{};
 
          // If we have attitude...
          double inertia[3][3]{};
