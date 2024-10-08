@@ -23,3 +23,6 @@ venv
 *.slxc
 *.autosave
 slprj
+
+# Ignore pycache
+__pycache__/

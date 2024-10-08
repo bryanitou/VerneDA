@@ -37,7 +37,7 @@ int main()
     x0[5] = 0.0 + DACE::DA(6);
 
     // Get the basis of this algebra
-    auto basis = tools::math::get_DA_basis(3, 2);
+    auto basis = tools::math::get_DA_basis(6, 2);
     auto kronecker = tools::math::Kroneckerproduct_vect(x0, x0);
     DACE::DA dydy3[n_var * n_var];
     get_matrix_test(n_var, dydy3);

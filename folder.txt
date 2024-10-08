@@ -1,0 +1,30 @@
+\node {.}; & \textit{.gitignore} \textit{CITATION.cff} \textit{README.md} \textit{CHANGELOG.md} \textit{examples} \textit{folder_structure.py} \textit{out} \textit{.idea} \textit{.git} \textit{folder.txt} \textit{.gitmodules} \textit{build} \textit{VERSION} \textit{cfg} \textit{CMakeLists.txt} \textit{venv} \textit{slprj} \textit{doc} \textit{src} \textit{common} \textit{scripts} \textit{reps} \textit{real_model.slxc} \\ \hline
+\node {./examples}; & \textit{transformation_pol2cart.json} \textit{translation_ads.json} \textit{attitude_ads.json} \textit{translation_loads.json} \textit{attitude_loads.json} \\ \hline
+\node {./.idea}; & \textit{misc.xml} \textit{.gitignore} \textit{dictionaries} \textit{workspace.xml} \textit{modules.xml} \textit{VerneDA.iml} \textit{vcs.xml} \textit{codeStyles} \\ \hline
+\node {./.idea/dictionaries}; & \textit{bryan.xml} \\ \hline
+\node {./.idea/codeStyles}; & \textit{codeStyleConfig.xml} \\ \hline
+\node {./doc}; & \textit{Tutorial1.pdf} \textit{Tutorial2.pdf} \\ \hline
+\node {./src}; & \textit{main} \textit{3rdparty} \textit{core} \\ \hline
+\node {./src/main}; & \textit{ads} \textit{mex_cpp} \textit{matlab} \textit{tutorials} \textit{kepler.cpp} \textit{dace_vsad.cpp} \textit{dace_st.cpp} \textit{test} \textit{dace_vsod.cpp} \\ \hline
+\node {./src/main/ads}; & \textit{testProp.cpp} \\ \hline
+\node {./src/main/mex_cpp}; & \textit{mex_get_DA_third_moments.cpp} \textit{mex_propagate_DA_state.cpp} \textit{mex_get_DA_meas_update.cpp} \textit{mex_get_DA_second_moments_xy.cpp} \textit{mex_get_DA_state.cpp} \textit{mex_propagate_DA_state_and_get_samples.cpp} \textit{mex_get_DA_aug_meas_dev2.cpp} \textit{mex_get_DA_predict_spherical.cpp} \textit{mex_get_DA_fourth_moments.cpp} \textit{mex_get_DA_first_moments.cpp} \textit{mex_get_DA_second_moments.cpp} \textit{HODAKF} \textit{mex_get_samples.cpp} \textit{mex_vsaod.cpp} \textit{mex_get_DA_err_variation.cpp} \textit{mex_filter_DA_state.cpp} \textit{mex_get_DA_aug_meas_dev.cpp} \\ \hline
+\node {./src/main/mex_cpp/HODAKF}; &  \\ \hline
+\node {./src/main/matlab}; & \textit{mex_build.m} \textit{propagation} \textit{nearestPSD.m} \textit{example} \textit{env.m} \textit{stddev_ompl.m} \textit{mex_scaling.m} \\ \hline
+\node {./src/main/matlab/propagation}; & \textit{propagation.m} \textit{plot_orbits.m} \textit{propagation.asv} \textit{simulator.m} \textit{plot_noise.m} \textit{real_model.slx} \\ \hline
+\node {./src/main/matlab/example}; & \textit{mex_vsad.m} \textit{mex_vsod.m} \textit{mex_vsod_DA.m} \textit{mex_vsod.asv} \\ \hline
+\node {./src/main/tutorials}; & \textit{Example1-dace_test.cpp} \textit{Example4-dace_test.cpp} \textit{Example2-dace_test.cpp} \textit{Example3-dace_test.cpp} \\ \hline
+\node {./src/main/test}; & \textit{algebra_basis_vectors.cpp} \\ \hline
+\node {./src/3rdparty}; & \textit{RSJp-cpp-master.tar.gz} \textit{dace-master.tar.gz} \\ \hline
+\node {./src/core}; & \textit{integrator.cpp} \textit{ads} \textit{delta.h} \textit{writer.h} \textit{FileProcessor.h} \textit{scv.cpp} \textit{base} \textit{geometry} \textit{quaternion.cpp} \textit{scv.h} \textit{problems.h} \textit{quaternion_temp.cpp} \textit{delta.cpp} \textit{tools} \textit{specs} \textit{writer.cpp} \textit{solids} \textit{conversions} \textit{problems.cpp} \textit{json} \textit{FileProcessor.cpp} \textit{quaternion.h} \textit{integrator.h} \\ \hline
+\node {./src/core/ads}; & \textit{SuperManifold.h} \textit{Patch.cpp} \textit{SplittingHistory.cpp} \textit{Manifold.cpp} \textit{SplittingHistory.h} \textit{Patch.h} \textit{SuperManifold.cpp} \textit{Manifold.h} \\ \hline
+\node {./src/core/base}; & \textit{Header_Info.cpp} \textit{constants.h} \textit{enums.h} \textit{structs.h} \textit{Header_Info.h} \\ \hline
+\node {./src/core/geometry}; & \textit{point.h} \textit{point.cpp} \\ \hline
+\node {./src/core/tools}; & \textit{math_temp.cpp} \textit{io.cpp} \textit{mex_aux_temp.cpp} \textit{math.h} \textit{mex_aux.cpp} \textit{ep.h} \textit{str.h} \textit{io.h} \textit{vo.h} \textit{io_dace.h} \textit{ep.cpp} \textit{io_dace.cpp} \textit{vo_temp.cpp} \textit{vo.cpp} \textit{mex_aux.h} \textit{math.cpp} \textit{str.cpp} \\ \hline
+\node {./src/core/specs}; & \textit{args_input.cpp} \textit{json_input.h} \textit{args_input.h} \\ \hline
+\node {./src/core/solids}; & \textit{solid.h} \textit{solid.cpp} \\ \hline
+\node {./src/core/conversions}; & \textit{angles.h} \textit{angles.cpp} \\ \hline
+\node {./src/core/json}; & \textit{json_parser.cpp} \textit{json_parser.h} \\ \hline
+\node {./common}; & \textit{.gitignore} \textit{tools-py} \\ \hline
+\node {./common/tools-py}; & \textit{plotter.py} \textit{tools.py} \textit{euler.py} \textit{quaternion_histogram.py} \textit{make_film.py} \textit{sphere.py} \textit{parse2csv_jsonfile.py} \textit{banana.py} \textit{__pycache__} \textit{reader.py} \\ \hline
+\node {./common/tools-py/__pycache__}; & \textit{reader.cpython-310.pyc} \textit{euler.cpython-310.pyc} \textit{tools.cpython-310.pyc} \\ \hline
+\node {./scripts}; & \textit{build.sh} \textit{install_3rdparties.sh} \textit{matlab23b} \textit{shortcuts.sh} \textit{matlab23a} \\ \hline

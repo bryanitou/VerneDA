@@ -23,7 +23,7 @@ n_split_max = int16(10);
 n_samples = int16(10000);
 
 % Periods to simulate
-orbits_period_sec_vec = [0.50] * orbit_period_sec;
+orbits_period_sec_vec = [0.25, 0.50, 1.0] * orbit_period_sec;
 
 % Set time constraints
 t0 = 0.0;
@@ -31,6 +31,7 @@ t0 = 0.0;
 % Save the results here
 N = length(orbits_period_sec_vec);
 b = zeros(6, n_samples + 1, N);
+
 
 for i = 1:length(orbits_period_sec_vec)
     tf = orbits_period_sec_vec(i) / scaling_time;
@@ -40,6 +41,7 @@ for i = 1:length(orbits_period_sec_vec)
     % Test MEX executable
     b(:,:,i) = mex_vsaod(state_ini, stddev, t, ci, nli, n_split_max, n_samples, "tbp");
 end
+
 
 figure(1);
 % Plot the result
