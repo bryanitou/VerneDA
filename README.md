@@ -165,6 +165,89 @@ Some links which the developer may find useful:
 
 TODO
 
+## Developers in VSCODE Environment
+
+1. Clone the repository from CLion's Version control using the same URL:
+`git@github.com:bryanitou/VerneDA.git`.
+
+2. Enter to the project folder if you are not in already.
+
+3. Run:
+   ```shell
+   bash scripts/install_3rdparties.sh
+
+4. Download the needed tools in vscode like C++, Make, etc.
+
+5. In order to set the CMake configurations: create a file named `CMakePresets.json` and write the following inside:
+
+```json
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 23,
+      "patch": 0
+    },
+    "configurePresets": [
+    {
+        "name": "default",
+        "displayName": "default",
+        "description": "Write your description here.",
+        "generator": "Unix Makefiles",
+        "binaryDir": "${workspaceFolder}/build/VerneDA-install-debug",
+        "cacheVariables": {
+            "B": "VerneDA-build-debug",
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_INSTALL_PREFIX": "../VerneDA-install-debug",
+            "BUILD_DACE_AFOSSA_LIBS": "ON"
+        }
+      }
+  ]
+}
+```
+In order to understand what you are doing or tuning these, please read instructions in the following section, points 6-11.
+
+6. After that, you can set your own `launch.json` and `task.json` file in order to run/debug the programs. Here below you can find an example of each for the target `dace_vsod` program.
+
+In `launch.json` in the configurations vector:
+```json
+...
+{
+    "name": "dace_vsod",
+    "type": "cppdbg",
+    "request": "launch",
+    "program": "${workspaceFolder}/build/VerneDA-install-debug/bin/dace_vsod",
+    "args": ["--config", "examples/translation_loads.json"],
+    "cwd": "${workspaceFolder}",
+    "preLaunchTask": "CMake: build dace_vsod"
+},
+...
+```
+
+In `tasks.json` in the configurations vector:
+```json
+{
+    "type": "cmake",
+    "label": "CMake: build dace_vsod",
+    "command": "build",
+    "targets": [
+        "dace_vsod"
+    ],
+    "preset": "${command:cmake.activeBuildPresetName}",
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    },
+    "problemMatcher": [],
+    "detail": "CMake template build task"
+},
+```
+
+So basically, when you try to launch (from `launch.json`) an executable (in this case `dace_vsod`) it will build the program (from `tasks.json`) in the case that the code has been modified. As you can see,  in `launch.json` has the field: `preLaunchTask`, which connects the launch to the pretask.
+
+7. You should be able now to launch any program of the project. If not, revise the instructions.
+
+
 ## Developers in CLion Environment
 
 1. Clone the repository from CLion's Version control using the same URL:

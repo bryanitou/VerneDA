@@ -1,0 +1,23 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 23,
+      "patch": 0
+    },
+    "configurePresets": [
+    {
+        "name": "default",
+        "displayName": "default",
+        "description": "What the hell goes here",
+        "generator": "Unix Makefiles",
+        "binaryDir": "${workspaceFolder}/build/VerneDA-install-debug",
+        "cacheVariables": {
+            "B": "VerneDA-build-debug",
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_INSTALL_PREFIX": "../VerneDA-install-debug",
+            "BUILD_DACE_AFOSSA_LIBS": "ON"
+        }
+      }
+  ]
+  }

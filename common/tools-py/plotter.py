@@ -181,6 +181,11 @@ def plot_taylor(taylor: dict, span: int, output_path: os.PathLike or str, verbos
     # Show plot
     plt.savefig(output_path)
 
+    # Info
+    if verbose:
+        print(f"The resultant figure has been saved in: {output_path}")
+
+
 
 # Main running function
 def main(args: list = None, span: int = 1, verbose: bool = False) -> None:
